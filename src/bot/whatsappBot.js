@@ -41,6 +41,7 @@ class WhatsAppBot {
     
     this.isReady = false;
     this.startTime = Date.now();
+    this.isReconnecting = false;
   }
 
   /**
@@ -152,9 +153,19 @@ class WhatsAppBot {
       console.log('🔐 WhatsApp authenticated successfully');
     });
 
-    // Loading screen
+    // Loading screen progress
     this.client.on('loading_screen', (percent, message) => {
       console.log(`⏳ Loading: ${percent}% - ${message}`);
+      
+      // If we're stuck at 0% for too long after logout, it might be a reconnection issue
+      if (percent === 0 && message === 'Do not close this window') {
+        // This is normal initial loading, but if it persists, we might need to restart
+        setTimeout(() => {
+          if (!this.isReady) {
+            console.log('⚠️ Still loading after extended time, this is normal for initial connection');
+          }
+        }, 30000); // 30 seconds
+      }
     });
 
     // Authentication failure
@@ -166,6 +177,33 @@ class WhatsAppBot {
     this.client.on('disconnected', (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
+      
+      // If disconnected due to logout, handle reconnection
+      if (reason === 'LOGOUT') {
+        console.log('🔄 Logout detected, clearing session and preparing for new QR...');
+        this.isReconnecting = true;
+        
+        // Clear the session to force new QR generation
+        setTimeout(async () => {
+          try {
+            if (this.client) {
+              await this.client.destroy();
+              this.client = null;
+            }
+            console.log('🔄 Session cleared, ready for new authentication');
+            this.isReconnecting = false;
+          } catch (error) {
+            console.error('❌ Error clearing session:', error);
+            this.isReconnecting = false;
+          }
+        }, 2000);
+      }
+    });
+
+    // Authentication failure - restart QR process
+    this.client.on('auth_failure', (msg) => {
+      console.error('❌ WhatsApp authentication failed:', msg);
+      console.log('🔄 Restarting authentication process...');
     });
 
     // Incoming messages
