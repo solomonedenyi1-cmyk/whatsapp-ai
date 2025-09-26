@@ -14,3 +14,4 @@ coverage
 data/*.json
 .wwebjs_auth
 .wwebjs_cache
+config.json

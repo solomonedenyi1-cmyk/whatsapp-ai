@@ -20,8 +20,9 @@ services:
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
       - PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
     volumes:
-      - whatsapp_sessions:/usr/src/app/.wwebjs_auth
-      - app_data:/usr/src/app/data
+      - /whatsapp-ai/whatsapp_sessions:/usr/src/app/.wwebjs_auth
+      - /whatsapp-ai/app_data:/usr/src/app/data
+      - ./config.json:/usr/src/app/config.json:ro
     networks:
       - whatsapp-network
     healthcheck:

@@ -47,6 +47,10 @@ We provide 4 different Docker Compose configurations to suit different deploymen
 git clone https://github.com/your-username/whatsapp-ai.git
 cd whatsapp-ai
 
+# Create your config.json from the example
+cp config.example.json config.json
+nano config.json  # Edit with your business information
+
 # Edit environment variables directly in docker-compose.yml
 # Then build and run
 docker-compose up --build
@@ -59,6 +63,10 @@ docker-compose up --build
 git clone https://github.com/your-username/whatsapp-ai.git
 cd whatsapp-ai
 
+# Create your config.json from the example
+cp config.example.json config.json
+nano config.json  # Edit with your business information
+
 # Create and configure .env file
 cp .env.example .env
 nano .env  # Edit with your settings
@@ -70,8 +78,13 @@ docker-compose -f docker-compose.env.yml up --build
 #### 3. Docker Hub + Environment Variables Inline (`docker-compose.hub.yml`)
 **Use case**: Production deployment without building, quick deployment
 ```bash
-# Download the compose file
+# Download the compose file and config example
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
+
+# Create your config.json
+cp config.example.json config.json
+nano config.json  # Edit with your business information
 
 # Edit environment variables in the file
 nano docker-compose.hub.yml
@@ -83,9 +96,14 @@ docker-compose -f docker-compose.hub.yml up
 #### 4. Docker Hub + Environment Variables from .env (`docker-compose.hub-env.yml`)
 **Use case**: Production deployment with secure environment management
 ```bash
-# Download the compose file and env example
+# Download the compose file, env example, and config example
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
+
+# Create your config.json
+cp config.example.json config.json
+nano config.json  # Edit with your business information
 
 # Configure environment
 cp .env.example .env
@@ -162,12 +180,18 @@ nano .env  # Edit with your actual values
 # Option 1: Use pre-built image with .env file (Recommended)
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
+cp config.example.json config.json
+nano config.json  # Configure your business information
 cp .env.example .env
 nano .env  # Configure your settings
 docker-compose -f docker-compose.hub-env.yml up -d
 
 # Option 2: Use pre-built image with inline variables
 curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
+cp config.example.json config.json
+nano config.json  # Configure your business information
 nano docker-compose.hub.yml  # Edit environment variables
 docker-compose -f docker-compose.hub.yml up -d
 ```
@@ -177,6 +201,8 @@ docker-compose -f docker-compose.hub.yml up -d
 # Option 1: Build with .env file
 git clone https://github.com/your-username/whatsapp-ai.git
 cd whatsapp-ai
+cp config.example.json config.json
+nano config.json  # Configure your business information
 cp .env.example .env
 nano .env  # Configure your settings
 docker-compose -f docker-compose.env.yml up --build
@@ -184,6 +210,8 @@ docker-compose -f docker-compose.env.yml up --build
 # Option 2: Build with inline variables
 git clone https://github.com/your-username/whatsapp-ai.git
 cd whatsapp-ai
+cp config.example.json config.json
+nano config.json  # Configure your business information
 nano docker-compose.yml  # Edit environment variables
 docker-compose up --build
 ```
@@ -192,6 +220,7 @@ docker-compose up --build
 Docker volumes automatically persist:
 - WhatsApp session data (`.wwebjs_auth`, `.wwebjs_cache`)
 - Application data (`conversations`, `analytics`, `logs`)
+- Configuration file (`config.json`) - mounted from host for easy editing
 
 ### Health Checks
 Built-in health checks monitor container status:
@@ -201,13 +230,21 @@ docker logs whatsapp-ai-bot  # View application logs
 ```
 
 4. **Customize your AI assistant** (Important!):
-Edit `config.json` in the root directory to set up your business information:
+**For Docker users**: Create `config.json` from the example template before running containers:
+```bash
+cp config.example.json config.json
+nano config.json  # Edit with your business information
+```
+
+**For local installation**: Edit `config.json` in the root directory to set up your business information:
 - AI identity (name, gender, personality)
 - Business details (services, products, contact info)
 - Owner information and expertise
 - FAQ and standard responses
 
 **No coding required!** Just edit the simple JSON file.
+
+**Important**: The `config.json` file is mounted as a volume in Docker, so you can edit it on your host system and changes will be reflected in the container immediately after using the `/reload` command.
 
 5. **Run the bot**:
 ```bash

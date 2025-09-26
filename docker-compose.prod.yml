@@ -32,6 +32,8 @@ services:
       - whatsapp_cache_prod:/usr/src/app/.wwebjs_cache
       # Persist application data (conversations, analytics, etc.)
       - app_data_prod:/usr/src/app/data
+      # Mount config.json from host (users must create this file)
+      - ./config.json:/usr/src/app/config.json:ro
     networks:
       - whatsapp-network-prod
     healthcheck:
