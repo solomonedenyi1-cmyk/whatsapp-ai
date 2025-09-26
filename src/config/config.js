@@ -5,7 +5,8 @@ const config = {
   yuef: {
     apiUrl: process.env.YUE_F_API_URL || 'https://llms.yuricunha.com',
     modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
-    timeout: parseInt(process.env.API_TIMEOUT) || 30000,
+    timeout: 0, // No timeout - wait indefinitely
+    warningTimeout: 5 * 60 * 1000, // 5 minutes warning
   },
 
   // Bot Configuration

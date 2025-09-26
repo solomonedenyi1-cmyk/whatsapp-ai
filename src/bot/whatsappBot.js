@@ -222,7 +222,15 @@ class WhatsAppBot {
       await this.monitoringService.updateComponentStatus('yueApi', 'processing');
       
       // Send to AI (this may take a long time)
-      const aiResponse = await this.yueApiService.sendMessage(messageText, context);
+      const warningCallback = async () => {
+        try {
+          await this.client.sendMessage(chatId, '⏳ Só um momento... Estou processando sua solicitação. O servidor está um pouco lento hoje, mas estou trabalhando nisso!');
+        } catch (error) {
+          console.error('❌ Error sending warning message:', error);
+        }
+      };
+      
+      const aiResponse = await this.yueApiService.sendMessage(messageText, context, warningCallback);
       
       // Complete the timeout request
       const duration = this.timeoutHandler.completeRequest(requestId);
