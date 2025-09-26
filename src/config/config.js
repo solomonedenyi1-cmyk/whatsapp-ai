@@ -37,6 +37,11 @@ const config = {
         '--disable-gpu'
       ]
     }
+  },
+
+  // Admin Configuration
+  admin: {
+    whatsappNumber: process.env.ADMIN_WHATSAPP_NUMBER || '551234567890@c.us'
   }
 };
 

@@ -8,6 +8,9 @@ const CommandHandler = require('../commands/commandHandler');
 const ErrorHandler = require('../services/errorHandler');
 const PerformanceOptimizer = require('../services/performanceOptimizer');
 const MonitoringService = require('../services/monitoringService');
+const TimeoutHandler = require('../services/timeoutHandler');
+const AdminService = require('../services/adminService');
+const PerformanceOptimizations = require('../services/performanceOptimizations');
 
 class WhatsAppBot {
   constructor() {
@@ -18,6 +21,11 @@ class WhatsAppBot {
     this.performanceOptimizer = new PerformanceOptimizer();
     this.monitoringService = new MonitoringService(this.errorHandler, this.performanceOptimizer);
     
+    // Initialize Phase 3.5 services
+    this.timeoutHandler = new TimeoutHandler();
+    this.adminService = new AdminService();
+    this.performanceOptimizations = new PerformanceOptimizations();
+    
     // Initialize existing services with error handling
     this.yueApiService = new YueApiService();
     this.conversationService = new ConversationService();
@@ -27,7 +35,8 @@ class WhatsAppBot {
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
-      this.monitoringService
+      this.monitoringService,
+      this.adminService
     );
     
     this.isReady = false;
@@ -147,10 +156,21 @@ class WhatsAppBot {
       // Check if it's a command
       if (this.messageService.isCommand(messageText)) {
         const { command, args } = this.messageService.parseCommand(messageText);
-        response = await this.commandHandler.handleCommand(command, args, chatId);
+        
+        // Check admin access for commands
+        const accessCheck = this.adminService.validateAdminAccess(chatId, command);
+        if (!accessCheck.allowed) {
+          response = accessCheck.message;
+        } else {
+          response = await this.commandHandler.handleCommand(command, args, chatId);
+        }
       } else {
-        // Regular message - send to AI
-        response = await this.processAIMessage(messageText, chatId);
+        // Regular message - send to AI with timeout handling and performance optimizations
+        response = await this.performanceOptimizations.optimizeMessageProcessing(
+          chatId, 
+          messageText, 
+          (msg) => this.processAIMessageWithTimeout(msg, chatId)
+        );
       }
 
       // Send response
@@ -173,13 +193,25 @@ class WhatsAppBot {
   }
 
   /**
-   * Process message with AI
+   * Process message with AI with timeout handling
    * @param {string} messageText - User message
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response
    */
-  async processAIMessage(messageText, chatId) {
+  async processAIMessageWithTimeout(messageText, chatId) {
+    const requestId = `${chatId}_${Date.now()}`;
+    
     try {
+      // Register request for timeout monitoring
+      this.timeoutHandler.registerRequest(requestId, requestId, messageText);
+      
+      // Set up timeout message handler
+      this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
+        if (data.chatId === chatId) {
+          await this.sendResponse(chatId, data.message);
+        }
+      });
+      
       // Get conversation context
       const context = this.conversationService.getFormattedContext(chatId);
       
@@ -189,8 +221,11 @@ class WhatsAppBot {
       // Update API status
       await this.monitoringService.updateComponentStatus('yueApi', 'processing');
       
-      // Send to AI
+      // Send to AI (this may take a long time)
       const aiResponse = await this.yueApiService.sendMessage(messageText, context);
+      
+      // Complete the timeout request
+      const duration = this.timeoutHandler.completeRequest(requestId);
       
       // Update API status
       await this.monitoringService.updateComponentStatus('yueApi', 'ready');
@@ -202,6 +237,10 @@ class WhatsAppBot {
       
     } catch (error) {
       console.error('❌ Error processing AI message:', error);
+      
+      // Complete the timeout request on error
+      this.timeoutHandler.completeRequest(requestId);
+      
       await this.errorHandler.handleError(error, {
         component: 'yueApi',
         operation: 'processMessage',
@@ -211,6 +250,16 @@ class WhatsAppBot {
       await this.monitoringService.updateComponentStatus('yueApi', 'error', { error: error.message });
       return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
     }
+  }
+
+  /**
+   * Process message with AI (legacy method for compatibility)
+   * @param {string} messageText - User message
+   * @param {string} chatId - WhatsApp chat ID
+   * @returns {Promise<string>} - AI response
+   */
+  async processAIMessage(messageText, chatId) {
+    return this.processAIMessageWithTimeout(messageText, chatId);
   }
 
   /**
@@ -302,6 +351,10 @@ class WhatsAppBot {
       await this.monitoringService.shutdown();
       await this.performanceOptimizer.shutdown();
       await this.errorHandler.shutdown();
+      
+      // Shutdown Phase 3.5 services
+      await this.timeoutHandler.shutdown();
+      await this.performanceOptimizations.shutdown();
       
       // Shutdown WhatsApp client
       if (this.client) {
