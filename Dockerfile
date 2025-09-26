@@ -47,8 +47,8 @@ RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
 # Create app directory
 WORKDIR /usr/src/app
 
-# Create non-root user for security
-RUN groupadd -r whatsapp && useradd -r -g whatsapp -G audio,video whatsapp \
+# Create non-root user for security with specific UID/GID for volume compatibility
+RUN groupadd -r whatsapp --gid=1000 && useradd -r -g whatsapp --uid=1000 -G audio,video whatsapp \
     && mkdir -p /home/whatsapp/Downloads \
     && chown -R whatsapp:whatsapp /home/whatsapp \
     && chown -R whatsapp:whatsapp /usr/src/app
@@ -65,9 +65,9 @@ COPY . .
 # Create data directory for persistence and startup script
 RUN mkdir -p /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache \
     && chown -R whatsapp:whatsapp /usr/src/app \
-    && chmod -R 755 /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache
+    && chmod -R 777 /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache
 
-# Create startup script with better display management
+# Create startup script with better display management and permission fixes
 RUN echo '#!/bin/bash\n\
 echo "🖥️ Starting virtual display..."\n\
 # Clean up any existing display locks\n\
@@ -75,6 +75,9 @@ rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true\n\
 # Create X11 directory with proper permissions\n\
 mkdir -p /tmp/.X11-unix\n\
 chmod 1777 /tmp/.X11-unix\n\
+# Ensure volume directories have correct permissions\n\
+mkdir -p /usr/src/app/.wwebjs_auth /usr/src/app/data\n\
+chmod 777 /usr/src/app/.wwebjs_auth /usr/src/app/data\n\
 # Start Xvfb with better error handling\n\
 Xvfb :99 -screen 0 $XVFB_WHD -ac +extension GLX +render -noreset -nolisten tcp &\n\
 XVFB_PID=$!\n\
