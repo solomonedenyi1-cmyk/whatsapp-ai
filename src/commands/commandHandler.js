@@ -1,9 +1,12 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(yueApiService, conversationService) {
+  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null) {
     this.yueApiService = yueApiService;
     this.conversationService = conversationService;
+    this.errorHandler = errorHandler;
+    this.performanceOptimizer = performanceOptimizer;
+    this.monitoringService = monitoringService;
   }
 
   /**
@@ -39,6 +42,18 @@ class CommandHandler {
       case 'cleanup':
         return await this.handleCleanup();
       
+      case 'health':
+        return await this.handleHealth();
+      
+      case 'monitor':
+        return await this.handleMonitor();
+      
+      case 'performance':
+        return await this.handlePerformance();
+      
+      case 'errors':
+        return await this.handleErrors();
+      
       default:
         return this.handleUnknownCommand(command);
     }
@@ -65,6 +80,12 @@ class CommandHandler {
 • /analytics - View conversation analytics report
 • /cleanup - Clean up old conversation data
 
+*System Monitoring:*
+• /health - System health check and status
+• /monitor - Comprehensive monitoring dashboard
+• /performance - Performance metrics and optimization
+• /errors - Error logs and system diagnostics
+
 *Usage Tips:*
 • Just send a normal message to chat with the AI
 • The AI remembers our conversation context permanently
@@ -79,8 +100,7 @@ class CommandHandler {
    * Handle /reset command
    * @returns {string} - Reset confirmation
    */
-  async handleReset() {
-    const chatId = this.currentChatId;
+  async handleReset(chatId) {
     if (chatId) {
       await this.conversationService.clearContext(chatId);
       return '🔄 *Conversation reset!*\n\nYour chat history has been cleared from both memory and storage. We can start fresh! 😊';
@@ -237,14 +257,253 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /cleanup command
-   * @returns {string} - Cleanup confirmation
+   * @returns {string} - Cleanup results
    */
   async handleCleanup() {
     try {
-      const cleaned = await this.conversationService.cleanupOldData(30);
-      return `🧹 *Data Cleanup Complete*\n\nCleaned up ${cleaned} old conversations (older than 30 days).\n\nStorage optimized! ✨`;
+      const result = await this.conversationService.persistenceService.cleanupOldData();
+      
+      return `🧹 *Data Cleanup Complete*
+
+` +
+             `📊 *Cleanup Results:*
+` +
+             `• Conversations cleaned: ${result.cleanedConversations || 0}
+` +
+             `• Analytics entries cleaned: ${result.cleanedAnalytics || 0}
+` +
+             `• Total space freed: ${result.spaceSaved || 'Unknown'}
+
+` +
+             `✅ Old data (30+ days) has been removed to optimize storage.`;
     } catch (error) {
-      return `❌ *Cleanup Error*\n\nUnable to cleanup data: ${error.message}`;
+      console.error('❌ Error during cleanup:', error);
+      return '❌ Error occurred during data cleanup. Please try again later.';
+    }
+  }
+
+  /**
+   * Handle /health command
+   * @returns {string} - System health status
+   */
+  async handleHealth() {
+    try {
+      if (!this.monitoringService) {
+        return '❌ Monitoring service not available.';
+      }
+
+      const healthData = await this.monitoringService.performHealthCheck();
+      
+      const healthEmoji = {
+        'healthy': '✅',
+        'degraded': '⚠️',
+        'unhealthy': '🚨'
+      };
+      
+      const emoji = healthEmoji[healthData.systemHealth] || '❓';
+      
+      let response = `${emoji} *System Health Check*\n\n`;
+      response += `🏥 *Overall Status:* ${healthData.systemHealth.toUpperCase()}\n`;
+      response += `⏰ *Last Check:* ${new Date(healthData.timestamp).toLocaleString()}\n\n`;
+      
+      if (healthData.checks) {
+        response += `📊 *Component Status:*\n`;
+        
+        if (healthData.checks.memory) {
+          const memStatus = healthData.checks.memory.status === 'healthy' ? '✅' : '⚠️';
+          response += `${memStatus} Memory: ${healthData.checks.memory.usage}MB\n`;
+        }
+        
+        if (healthData.checks.performance) {
+          const perfStatus = healthData.checks.performance.status === 'healthy' ? '✅' : '⚠️';
+          response += `${perfStatus} Performance: ${healthData.checks.performance.avgResponseTime}ms avg\n`;
+        }
+        
+        if (healthData.checks.errors) {
+          const errorStatus = healthData.checks.errors.status === 'healthy' ? '✅' : '⚠️';
+          response += `${errorStatus} Errors: ${healthData.checks.errors.recentErrors} recent\n`;
+        }
+        
+        if (healthData.checks.components) {
+          response += `\n🔧 *Components:*\n`;
+          Object.entries(healthData.checks.components).forEach(([name, status]) => {
+            const statusEmoji = status === 'ready' ? '✅' : status === 'error' ? '❌' : '⚠️';
+            response += `${statusEmoji} ${name}: ${status}\n`;
+          });
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Error getting health status:', error);
+      return '❌ Error occurred while checking system health.';
+    }
+  }
+
+  /**
+   * Handle /monitor command
+   * @returns {string} - Monitoring dashboard
+   */
+  async handleMonitor() {
+    try {
+      if (!this.monitoringService) {
+        return '❌ Monitoring service not available.';
+      }
+
+      const dashboard = await this.monitoringService.getMonitoringDashboard();
+      
+      let response = `📊 *Monitoring Dashboard*\n\n`;
+      response += `🏥 *System Health:* ${dashboard.systemHealth.toUpperCase()}\n`;
+      response += `⏱️ *Uptime:* ${Math.floor(dashboard.uptime / 3600)}h ${Math.floor((dashboard.uptime % 3600) / 60)}m\n`;
+      response += `📅 *Started:* ${new Date(dashboard.startTime).toLocaleString()}\n\n`;
+      
+      // Performance metrics
+      if (dashboard.performance) {
+        response += `⚡ *Performance:*\n`;
+        if (dashboard.performance.memory?.current) {
+          response += `• Memory: ${Math.round(dashboard.performance.memory.current)}MB\n`;
+        }
+        if (dashboard.performance.responseTime?.average) {
+          response += `• Avg Response: ${Math.round(dashboard.performance.responseTime.average)}ms\n`;
+        }
+        if (dashboard.performance.cache?.hitRate !== undefined) {
+          response += `• Cache Hit Rate: ${Math.round(dashboard.performance.cache.hitRate * 100)}%\n`;
+        }
+        response += `\n`;
+      }
+      
+      // Error summary
+      if (dashboard.errors) {
+        response += `🚨 *Errors:*\n`;
+        response += `• Total: ${dashboard.errors.total}\n`;
+        response += `• Recent: ${dashboard.errors.recent}\n\n`;
+      }
+      
+      // Alerts
+      if (dashboard.alerts) {
+        response += `🔔 *Alerts:*\n`;
+        response += `• Total: ${dashboard.alerts.total}\n`;
+        response += `• Unacknowledged: ${dashboard.alerts.unacknowledged}\n`;
+        
+        if (dashboard.alerts.recent && dashboard.alerts.recent.length > 0) {
+          response += `\n📋 *Recent Alerts:*\n`;
+          dashboard.alerts.recent.slice(0, 3).forEach(alert => {
+            const alertEmoji = { low: '💡', medium: '⚠️', high: '🚨', critical: '🔥' };
+            response += `${alertEmoji[alert.severity]} ${alert.message}\n`;
+          });
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Error getting monitoring dashboard:', error);
+      return '❌ Error occurred while retrieving monitoring data.';
+    }
+  }
+
+  /**
+   * Handle /performance command
+   * @returns {string} - Performance metrics
+   */
+  async handlePerformance() {
+    try {
+      if (!this.performanceOptimizer) {
+        return '❌ Performance optimizer not available.';
+      }
+
+      const stats = this.performanceOptimizer.getPerformanceStats();
+      
+      let response = `⚡ *Performance Metrics*\n\n`;
+      
+      // Memory stats
+      if (stats.memory) {
+        response += `🧠 *Memory Usage:*\n`;
+        response += `• Current: ${Math.round(stats.memory.current)}MB\n`;
+        response += `• Peak: ${Math.round(stats.memory.peak)}MB\n`;
+        response += `• Average: ${Math.round(stats.memory.average)}MB\n\n`;
+      }
+      
+      // Response time stats
+      if (stats.responseTime) {
+        response += `⏱️ *Response Times:*\n`;
+        response += `• Average: ${Math.round(stats.responseTime.average)}ms\n`;
+        response += `• Fastest: ${Math.round(stats.responseTime.min)}ms\n`;
+        response += `• Slowest: ${Math.round(stats.responseTime.max)}ms\n\n`;
+      }
+      
+      // Cache performance
+      if (stats.cache) {
+        response += `💾 *Cache Performance:*\n`;
+        response += `• Hit Rate: ${Math.round(stats.cache.hitRate * 100)}%\n`;
+        response += `• Entries: ${stats.cache.size}\n`;
+        response += `• Memory: ${Math.round(stats.cache.memoryUsage)}MB\n\n`;
+      }
+      
+      // Message queue
+      if (stats.messageQueue) {
+        response += `📬 *Message Queue:*\n`;
+        response += `• Current Size: ${stats.messageQueue.size}\n`;
+        response += `• Processed: ${stats.messageQueue.processed}\n`;
+        response += `• Average Wait: ${Math.round(stats.messageQueue.averageWaitTime)}ms\n`;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Error getting performance metrics:', error);
+      return '❌ Error occurred while retrieving performance data.';
+    }
+  }
+
+  /**
+   * Handle /errors command
+   * @returns {string} - Error logs and diagnostics
+   */
+  async handleErrors() {
+    try {
+      if (!this.errorHandler) {
+        return '❌ Error handler not available.';
+      }
+
+      const errorStats = this.errorHandler.getErrorStats();
+      
+      let response = `🚨 *Error Diagnostics*\n\n`;
+      response += `📊 *Error Summary:*\n`;
+      response += `• Total Errors: ${errorStats.total}\n`;
+      response += `• Recent (24h): ${errorStats.recent?.length || 0}\n\n`;
+      
+      // Error by component
+      if (errorStats.byComponent && Object.keys(errorStats.byComponent).length > 0) {
+        response += `🔧 *Errors by Component:*\n`;
+        Object.entries(errorStats.byComponent).forEach(([component, count]) => {
+          response += `• ${component}: ${count}\n`;
+        });
+        response += `\n`;
+      }
+      
+      // Error by type
+      if (errorStats.byType && Object.keys(errorStats.byType).length > 0) {
+        response += `📋 *Errors by Type:*\n`;
+        Object.entries(errorStats.byType).forEach(([type, count]) => {
+          response += `• ${type}: ${count}\n`;
+        });
+        response += `\n`;
+      }
+      
+      // Recent errors
+      if (errorStats.recent && errorStats.recent.length > 0) {
+        response += `🕐 *Recent Errors:*\n`;
+        errorStats.recent.slice(0, 5).forEach((error, index) => {
+          const time = new Date(error.timestamp).toLocaleTimeString();
+          response += `${index + 1}. [${time}] ${error.component}: ${error.message.substring(0, 50)}...\n`;
+        });
+      } else {
+        response += `✅ No recent errors found!`;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Error getting error diagnostics:', error);
+      return '❌ Error occurred while retrieving error data.';
     }
   }
 
