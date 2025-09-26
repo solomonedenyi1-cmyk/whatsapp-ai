@@ -186,33 +186,14 @@ class WhatsAppClient:
                     
                     # Wait for authentication
                     self.logger.info("⏳ Waiting for QR code scan...")
+                    WebDriverWait(self.driver, 60).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="chat-list"]'))
+                    )
                     
-                    # Wait for authentication with multiple possible indicators
-                    authenticated = False
-                    timeout = 120  # Increase timeout to 2 minutes
-                    start_time = time.time()
-                    
-                    while time.time() - start_time < timeout and not authenticated:
-                        try:
-                            # Check for multiple possible authentication indicators
-                            if (self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="chat-list"]') or
-                                self.driver.find_elements(By.CSS_SELECTOR, '#main') or
-                                self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="conversation-compose-box-input"]') or
-                                self.driver.find_elements(By.CSS_SELECTOR, '.two')):
-                                authenticated = True
-                                break
-                        except:
-                            pass
-                        
-                        time.sleep(2)
-                    
-                    if authenticated:
-                        self.is_authenticated = True
-                        self.logger.info("✅ QR code scanned successfully!")
-                        await self._wait_for_ready()
-                        break
-                    else:
-                        raise TimeoutException("Authentication timeout")
+                    self.is_authenticated = True
+                    self.logger.info("✅ QR code scanned successfully!")
+                    await self._wait_for_ready()
+                    break
                 
             except TimeoutException:
                 if attempt < max_attempts:
