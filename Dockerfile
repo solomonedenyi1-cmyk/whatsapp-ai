@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libatspi2.0-0 \
     xvfb \
+    x11-utils \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -66,12 +67,27 @@ RUN mkdir -p /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_ca
     && chown -R whatsapp:whatsapp /usr/src/app \
     && chmod -R 755 /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache
 
-# Create startup script
+# Create startup script with better display management
 RUN echo '#!/bin/bash\n\
 echo "🖥️ Starting virtual display..."\n\
-Xvfb :99 -screen 0 $XVFB_WHD -ac +extension GLX +render -noreset &\n\
+# Clean up any existing display locks\n\
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true\n\
+# Create X11 directory with proper permissions\n\
+mkdir -p /tmp/.X11-unix\n\
+chmod 1777 /tmp/.X11-unix\n\
+# Start Xvfb with better error handling\n\
+Xvfb :99 -screen 0 $XVFB_WHD -ac +extension GLX +render -noreset -nolisten tcp &\n\
+XVFB_PID=$!\n\
 echo "⏳ Waiting for display to be ready..."\n\
-sleep 3\n\
+# Wait for display to be ready with timeout\n\
+for i in {1..10}; do\n\
+  if xdpyinfo -display :99 >/dev/null 2>&1; then\n\
+    echo "✅ Display :99 is ready"\n\
+    break\n\
+  fi\n\
+  echo "Waiting for display... ($i/10)"\n\
+  sleep 1\n\
+done\n\
 echo "🚀 Starting WhatsApp AI Bot..."\n\
 npm start' > /usr/src/app/start.sh \
     && chmod +x /usr/src/app/start.sh \

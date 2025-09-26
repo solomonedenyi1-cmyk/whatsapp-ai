@@ -44,41 +44,84 @@ class WhatsAppBot {
   }
 
   /**
-   * Initialize the WhatsApp bot
+   * Initialize the WhatsApp bot with retry logic
    */
   async initialize() {
-    try {
-      console.log('🤖 Initializing WhatsApp AI Bot...');
-      
-      // Update component status
-      await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
-      
-      // Create WhatsApp client
-      this.client = new Client({
-        authStrategy: new LocalAuth({
-          dataPath: config.whatsapp.sessionPath
-        }),
-        puppeteer: config.whatsapp.puppeteerOptions
-      });
+    const maxRetries = 3;
+    let lastError;
 
-      // Set up event listeners
-      this.setupEventListeners();
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🤖 Initializing WhatsApp AI Bot... (Attempt ${attempt}/${maxRetries})`);
+        
+        // Update component status
+        await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
+        
+        // Clean up any existing client
+        if (this.client) {
+          try {
+            await this.client.destroy();
+          } catch (cleanupError) {
+            console.warn('⚠️ Error cleaning up previous client:', cleanupError.message);
+          }
+          this.client = null;
+        }
 
-      // Initialize the client
-      await this.client.initialize();
-      
-      // Update component status
-      await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
-      
-    } catch (error) {
-      console.error('❌ Failed to initialize WhatsApp bot:', error);
-      await this.errorHandler.handleError(error, {
-        component: 'whatsappBot',
-        operation: 'initialize'
-      });
-      await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
-      throw error;
+        // Wait a bit before retry
+        if (attempt > 1) {
+          console.log(`⏳ Waiting ${attempt * 2} seconds before retry...`);
+          await this.delay(attempt * 2000);
+        }
+
+        // Create WhatsApp client with enhanced options
+        this.client = new Client({
+          authStrategy: new LocalAuth({
+            dataPath: config.whatsapp.sessionPath
+          }),
+          puppeteer: {
+            ...config.whatsapp.puppeteerOptions,
+            // Add retry-specific options
+            handleSIGINT: false,
+            handleSIGTERM: false,
+            handleSIGHUP: false
+          }
+        });
+
+        // Set up event listeners
+        this.setupEventListeners();
+
+        // Initialize the client with timeout
+        const initPromise = this.client.initialize();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Client initialization timeout')), 120000);
+        });
+
+        await Promise.race([initPromise, timeoutPromise]);
+        
+        // Update component status
+        await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
+        
+        console.log('✅ WhatsApp bot initialized successfully');
+        return;
+        
+      } catch (error) {
+        lastError = error;
+        console.error(`❌ Failed to initialize WhatsApp bot (attempt ${attempt}/${maxRetries}):`, error.message);
+        
+        await this.errorHandler.handleError(error, {
+          component: 'whatsappBot',
+          operation: 'initialize',
+          attempt: attempt
+        });
+
+        if (attempt === maxRetries) {
+          await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
+          break;
+        }
+      }
     }
+
+    throw new Error(`Failed to initialize WhatsApp bot after ${maxRetries} attempts. Last error: ${lastError.message}`);
   }
 
   /**

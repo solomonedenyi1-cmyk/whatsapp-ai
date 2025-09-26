@@ -23,9 +23,9 @@ const config = {
 
   // WhatsApp Configuration
   whatsapp: {
-    sessionPath: './session',
+    sessionPath: './.wwebjs_auth',
     puppeteerOptions: {
-      headless: true,
+      headless: 'new', // Use new headless mode for better stability
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -47,9 +47,31 @@ const config = {
         '--no-default-browser-check',
         '--no-pings',
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        '--disable-features=VizDisplayCompositor',
+        '--disable-ipc-flooding-protection',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-hang-monitor',
+        '--disable-prompt-on-repost',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-extensions-with-background-pages',
+        '--disable-breakpad',
+        '--disable-features=TranslateUI',
+        '--disable-features=BlinkGenPropertyTrees',
+        '--run-all-compositor-stages-before-draw',
+        '--memory-pressure-off',
+        '--max_old_space_size=4096',
+        '--virtual-time-budget=5000',
+        '--disable-software-rasterizer',
+        '--disable-background-media-suspend'
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? undefined : '/usr/bin/google-chrome-stable')
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? undefined : '/usr/bin/google-chrome-stable'),
+      ignoreDefaultArgs: ['--disable-extensions'],
+      defaultViewport: null,
+      devtools: false,
+      timeout: 60000,
+      protocolTimeout: 60000,
+      slowMo: 0
     }
   },
 
