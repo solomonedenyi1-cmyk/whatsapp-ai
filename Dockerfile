@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     libdrm2 \
     libxkbcommon0 \
     libatspi2.0-0 \
+    xvfb \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -60,10 +61,21 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy application code
 COPY . .
 
-# Create data directory for persistence and set proper permissions
+# Create data directory for persistence and startup script
 RUN mkdir -p /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache \
     && chown -R whatsapp:whatsapp /usr/src/app \
     && chmod -R 755 /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+echo "🖥️ Starting virtual display..."\n\
+Xvfb :99 -screen 0 $XVFB_WHD -ac +extension GLX +render -noreset &\n\
+echo "⏳ Waiting for display to be ready..."\n\
+sleep 3\n\
+echo "🚀 Starting WhatsApp AI Bot..."\n\
+npm start' > /usr/src/app/start.sh \
+    && chmod +x /usr/src/app/start.sh \
+    && chown whatsapp:whatsapp /usr/src/app/start.sh
 
 # Switch to non-root user
 USER whatsapp
@@ -71,7 +83,9 @@ USER whatsapp
 # Set environment variables for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
+ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-extensions --disable-default-apps --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-default-browser-check --no-pings --single-process"
+ENV DISPLAY=:99
+ENV XVFB_WHD=1280x720x16
 
 # Expose port (if needed for health checks)
 EXPOSE 3000
@@ -80,5 +94,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD node -e "console.log('Health check passed')" || exit 1
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application with virtual display
+CMD ["/usr/src/app/start.sh"]

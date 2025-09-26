@@ -34,6 +34,7 @@ services:
       - app_data_prod:/usr/src/app/data
       # Mount config.json from host (users must create this file)
       - ./config.json:/usr/src/app/config.json:ro
+    shm_size: 2gb
     networks:
       - whatsapp-network-prod
     healthcheck:

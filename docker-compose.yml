@@ -23,6 +23,7 @@ services:
       - /whatsapp-ai/whatsapp_sessions:/usr/src/app/.wwebjs_auth
       - /whatsapp-ai/app_data:/usr/src/app/data
       - ./config.json:/usr/src/app/config.json:ro
+    shm_size: 2gb
     networks:
       - whatsapp-network
     healthcheck:
