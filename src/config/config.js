@@ -1,10 +1,10 @@
 require('dotenv').config();
 
 const config = {
-  // Yue-F API Configuration
+  // AI API Configuration
   yuef: {
-    apiUrl: process.env.YUE_F_API_URL || 'https://llms.yuricunha.com',
-    modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
+    apiUrl: process.env.AI_API_URL || 'https://api.example-ai.com/v1',
+    modelName: process.env.AI_MODEL_NAME || 'llama3.1:8b',
     timeout: parseInt(process.env.API_TIMEOUT) || 30000,
   },
 

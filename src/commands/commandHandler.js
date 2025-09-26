@@ -145,7 +145,7 @@ class CommandHandler {
       
       return `📊 *Bot Status*
 
-*Yue-F API:* ${statusEmoji} ${apiStatusText}
+*AI API:* ${statusEmoji} ${apiStatusText}
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
 *Model:* ${config.yuef.modelName}
@@ -166,7 +166,7 @@ class CommandHandler {
     } catch (error) {
       return `📊 *Bot Status*
 
-*Yue-F API:* ❌ Error
+*AI API:* ❌ Error
 *Error:* ${error.message}
 
 *System:* Operational with API issues ⚠️`;
@@ -181,7 +181,7 @@ class CommandHandler {
     return `🤖 *${config.bot.name}*
 
 *About this bot:*
-This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
+This is an AI assistant integrated with WhatsApp, powered by AI language models.
 
 *Features:*
 • Natural conversations with business context
@@ -191,7 +191,7 @@ This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 • Customizable AI persona and knowledge base
 
 *Technology:*
-• Model: Yue-F (via Ollama)
+• Model: Llama 3.1 (via Ollama)
 • API: ${config.yuef.apiUrl}
 • Platform: Node.js + WhatsApp Web
 

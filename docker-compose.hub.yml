@@ -1,0 +1,42 @@
+# Docker Compose - Docker Hub Image + Environment Variables Inline
+# Usage: docker-compose -f docker-compose.hub.yml up
+version: '3.8'
+
+services:
+  whatsapp-ai-bot:
+    image: isyuricunha/whatsapp-ai-bot:latest
+    container_name: whatsapp-ai-bot-hub
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - AI_API_URL=https://api.example-ai.com/v1
+      - AI_MODEL_NAME=llama3.1:8b
+      - API_TIMEOUT=30000
+      - BOT_NAME=WhatsApp AI Assistant
+      - MAX_CONTEXT_MESSAGES=20
+      - MESSAGE_SPLIT_LENGTH=1500
+      - DEBUG=false
+      - ADMIN_WHATSAPP_NUMBER=5511987654321@c.us
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+    volumes:
+      - whatsapp_sessions:/usr/src/app/.wwebjs_auth
+      - app_data:/usr/src/app/data
+    networks:
+      - whatsapp-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  whatsapp_sessions:
+    driver: local
+  app_data:
+    driver: local
+
+networks:
+  whatsapp-network:
+    driver: bridge

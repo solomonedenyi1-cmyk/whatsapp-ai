@@ -1,7 +1,7 @@
 # WhatsApp AI Bot - Product Requirements Document (PRD)
 
 ## 📋 Executive Summary
-This document outlines the requirements for developing a WhatsApp Bot integrated with the Yue-F AI model via API. The bot will serve as an intelligent assistant that can engage in natural conversations through WhatsApp, leveraging the Yue-F language model hosted at https://llms.yuricunha.com.
+This document outlines the requirements for developing a WhatsApp Bot integrated with AI models via API. The bot will serve as an intelligent assistant that can engage in natural conversations through WhatsApp, leveraging AI language models hosted at https://api.example-ai.com/v1.
 
 ## 🎯 Product Overview
 
@@ -111,8 +111,8 @@ To create a seamless conversational AI experience within WhatsApp, allowing user
 **Priority**: P0 (Critical)
 
 **Requirements**:
-- [x] Connect to Yue-F API at https://llms.yuricunha.com
-- [x] Must be compatible with Ollama API format (since Yue-F runs on Ollama)
+- [x] Connect to AI API at https://api.example-ai.com/v1
+- [x] Must be compatible with Ollama API format
 - [x] Send user messages to the AI model
 - [x] Receive and process AI responses
 - [x] Handle API failures gracefully

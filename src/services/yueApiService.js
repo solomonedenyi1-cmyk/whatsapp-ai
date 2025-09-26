@@ -18,7 +18,7 @@ class YueApiService {
   }
 
   /**
-   * Send a chat message to the Yue-F API (Ollama compatible)
+   * Send a chat message to the AI API (Ollama compatible)
    * @param {Array} messages - Array of message objects with role and content
    * @returns {Promise<string>} - The AI response content
    */
@@ -31,24 +31,24 @@ class YueApiService {
       };
 
       if (config.env.debug) {
-        console.log('Sending request to Yue-F API:', JSON.stringify(requestData, null, 2));
+        console.log('Sending request to AI API:', JSON.stringify(requestData, null, 2));
       }
 
       const response = await this.client.post('/api/chat', requestData);
 
       if (config.env.debug) {
-        console.log('Received response from Yue-F API:', JSON.stringify(response.data, null, 2));
+        console.log('Received response from AI API:', JSON.stringify(response.data, null, 2));
       }
 
       // Extract the content from Ollama-compatible response
       if (response.data && response.data.message && response.data.message.content) {
         return response.data.message.content;
       } else {
-        throw new Error('Invalid response format from Yue-F API');
+        throw new Error('Invalid response format from AI API');
       }
 
     } catch (error) {
-      console.error('Error calling Yue-F API:', error.message);
+      console.error('Error calling AI API:', error.message);
       
       if (error.response) {
         console.error('API Response Status:', error.response.status);

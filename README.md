@@ -1,11 +1,11 @@
-# WhatsApp AI Bot - Yue-F Integration
+# WhatsApp AI Bot - AI Integration
 
-An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context and persona.
+An intelligent WhatsApp bot integrated with AI models via Ollama API, featuring customizable business context and persona.
 
 ## 🚀 Features
 
 ### Core Features
-- **Natural Conversations**: Interact with Yue-F AI directly through WhatsApp
+- **Natural Conversations**: Interact with AI models directly through WhatsApp
 - **Business Context**: Customizable AI persona with your business information
 - **Advanced Persistence**: Permanent conversation storage with automatic backup
 - **Analytics & Reporting**: Comprehensive usage analytics and performance metrics
@@ -34,18 +34,65 @@ An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, f
 - Stable internet connection
 - Access to WhatsApp Web
 
-## 🛠️ Installation
+## 🛠️ Installation & Deployment
 
-### Option 1: Docker (Recommended)
+### Docker Deployment Options
 
-#### Using Docker Hub (Pre-built Image)
+We provide 4 different Docker Compose configurations to suit different deployment needs:
+
+#### 1. Build + Environment Variables Inline (`docker-compose.yml`)
+**Use case**: Development, testing, quick setup with custom environment variables
 ```bash
-# Pull the latest image
-docker pull isyuricunha/whatsapp-ai-bot:latest
+# Clone the repository
+git clone https://github.com/your-username/whatsapp-ai.git
+cd whatsapp-ai
 
-# Run with docker-compose (production)
-curl -O https://raw.githubusercontent.com/your-repo/whatsapp-ai/main/docker-compose.prod.yml
-docker-compose -f docker-compose.prod.yml up -d
+# Edit environment variables directly in docker-compose.yml
+# Then build and run
+docker-compose up --build
+```
+
+#### 2. Build + Environment Variables from .env (`docker-compose.env.yml`)
+**Use case**: Development with secure environment variable management
+```bash
+# Clone the repository
+git clone https://github.com/your-username/whatsapp-ai.git
+cd whatsapp-ai
+
+# Create and configure .env file
+cp .env.example .env
+nano .env  # Edit with your settings
+
+# Build and run
+docker-compose -f docker-compose.env.yml up --build
+```
+
+#### 3. Docker Hub + Environment Variables Inline (`docker-compose.hub.yml`)
+**Use case**: Production deployment without building, quick deployment
+```bash
+# Download the compose file
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub.yml
+
+# Edit environment variables in the file
+nano docker-compose.hub.yml
+
+# Run with pre-built image
+docker-compose -f docker-compose.hub.yml up
+```
+
+#### 4. Docker Hub + Environment Variables from .env (`docker-compose.hub-env.yml`)
+**Use case**: Production deployment with secure environment management
+```bash
+# Download the compose file and env example
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub-env.yml
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/.env.example
+
+# Configure environment
+cp .env.example .env
+nano .env  # Edit with your settings
+
+# Run with pre-built image
+docker-compose -f docker-compose.hub-env.yml up
 ```
 
 #### Building from Source
@@ -83,35 +130,62 @@ Replace `your_number@c.us` with your actual WhatsApp number in the format `55123
 
 ## 🐳 Docker Configuration
 
-### Environment Variables
-Both docker-compose files support environment variables via `.env` file or direct environment variable injection:
+### Environment Variables Configuration
+
+All Docker Compose files support environment variables. Choose your preferred method:
+
+**Method 1: Direct in compose file** - Edit environment variables directly in the Docker Compose file
+**Method 2: Using .env file** - Create a `.env` file for secure environment management
 
 ```bash
-# Create .env file for Docker
+# Create .env file from example
 cp .env.example .env
+nano .env  # Edit with your actual values
 ```
 
 **Required Variables:**
-- `ADMIN_WHATSAPP_NUMBER` - Your WhatsApp number for admin access
-- `YUE_F_API_URL` - API endpoint (default: https://llms.yuricunha.com)
-- `YUE_F_MODEL_NAME` - Model name (default: yue-f)
+- `ADMIN_WHATSAPP_NUMBER` - Your WhatsApp number for admin access (format: `5511987654321@c.us`)
+- `AI_API_URL` - Your AI API endpoint (default: `https://api.example-ai.com/v1`)
+- `AI_MODEL_NAME` - AI model name (default: `llama3.1:8b`)
 
 **Optional Variables:**
-- `NODE_ENV` - Environment (production/development)
-- `API_TIMEOUT` - API timeout in ms (default: 30000)
-- `BOT_NAME` - Bot display name
-- `DEBUG` - Enable debug logging
+- `NODE_ENV` - Environment mode (`production`/`development`)
+- `API_TIMEOUT` - API timeout in milliseconds (default: `30000`)
+- `BOT_NAME` - Custom bot display name (default: `WhatsApp AI Assistant`)
+- `DEBUG` - Enable debug logging (`true`/`false`)
+- `MAX_CONTEXT_MESSAGES` - Maximum context messages (default: `20`)
+- `MESSAGE_SPLIT_LENGTH` - Maximum message length (default: `1500`)
 
-### Docker Compose Options
+### Quick Start Guide
 
-**Development (Build from source):**
 ```bash
-docker-compose up -d --build
+# Option 1: Use pre-built image with .env file (Recommended)
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub-env.yml
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/.env.example
+cp .env.example .env
+nano .env  # Configure your settings
+docker-compose -f docker-compose.hub-env.yml up -d
+
+# Option 2: Use pre-built image with inline variables
+curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub.yml
+nano docker-compose.hub.yml  # Edit environment variables
+docker-compose -f docker-compose.hub.yml up -d
 ```
 
-**Production (Pre-built image):**
+**For Development:**
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+# Option 1: Build with .env file
+git clone https://github.com/your-username/whatsapp-ai.git
+cd whatsapp-ai
+cp .env.example .env
+nano .env  # Configure your settings
+docker-compose -f docker-compose.env.yml up --build
+
+# Option 2: Build with inline variables
+git clone https://github.com/your-username/whatsapp-ai.git
+cd whatsapp-ai
+nano docker-compose.yml  # Edit environment variables
+docker-compose up --build
 ```
 
 ### Data Persistence
@@ -220,8 +294,8 @@ Active conversations: 1
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `YUE_F_API_URL` | Yue-F API URL | `https://llms.yuricunha.com` |
-| `YUE_F_MODEL_NAME` | Model name | `yue-f` |
+| `AI_API_URL` | AI API URL | `https://api.example-ai.com/v1` |
+| `AI_MODEL_NAME` | Model name | `llama3.1:8b` |
 | `API_TIMEOUT` | API timeout (ms) | `30000` |
 | `BOT_NAME` | Bot name | `WhatsApp AI Bot` |
 | `MAX_CONTEXT_MESSAGES` | Max messages in context | `20` |
