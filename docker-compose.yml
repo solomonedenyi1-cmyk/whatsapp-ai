@@ -9,8 +9,8 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - AI_API_URL=https://api.example-ai.com/v1
-      - AI_MODEL_NAME=llama3.1:8b
+      - AI_API_URL=https://llms.yuricunha.com
+      - AI_MODEL_NAME=yue-f
       - API_TIMEOUT=30000
       - BOT_NAME=WhatsApp AI Assistant
       - MAX_CONTEXT_MESSAGES=20
