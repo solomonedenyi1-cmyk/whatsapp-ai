@@ -1,106 +1,117 @@
 /**
  * AI Assistant Context Configuration
  * 
- * This file contains the system context that defines the AI's persona,
- * knowledge base, and behavior. Customize this to match your business needs.
+ * This file loads the AI's persona, knowledge base, and behavior from config.json
+ * Edit config.json in the root directory to customize your AI assistant.
  */
 
-const businessContext = {
-  // Assistant Identity
-  identity: {
-    name: "Yue",
-    role: "Professional AI Assistant",
-    personality: "Friendly, professional, knowledgeable, and helpful",
-    language: "Portuguese (Brazilian)",
-    tone: "Professional but approachable"
-  },
+const fs = require('fs');
+const path = require('path');
 
-  // Business Information
-  business: {
-    name: "Your Company Name",
-    description: "Brief description of your business",
-    website: "https://yourwebsite.com",
-    email: "contact@yourcompany.com",
-    phone: "+55 11 99999-9999",
-    address: "Your business address",
-    workingHours: "Monday to Friday, 9 AM to 6 PM (GMT-3)",
+let businessContext = {};
+
+/**
+ * Load configuration from config.json
+ */
+function loadConfig() {
+  try {
+    const configPath = path.join(__dirname, '../../config.json');
+    const configData = fs.readFileSync(configPath, 'utf8');
+    const config = JSON.parse(configData);
     
-    // Services offered
-    services: [
-      {
-        name: "Service 1",
-        description: "Description of service 1",
-        price: "R$ 299",
-        duration: "2 hours"
+    // Transform JSON config to internal format
+    businessContext = {
+      identity: {
+        name: config.ai_identity.name,
+        gender: config.ai_identity.gender,
+        role: config.ai_identity.role,
+        personality: config.ai_identity.personality,
+        language: config.ai_identity.language,
+        tone: config.ai_identity.tone
       },
-      {
-        name: "Service 2", 
-        description: "Description of service 2",
-        price: "R$ 599",
-        duration: "1 day"
-      }
-      // Add more services as needed
-    ],
-
-    // Products (if applicable)
-    products: [
-      {
-        name: "Product 1",
-        description: "Description of product 1",
-        price: "R$ 199",
-        availability: "In stock"
-      }
-      // Add more products as needed
-    ],
-
-    // Frequently Asked Questions
-    faq: [
-      {
-        question: "What are your payment methods?",
-        answer: "We accept credit cards, debit cards, PIX, and bank transfers."
+      business: {
+        name: config.business.name,
+        description: config.business.description,
+        website: config.business.website,
+        email: config.business.email,
+        phone: config.business.phone,
+        address: config.business.address,
+        workingHours: config.business.working_hours,
+        services: config.services || [],
+        products: config.products || [],
+        faq: config.faq || []
       },
-      {
-        question: "Do you offer guarantees?",
-        answer: "Yes, we offer a 30-day satisfaction guarantee on all our services."
+      owner: config.owner,
+      capabilities: config.capabilities || [],
+      limitations: config.limitations || [],
+      standardResponses: {
+        greeting: config.standard_responses.greeting.replace('{name}', config.ai_identity.name),
+        goodbye: config.standard_responses.goodbye,
+        unavailable: config.standard_responses.unavailable,
+        businessHours: config.standard_responses.business_hours.replace('{working_hours}', config.business.working_hours),
+        emergency: config.standard_responses.emergency.replace('{phone}', config.business.phone)
       }
-      // Add more FAQs as needed
-    ]
-  },
-
-  // Owner/Founder Information
-  owner: {
-    name: "Your Name",
-    title: "Founder & CEO",
-    bio: "Brief bio about yourself and your expertise",
-    experience: "X years of experience in your field",
-    specialties: ["Specialty 1", "Specialty 2", "Specialty 3"]
-  },
-
-  // Capabilities and Limitations
-  capabilities: [
-    "Provide information about services and products",
-    "Schedule appointments and consultations",
-    "Answer frequently asked questions",
-    "Provide technical support",
-    "Share company policies and procedures",
-    "Collect customer feedback"
-  ],
-
-  limitations: [
-    "Cannot process payments directly",
-    "Cannot access external systems without integration",
-    "Cannot make binding commitments without human approval"
-  ],
-
-  // Standard Responses
-  standardResponses: {
-    greeting: "Hello! I'm Yue, your AI assistant. How can I help you today?",
-    goodbye: "Thank you for contacting us! Have a great day!",
-    unavailable: "I'm sorry, I don't have that information right now. Let me connect you with a human representative.",
-    businessHours: "Our business hours are Monday to Friday, 9 AM to 6 PM (GMT-3). I'm available 24/7 to help with basic questions!",
-    emergency: "For urgent matters, please call us directly at +55 11 99999-9999."
+    };
+    
+    console.log(`✅ Configuration loaded successfully for ${businessContext.identity.name}`);
+    return businessContext;
+    
+  } catch (error) {
+    console.error('❌ Error loading config.json:', error.message);
+    console.log('📝 Using default configuration. Please check your config.json file.');
+    
+    // Fallback to default configuration
+    businessContext = getDefaultConfig();
+    return businessContext;
   }
-};
+}
+
+/**
+ * Get default configuration if config.json fails to load
+ */
+function getDefaultConfig() {
+  return {
+    identity: {
+      name: "Yue",
+      gender: "female",
+      role: "AI Assistant",
+      personality: "friendly, professional, and helpful",
+      language: "Portuguese (Brazilian)",
+      tone: "professional but approachable"
+    },
+    business: {
+      name: "Your Company Name",
+      description: "Please edit config.json to add your business information",
+      website: "https://yourwebsite.com",
+      email: "contact@yourcompany.com",
+      phone: "+55 11 99999-9999",
+      address: "Your business address",
+      workingHours: "Monday to Friday, 9 AM to 6 PM (GMT-3)",
+      services: [],
+      products: [],
+      faq: []
+    },
+    owner: {
+      name: "Your Name",
+      title: "Owner",
+      bio: "Please edit config.json to add your information",
+      experience: "Please add your experience",
+      specialties: []
+    },
+    capabilities: ["Answer basic questions", "Provide company information"],
+    limitations: ["Cannot process payments", "Cannot access external systems"],
+    standardResponses: {
+      greeting: "Hello! I'm Yue, your AI assistant. How can I help you today?",
+      goodbye: "Thank you for contacting us! Have a great day!",
+      unavailable: "I'm sorry, I don't have that information right now.",
+      businessHours: "Please check our business hours in the configuration.",
+      emergency: "For urgent matters, please contact us directly."
+    }
+  };
+}
+
+// Load configuration on module initialization
+loadConfig();
 
 /**
  * Generate system prompt based on context configuration
@@ -108,10 +119,14 @@ const businessContext = {
 function generateSystemPrompt() {
   const context = businessContext;
   
-  return `You are ${context.identity.name}, a ${context.identity.role} for ${context.business.name}.
+  // Gender-specific pronouns and language
+  const pronouns = getPronouns(context.identity.gender);
+  
+  return `You are ${context.identity.name}, a ${context.identity.gender} ${context.identity.role} for ${context.business.name}.
 
 IDENTITY & PERSONALITY:
 - Name: ${context.identity.name}
+- Gender: ${context.identity.gender} (use ${pronouns.subject}/${pronouns.object}/${pronouns.possessive} pronouns)
 - Role: ${context.identity.role}
 - Personality: ${context.identity.personality}
 - Communication: Always respond in ${context.identity.language} with a ${context.identity.tone} tone
@@ -134,6 +149,11 @@ ${context.business.products.map(product =>
   `- ${product.name}: ${product.description} (${product.price}, ${product.availability})`
 ).join('\n')}
 
+FREQUENTLY ASKED QUESTIONS:
+${context.business.faq.map(faq => 
+  `Q: ${faq.question}\nA: ${faq.answer}`
+).join('\n\n')}
+
 OWNER INFORMATION:
 - ${context.owner.name}, ${context.owner.title}
 - ${context.owner.bio}
@@ -151,9 +171,10 @@ INSTRUCTIONS:
 2. Provide accurate information about services, products, and policies
 3. If you don't know something, admit it and offer to connect them with a human
 4. Be proactive in offering relevant services based on customer needs
-5. Always maintain a friendly but professional tone
+5. Always maintain a ${context.identity.tone} tone
 6. Use the standard responses when appropriate
 7. Remember to collect contact information for follow-ups when relevant
+8. Identify yourself with the correct gender pronouns (${pronouns.subject}/${pronouns.object}/${pronouns.possessive})
 
 STANDARD RESPONSES:
 - Greeting: "${context.standardResponses.greeting}"
@@ -161,6 +182,28 @@ STANDARD RESPONSES:
 - Emergency: "${context.standardResponses.emergency}"
 
 Remember: You represent ${context.business.name} and ${context.owner.name}. Always provide excellent customer service!`;
+}
+
+/**
+ * Get pronouns based on gender
+ */
+function getPronouns(gender) {
+  const pronounMap = {
+    'female': { subject: 'she', object: 'her', possessive: 'her' },
+    'male': { subject: 'he', object: 'him', possessive: 'his' },
+    'non-binary': { subject: 'they', object: 'them', possessive: 'their' },
+    'neutral': { subject: 'they', object: 'them', possessive: 'their' }
+  };
+  
+  return pronounMap[gender?.toLowerCase()] || pronounMap['neutral'];
+}
+
+/**
+ * Reload configuration from config.json
+ */
+function reloadConfig() {
+  console.log('🔄 Reloading configuration from config.json...');
+  return loadConfig();
 }
 
 module.exports = {

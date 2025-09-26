@@ -37,29 +37,34 @@ To create a seamless conversational AI experience within WhatsApp, allowing user
 ## ✨ Core Features
 
 ### 6. Business Context System
-**Priority**: P0 (Critical) - **NEW in v1.1**
+**Priority**: P0 (Critical) - **UPDATED in v1.2**
 
 **Requirements**:
-- [x] Customizable AI persona and identity
+- [x] Customizable AI persona and identity with gender support
 - [x] Business information integration (services, products, contact info)
 - [x] Owner/founder profile integration
 - [x] FAQ database for common questions
 - [x] Dynamic context loading and reloading
 - [x] Context management commands
+- [x] Simplified JSON configuration for non-developers
+- [x] Gender identity support with automatic pronoun usage
 
 **Context Configuration**:
-- AI Identity: Name, role, personality, communication style
+- AI Identity: Name, gender, role, personality, communication style
 - Business Info: Company details, services, products, pricing
 - Owner Profile: Personal information, expertise, background
 - FAQ Database: Pre-configured answers to common questions
 - Capabilities & Limitations: What the AI can and cannot do
+- Gender Support: Female, male, non-binary, neutral with appropriate pronouns
 
 **Acceptance Criteria**:
-- [x] Context is loaded from configuration file
+- [x] Context is loaded from simple config.json file
 - [x] AI responds with business-specific knowledge
 - [x] Context can be reloaded without restart (/reload command)
 - [x] Current context can be viewed (/context command)
 - [x] Professional assistant behavior with business context
+- [x] Automatic gender pronoun usage (she/her, he/him, they/them)
+- [x] User-friendly configuration requiring no coding knowledge
 
 ## ✨ Core Features
 
@@ -207,6 +212,9 @@ POST /api/chat
 - [x] Dynamic context loading/reloading
 - [x] Context management commands
 - [x] Professional assistant capabilities
+- [x] Simplified JSON configuration system
+- [x] Gender identity support with pronouns
+- [x] User-friendly setup for non-developers
 
 ### Phase 2: Enhanced Features (Next Phase)
 - [ ] Advanced context persistence
@@ -240,10 +248,14 @@ POST /api/chat
 - [x] Dynamic context loading and reloading
 - [x] Professional AI assistant capabilities
 - [x] All content converted to English
+- [x] Simplified JSON configuration system
+- [x] Gender identity support with automatic pronouns
+- [x] User-friendly setup for non-technical users
 
 ### Current Status
 - ✅ Phase 1: Core functionality complete
 - ✅ Phase 1.5: Business context system complete
+- ✅ Phase 1.6: Simplified configuration system complete
 - 🔄 Ready for Phase 2: Enhanced features
 
 ### Next Steps (Phase 2)
@@ -273,7 +285,7 @@ POST /api/chat
 
 ---
 
-**Document Version**: 1.1  
+**Document Version**: 1.2  
 **Last Updated**: September 26, 2025  
 **Next Review**: October 2025  
-**Status**: Phase 1.5 Complete - Business Context System Implemented
+**Status**: Phase 1.6 Complete - Simplified Configuration System Implemented

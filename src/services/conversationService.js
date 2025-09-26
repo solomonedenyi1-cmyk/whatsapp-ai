@@ -78,6 +78,8 @@ class ConversationService {
    * Reload system prompt from context configuration
    */
   reloadSystemPrompt() {
+    const { reloadConfig } = require('../config/context');
+    reloadConfig();
     this.systemPrompt = generateSystemPrompt();
   }
 

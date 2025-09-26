@@ -38,11 +38,13 @@ cp .env.example .env
 Edit the `.env` file if needed (default settings should work).
 
 4. **Customize your AI assistant** (Important!):
-Edit `src/config/context.js` to set up your business information:
-- Business name, services, and products
-- AI assistant name and personality
+Edit `config.json` in the root directory to set up your business information:
+- AI identity (name, gender, personality)
+- Business details (services, products, contact info)
 - Owner information and expertise
 - FAQ and standard responses
+
+**No coding required!** Just edit the simple JSON file.
 
 5. **Run the bot**:
 ```bash
@@ -70,8 +72,8 @@ npm start
 
 The bot comes with a powerful context system that allows you to create a professional AI assistant:
 
-1. **Edit `src/config/context.js`** to customize:
-   - **Identity**: AI name, role, personality
+1. **Edit `config.json`** (in the root directory) to customize:
+   - **AI Identity**: Name, gender, role, personality
    - **Business Info**: Company name, services, products, contact info
    - **Owner Details**: Your information and expertise
    - **FAQ**: Common questions and answers
@@ -80,6 +82,9 @@ The bot comes with a powerful context system that allows you to create a profess
 2. **Use `/reload`** command to apply changes without restarting
 
 3. **Use `/context`** to verify current configuration
+
+**Easy Configuration - No Coding Required!**
+The configuration is now in simple JSON format that anyone can edit.
 
 ### Normal Conversation
 
@@ -119,36 +124,48 @@ Active conversations: 1
 
 ### Business Context Configuration
 
-The most important configuration is in `src/config/context.js`. This file defines:
+The most important configuration is in `config.json` (root directory). This file defines:
 
-- **AI Identity**: Name, role, personality, communication style
+- **AI Identity**: Name, gender, role, personality, communication style
 - **Business Information**: Company details, services, products, contact info
 - **Owner Profile**: Your information, expertise, and background
 - **FAQ Database**: Pre-configured answers to common questions
 - **Capabilities & Limitations**: What the AI can and cannot do
 
 **Example customization:**
-```javascript
-const businessContext = {
-  identity: {
-    name: "Yue",
-    role: "Customer Service AI Assistant",
-    personality: "Professional, helpful, and knowledgeable"
+```json
+{
+  "ai_identity": {
+    "name": "Yue",
+    "gender": "female",
+    "role": "Customer Service AI Assistant",
+    "personality": "professional, helpful, and knowledgeable",
+    "language": "Portuguese (Brazilian)",
+    "tone": "professional but approachable"
   },
-  business: {
-    name: "Tech Solutions Inc",
-    description: "We provide innovative tech solutions for businesses",
-    services: [
-      {
-        name: "Web Development",
-        description: "Custom websites and web applications",
-        price: "R$ 2,999",
-        duration: "2-4 weeks"
-      }
-    ]
-  }
-};
+  "business": {
+    "name": "Tech Solutions Inc",
+    "description": "We provide innovative tech solutions for businesses",
+    "website": "https://techsolutions.com",
+    "email": "contact@techsolutions.com",
+    "phone": "+55 11 99999-9999"
+  },
+  "services": [
+    {
+      "name": "Web Development",
+      "description": "Custom websites and web applications",
+      "price": "R$ 2,999",
+      "duration": "2-4 weeks"
+    }
+  ]
+}
 ```
+
+**Gender Identity Support:**
+The AI can identify as:
+- `"female"` - Uses she/her/her pronouns
+- `"male"` - Uses he/him/his pronouns  
+- `"non-binary"` or `"neutral"` - Uses they/them/their pronouns
 
 ### Project Structure
 
@@ -187,10 +204,16 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
 
 ### Customizing the AI Assistant
 
-1. **Edit Context**: Modify `src/config/context.js` to customize the AI's knowledge and personality
+1. **Edit Configuration**: Modify `config.json` to customize the AI's knowledge and personality
 2. **Test Changes**: Use `/reload` command to apply changes without restarting
 3. **Verify Setup**: Use `/context` command to check current configuration
 4. **Monitor Performance**: Use `/status` to check system health
+
+**Configuration Tips:**
+- Use simple, clear language in the JSON file
+- Add as many services, products, and FAQ items as needed
+- The AI will automatically use the correct gender pronouns
+- Test your configuration with `/context` before going live
 
 ## 📊 Implementation Status
 
@@ -243,9 +266,14 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
    - Make sure WhatsApp Web is not open elsewhere
 
 4. **AI responses seem generic**:
-   - Edit `src/config/context.js` with your business information
+   - Edit `config.json` with your business information
    - Use `/reload` to apply changes
    - Use `/context` to verify configuration
+
+5. **Configuration file errors**:
+   - Check that `config.json` has valid JSON syntax
+   - Use a JSON validator online if needed
+   - The bot will use default settings if config.json has errors
 
 ### Error Logs
 
@@ -260,9 +288,17 @@ DEBUG=true npm start
 - **Issues**: Open a GitHub issue for technical problems
 - **Documentation**: Check this README for common questions
 - **API**: Check Yue-F API documentation for connectivity issues
-- **Context Setup**: See `src/config/context.js` for business configuration examples
+- **Context Setup**: See `config.json` for business configuration examples
+- **JSON Help**: Use online JSON validators to check your configuration syntax
 
 ## 📝 Changelog
+
+### v1.2.0 (September 2025)
+- **NEW**: Simplified JSON configuration system (no coding required!)
+- **NEW**: Gender identity support with automatic pronoun usage
+- **NEW**: User-friendly configuration format for non-developers
+- **IMPROVED**: Configuration now in simple `config.json` file
+- **IMPROVED**: Better error handling for configuration issues
 
 ### v1.1.0 (September 2025)
 - **NEW**: Business context system for professional AI assistants
@@ -293,3 +329,5 @@ MIT License - see LICENSE file for details.
 - **Personal Productivity**: AI helper with your specific knowledge base
 - **Technical Support**: AI that knows your products and services
 - **Sales Assistant**: AI that can provide pricing and product information
+- **Non-Technical Users**: Simple JSON configuration, no coding required!
+- **Gender-Inclusive AI**: Supports all gender identities with proper pronouns
