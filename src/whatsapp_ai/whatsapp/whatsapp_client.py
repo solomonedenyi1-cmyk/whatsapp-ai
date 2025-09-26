@@ -355,14 +355,113 @@ class WhatsAppClient:
         """Get unread messages"""
         messages = []
         try:
-            # This is a simplified implementation
-            # In a real implementation, you'd need to track message state
-            # and detect new messages more sophisticated way
+            # Look for chats with unread message indicators
+            unread_chats = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="chat-list"] [aria-label*="unread"], [data-testid="chat-list"] [data-testid="unread-count"]')
             
-            # For now, return empty list
-            # This would be implemented with proper message detection
-            pass
+            self.logger.debug(f"🔍 Found {len(unread_chats)} chats with unread indicators")
             
+            # Also check for chats with recent activity (green dot or bold text)
+            if not unread_chats:
+                recent_chats = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="chat-list"] > div')[:5]  # Check first 5 chats
+                self.logger.debug(f"🔍 Checking {len(recent_chats)} recent chats for new messages")
+            else:
+                recent_chats = []
+            
+            # Process unread chats first, then recent chats
+            all_chats_to_check = []
+            
+            # Add unread chats
+            for chat in unread_chats:
+                try:
+                    # Find the parent chat element
+                    chat_element = chat.find_element(By.XPATH, "./ancestor::div[contains(@data-testid, 'chat-list') or contains(@class, 'chat')]")
+                    if chat_element not in all_chats_to_check:
+                        all_chats_to_check.append(chat_element)
+                except:
+                    pass
+            
+            # Add recent chats if no unread found
+            if not all_chats_to_check:
+                all_chats_to_check = recent_chats
+            
+            for chat_element in all_chats_to_check[:3]:  # Limit to 3 chats to avoid spam
+                try:
+                    # Click on the chat to open it
+                    chat_element.click()
+                    time.sleep(1)
+                    
+                    # Get chat info
+                    try:
+                        chat_name_element = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="conversation-info-header-chat-title"]')
+                        chat_name = chat_name_element.text
+                    except:
+                        chat_name = "Unknown"
+                    
+                    # Get recent messages from this chat
+                    message_elements = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="msg-container"]')
+                    
+                    # Check last few messages for new ones
+                    for msg_element in message_elements[-3:]:  # Check last 3 messages
+                        try:
+                            # Check if message is incoming (not sent by us)
+                            is_incoming = len(msg_element.find_elements(By.CSS_SELECTOR, '[data-testid="msg-container-send-failed"], [data-testid="msg-dblcheck"], [data-testid="msg-check"]')) == 0
+                            
+                            if is_incoming:
+                                # Get message text
+                                text_elements = msg_element.find_elements(By.CSS_SELECTOR, '[data-testid="conversation-text-content"], .selectable-text')
+                                message_text = ""
+                                for text_elem in text_elements:
+                                    if text_elem.text:
+                                        message_text += text_elem.text + " "
+                                
+                                message_text = message_text.strip()
+                                
+                                if message_text:
+                                    # Get timestamp
+                                    try:
+                                        time_element = msg_element.find_element(By.CSS_SELECTOR, '[data-testid="msg-meta-time"]')
+                                        timestamp = time_element.get_attribute('title') or time_element.text
+                                    except:
+                                        timestamp = "Unknown"
+                                    
+                                    message_data = {
+                                        'chat_id': chat_name,
+                                        'chat_name': chat_name,
+                                        'message': message_text,
+                                        'timestamp': timestamp,
+                                        'is_incoming': True
+                                    }
+                                    
+                                    # Simple duplicate check - avoid processing same message multiple times
+                                    if not hasattr(self, '_processed_messages'):
+                                        self._processed_messages = set()
+                                    
+                                    message_key = f"{chat_name}:{message_text[:50]}:{timestamp}"
+                                    if message_key not in self._processed_messages:
+                                        messages.append(message_data)
+                                        self._processed_messages.add(message_key)
+                                        self.logger.info(f"📨 New message from {chat_name}: {message_text[:100]}...")
+                                        
+                                        # Limit processed messages cache size
+                                        if len(self._processed_messages) > 100:
+                                            # Remove oldest entries (simple cleanup)
+                                            old_messages = list(self._processed_messages)[:50]
+                                            for old_msg in old_messages:
+                                                self._processed_messages.discard(old_msg)
+                        
+                        except Exception as msg_error:
+                            self.logger.debug(f"Error processing message: {msg_error}")
+                            continue
+                
+                except Exception as chat_error:
+                    self.logger.debug(f"Error processing chat: {chat_error}")
+                    continue
+            
+            if messages:
+                self.logger.info(f"📬 Found {len(messages)} new messages to process")
+            else:
+                self.logger.debug("📭 No new messages found")
+                
         except Exception as e:
             self.logger.error(f"❌ Error getting unread messages: {e}")
         
