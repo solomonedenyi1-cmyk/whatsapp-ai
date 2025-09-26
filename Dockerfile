@@ -95,4 +95,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD node -e "console.log('Health check passed')" || exit 1
 
 # Start the application with virtual display
-CMD ["/usr/src/app/start.sh"]
+CMD ["bash", "/usr/src/app/start.sh"]
