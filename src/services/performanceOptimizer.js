@@ -19,12 +19,15 @@ class PerformanceOptimizer extends EventEmitter {
       errorRate: 0.05 // 5%
     };
     
-    // Performance metrics
+    // Initialize metrics
     this.metrics = {
-      messageQueue: [],
-      responseTimeHistory: [],
       memoryHistory: [],
-      errorRateHistory: []
+      responseTimeHistory: [],
+      errorRateHistory: [],
+      messageQueue: [],
+      messagesProcessed: 0,
+      totalMessageLength: 0,
+      messageHistory: []
     };
     
     // Optimization flags
@@ -246,27 +249,82 @@ class PerformanceOptimizer extends EventEmitter {
   }
 
   /**
-   * Record response time
+   * Record message received
    */
-  recordResponseTime(startTime, endTime, operation = 'unknown') {
-    const responseTime = endTime - startTime;
+  recordMessageReceived(chatId, messageLength) {
+    this.metrics.messagesProcessed++;
+    this.metrics.totalMessageLength += messageLength;
     
-    this.metrics.responseTimeHistory.push({
-      timestamp: endTime,
-      responseTime,
-      operation
+    // Update message queue stats
+    this.metrics.messageQueue.processed = this.metrics.messagesProcessed;
+    
+    // Record in history for analytics
+    this.metrics.messageHistory = this.metrics.messageHistory || [];
+    this.metrics.messageHistory.push({
+      timestamp: Date.now(),
+      chatId,
+      length: messageLength
     });
     
-    // Check threshold
-    if (responseTime > this.thresholds.responseTime) {
-      this.emit('responseTimeThresholdExceeded', { 
-        responseTime, 
-        threshold: this.thresholds.responseTime,
-        operation 
-      });
+    // Keep only last 1000 messages in history
+    if (this.metrics.messageHistory.length > 1000) {
+      this.metrics.messageHistory = this.metrics.messageHistory.slice(-1000);
+    }
+  }
+
+  /**
+   * Record response time
+   */
+  recordResponseTime(responseTime) {
+    this.metrics.responseTimeHistory.push({
+      timestamp: Date.now(),
+      responseTime
+    });
+    
+    // Update running averages
+    this.updateResponseTimeStats(responseTime);
+    
+    // Check thresholds
+    this.checkResponseTimeThreshold(responseTime);
+    
+    // Clean old data
+    this.clearOldMetrics();
+    return responseTime;
+  }
+
+  /**
+   * Update response time statistics
+   */
+  updateResponseTimeStats(responseTime) {
+    if (!this.responseTimeStats) {
+      this.responseTimeStats = {
+        min: responseTime,
+        max: responseTime,
+        total: responseTime,
+        count: 1,
+        average: responseTime
+      };
+      return;
     }
     
-    return responseTime;
+    this.responseTimeStats.min = Math.min(this.responseTimeStats.min, responseTime);
+    this.responseTimeStats.max = Math.max(this.responseTimeStats.max, responseTime);
+    this.responseTimeStats.total += responseTime;
+    this.responseTimeStats.count++;
+    this.responseTimeStats.average = this.responseTimeStats.total / this.responseTimeStats.count;
+  }
+
+  /**
+   * Check response time threshold
+   */
+  checkResponseTimeThreshold(responseTime) {
+    if (responseTime > this.thresholds.responseTime) {
+      this.emit('responseTimeThresholdExceeded', {
+        responseTime,
+        threshold: this.thresholds.responseTime,
+        timestamp: Date.now()
+      });
+    }
   }
 
   /**
@@ -306,16 +364,34 @@ class PerformanceOptimizer extends EventEmitter {
    */
   async performCleanup() {
     try {
-      await this.optimizeCache();
+      // Clear expired cache entries
+      this.clearExpiredCache();
+      
+      // Clear old metrics
       this.clearOldMetrics();
       
-      // Log performance stats
-      const stats = this.getPerformanceStats();
-      console.log(`📊 Performance: Mem: ${stats.memory.current}MB, Cache: ${stats.cache.hitRate}%, Queue: ${stats.messageQueue.size}`);
+      // Garbage collection hint
+      if (global.gc) {
+        global.gc();
+      }
       
+      console.log('🧹 Performance cleanup completed');
     } catch (error) {
-      console.error('❌ Performance cleanup failed:', error.message);
+      console.error('❌ Error during performance cleanup:', error);
     }
+  }
+
+  /**
+   * Clear expired cache entries
+   */
+  clearExpiredCache() {
+    const now = Date.now();
+    for (const [key, cached] of this.cache.entries()) {
+      if (cached.ttl && (now - cached.timestamp) > cached.ttl) {
+        this.cache.delete(key);
+      }
+    }
+    this.cacheStats.size = this.cache.size;
   }
 
   /**
@@ -323,40 +399,53 @@ class PerformanceOptimizer extends EventEmitter {
    */
   getPerformanceStats() {
     const memUsage = process.memoryUsage();
-    const currentMemory = memUsage.heapUsed / 1024 / 1024;
+    const currentMemoryMB = memUsage.heapUsed / 1024 / 1024;
     
     // Calculate averages
-    const avgResponseTime = this.metrics.responseTimeHistory.length > 0 ?
-      this.metrics.responseTimeHistory.reduce((sum, entry) => sum + entry.responseTime, 0) / this.metrics.responseTimeHistory.length : 0;
+    const avgMemory = this.metrics.memoryHistory.length > 0 
+      ? this.metrics.memoryHistory.reduce((sum, m) => sum + m.memory, 0) / this.metrics.memoryHistory.length 
+      : currentMemoryMB;
     
-    const cacheHitRate = (this.cacheStats.hits + this.cacheStats.misses) > 0 ?
-      (this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100 : 0;
+    const avgResponseTime = this.responseTimeStats ? this.responseTimeStats.average : 0;
     
     return {
-      timestamp: new Date().toISOString(),
       memory: {
-        current: Math.round(currentMemory),
-        threshold: this.thresholds.memoryUsage,
-        history: this.metrics.memoryHistory.slice(-10)
+        current: currentMemoryMB,
+        average: avgMemory,
+        peak: Math.max(...this.metrics.memoryHistory.map(m => m.memory), currentMemoryMB)
       },
       responseTime: {
-        average: Math.round(avgResponseTime),
-        threshold: this.thresholds.responseTime,
-        recent: this.metrics.responseTimeHistory.slice(-10)
+        average: avgResponseTime,
+        min: this.responseTimeStats ? this.responseTimeStats.min : 0,
+        max: this.responseTimeStats ? this.responseTimeStats.max : 0
       },
       cache: {
+        hitRate: this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses) || 0,
         size: this.cacheStats.size,
-        hitRate: Math.round(cacheHitRate),
-        hits: this.cacheStats.hits,
-        misses: this.cacheStats.misses
+        memoryUsage: this.cache.size * 0.1 // Rough estimate
       },
       messageQueue: {
         size: this.metrics.messageQueue.length,
-        threshold: this.thresholds.messageQueueSize
-      },
-      uptime: Math.round(process.uptime()),
-      optimizations: this.optimizations
+        processed: this.metrics.messagesProcessed || 0,
+        averageWaitTime: this.calculateAverageWaitTime()
+      }
     };
+  }
+
+  /**
+   * Calculate average wait time for message queue
+   */
+  calculateAverageWaitTime() {
+    if (this.metrics.messageQueue.length === 0) {
+      return 0;
+    }
+    
+    const now = Date.now();
+    const totalWaitTime = this.metrics.messageQueue.reduce((sum, msg) => {
+      return sum + (now - msg.timestamp);
+    }, 0);
+    
+    return totalWaitTime / this.metrics.messageQueue.length;
   }
 
   /**
@@ -381,7 +470,7 @@ class PerformanceOptimizer extends EventEmitter {
    * Generate unique ID
    */
   generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -408,13 +497,19 @@ class PerformanceOptimizer extends EventEmitter {
   }
 
   /**
-   * Cleanup and shutdown
+   * Shutdown performance optimizer
    */
-  shutdown() {
-    this.stopPerformanceMonitoring();
-    this.cache.clear();
-    this.metrics.messageQueue = [];
-    console.log('🛑 Performance optimizer shutdown complete');
+  async shutdown() {
+    try {
+      this.stopPerformanceMonitoring();
+      
+      // Final cleanup
+      await this.performCleanup();
+      
+      console.log('✅ Performance optimizer shutdown complete');
+    } catch (error) {
+      console.error('❌ Error during performance optimizer shutdown:', error);
+    }
   }
 }
 
