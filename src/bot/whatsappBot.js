@@ -88,14 +88,9 @@ class WhatsAppBot {
           arg.startsWith('--user-data-dir=') ? `--user-data-dir=${userDataDir}` : arg
         );
         
-        // Add stability options for headless environment
-        puppeteerOptions.args.push(
-          '--disable-blink-features=AutomationControlled',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-canvas-aa',
-          '--disable-2d-canvas-clip-aa',
-          '--disable-gl-drawing-for-tests',
-          '--disable-dev-shm-usage'
+        // Remove duplicate args that are already in config
+        puppeteerOptions.args = puppeteerOptions.args.filter((arg, index, arr) => 
+          arr.indexOf(arg) === index
         );
         
         this.client = new Client({
