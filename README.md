@@ -44,7 +44,7 @@ We provide 4 different Docker Compose configurations to suit different deploymen
 **Use case**: Development, testing, quick setup with custom environment variables
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/whatsapp-ai.git
+git clone https://github.com/isyuricunha/whatsapp-ai.git
 cd whatsapp-ai
 
 # Create your config.json from the example
@@ -60,7 +60,7 @@ docker-compose up --build
 **Use case**: Development with secure environment variable management
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/whatsapp-ai.git
+git clone https://github.com/isyuricunha/whatsapp-ai.git
 cd whatsapp-ai
 
 # Create your config.json from the example
@@ -199,7 +199,7 @@ docker-compose -f docker-compose.hub.yml up -d
 **For Development:**
 ```bash
 # Option 1: Build with .env file
-git clone https://github.com/your-username/whatsapp-ai.git
+git clone https://github.com/isyuricunha/whatsapp-ai.git
 cd whatsapp-ai
 cp config.example.json config.json
 nano config.json  # Configure your business information
@@ -208,7 +208,7 @@ nano .env  # Configure your settings
 docker-compose -f docker-compose.env.yml up --build
 
 # Option 2: Build with inline variables
-git clone https://github.com/your-username/whatsapp-ai.git
+git clone https://github.com/isyuricunha/whatsapp-ai.git
 cd whatsapp-ai
 cp config.example.json config.json
 nano config.json  # Configure your business information
