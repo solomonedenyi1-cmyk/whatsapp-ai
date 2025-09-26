@@ -1,7 +1,7 @@
 # WhatsApp AI Bot - Python Edition
 # Multi-stage Docker build for optimized production image
 
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -42,13 +42,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     xvfb \
     x11-utils \
-    # Chrome browser
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    ca-certificates \
+    # Chrome browser - modern approach without apt-key
+    && wget -q -O /tmp/google-chrome-key.gpg https://dl-ssl.google.com/linux/linux_signing_key.pub \
+    && gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     # Cleanup
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /tmp/google-chrome-key.gpg \
     && apt-get clean
 
 # Copy virtual environment from builder
@@ -134,7 +136,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 EXPOSE 8080
 
 # Set Python path
-ENV PYTHONPATH="/usr/src/app/src:$PYTHONPATH"
+ENV PYTHONPATH="/usr/src/app/src"
 
 # Default command
 CMD ["/usr/src/app/start.sh"]
