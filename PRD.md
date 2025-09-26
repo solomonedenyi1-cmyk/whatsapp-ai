@@ -1,19 +1,18 @@
 # WhatsApp AI Bot - Product Requirements Document (PRD)
 
 ## 📋 Executive Summary
-This document outlines the requirements for developing a WhatsApp Bot integrated with AI models via API. The bot will serve as an intelligent assistant that can engage in natural conversations through WhatsApp, leveraging AI language models hosted at https://api.example-ai.com/v1.
+This document outlines the requirements for developing a WhatsApp Bot integrated with the Yue-F AI model via API. The bot will serve as an intelligent assistant that can engage in natural conversations through WhatsApp, leveraging the Yue-F language model hosted at https://llms.yuricunha.com.
 
 ## 🎯 Product Overview
 
 ### Vision
-To create a seamless conversational AI experience within WhatsApp, allowing users to interact with the AI model through a familiar messaging interface with enterprise-grade containerization and deployment capabilities.
+To create a seamless conversational AI experience within WhatsApp, allowing users to interact with the Yue-F model through a familiar messaging interface.
 
 ### Goals
 - Provide 24/7 AI-powered assistance through WhatsApp
 - Maintain conversation context across interactions
 - Offer a reliable, user-friendly interface for AI interactions
-- Enable easy deployment and maintenance through Docker containerization
-- Support scalable production deployments with automated CI/CD
+- Enable easy deployment and maintenance
 
 ### Success Metrics
 - Message response rate > 95%
@@ -111,8 +110,8 @@ To create a seamless conversational AI experience within WhatsApp, allowing user
 **Priority**: P0 (Critical)
 
 **Requirements**:
-- [x] Connect to AI API at https://api.example-ai.com/v1
-- [x] Must be compatible with Ollama API format
+- [x] Connect to Yue-F API at https://llms.yuricunha.com
+- [x] Must be compatible with Ollama API format (since Yue-F runs on Ollama)
 - [x] Send user messages to the AI model
 - [x] Receive and process AI responses
 - [x] Handle API failures gracefully
@@ -121,7 +120,7 @@ To create a seamless conversational AI experience within WhatsApp, allowing user
 ```json
 POST /api/chat
 {
-  "model": "AI",
+  "model": "yue-f",
   "messages": [
     {"role": "user", "content": "user message"}
   ],
@@ -130,7 +129,7 @@ POST /api/chat
 ```
 
 **Acceptance Criteria**:
-- [x] Successfully connects to AI API
+- [x] Successfully connects to Yue-F API
 - [x] Sends properly formatted Ollama-compatible requests
 - [x] Correctly parses Ollama API responses
 - [x] Handles API timeouts (30s max)
@@ -223,7 +222,7 @@ POST /api/chat
 ### Phase 1: Core Functionality (Completed)
 - [x] Basic WhatsApp connection setup
 - [x] Simple message echo functionality
-- [x] AI API integration
+- [x] Yue-F API integration
 - [x] Basic error handling
 - [x] Conversation context system
 - [x] Command system implementation
@@ -286,7 +285,7 @@ POST /api/chat
 - [x] PRD documentation created
 - [x] Basic Node.js project initialization
 - [x] WhatsApp Web integration
-- [x] AI API client implementation
+- [x] Yue-F API client implementation
 - [x] Message processing logic
 - [x] Command system with context management
 - [x] Business context configuration system
@@ -304,64 +303,10 @@ POST /api/chat
 - ✅ Phase 2: Enhanced features complete
 - ✅ Phase 3: Production ready complete
 - ✅ Phase 3.5: Full performance optimization complete
-- ✅ Phase 4: Containerization & CI/CD complete
-- 🔄 Ready for Phase 5: Testing & Launch
+- 🔄 Ready for Phase 4: Testing & Launch
 
-## 🐳 Phase 4: Containerization & CI/CD (COMPLETE)
-**Priority**: P0 (Critical) - **Status**: ✅ Complete
-
-### 4.1 Docker Containerization
-**Requirements**:
-- [x] Multi-stage Dockerfile with Node.js 18 and Chrome dependencies
-- [x] Security-hardened container with non-root user
-- [x] Optimized image size and build caching
-- [x] Health checks and proper signal handling
-- [x] Volume mounts for data persistence
-
-**Implementation**:
-- Dockerfile with Chrome/Chromium installation
-- Non-root user `whatsapp` for security
-- Persistent volumes for session data and application data
-- Health check endpoint for container monitoring
-
-### 4.2 Docker Compose Configuration
-**Requirements**:
-- [x] Development and production compose files
-- [x] Environment variable support via .env files
-- [x] Volume persistence for WhatsApp sessions
-- [x] Network isolation and security
-- [x] Logging configuration
-
-**Files Created**:
-- `docker-compose.yml` - Build with environment variables inline
-- `docker-compose.env.yml` - Build with .env file
-- `docker-compose.hub.yml` - Docker Hub image with environment variables inline
-- `docker-compose.hub-env.yml` - Docker Hub image with .env file
-- `.dockerignore` - Optimized build context
-
-### 4.3 GitHub Actions CI/CD
-**Requirements**:
-- [x] Automated Docker image builds on push/PR
-- [x] Multi-architecture support (amd64, arm64)
-- [x] Docker Hub integration with automated pushes
-- [x] Semantic versioning and tagging
-- [x] Build caching for faster deployments
-
-**Implementation**:
-- GitHub Actions workflow: `.github/workflows/docker-hub.yml`
-- Docker Hub repository: `isyuricunha/whatsapp-ai-bot`
-- Automated builds on main/develop branches
-- Tag-based releases with semantic versioning
-
-### 4.4 Documentation Updates
-**Requirements**:
-- [x] Docker installation instructions in README
-- [x] Environment variable documentation
-- [x] Production deployment guide
-- [x] Troubleshooting and maintenance guides
-
-### Next Steps (Phase 5)
-1. End-to-end testing of containerized deployment
+### Next Steps (Phase 4)
+1. End-to-end testing of all features
 2. Load testing for production readiness
 3. Security review and vulnerability assessment
 4. Production deployment and monitoring setup
@@ -369,7 +314,7 @@ POST /api/chat
 ## 🔄 API Response Format (Ollama Compatible)
 ```json
 {
-  "model": "AI",
+  "model": "yue-f",
   "created_at": "2024-01-01T00:00:00.000000000Z",
   "message": {
     "role": "assistant",
@@ -387,7 +332,7 @@ POST /api/chat
 
 ---
 
-**Document Version**: 4.0  
+**Document Version**: 3.5  
 **Last Updated**: September 26, 2025  
 **Next Review**: October 2025  
-**Status**: Phase 4 Complete - Containerization & CI/CD Pipeline Implemented
+**Status**: Phase 3.5 Complete - Full Performance Optimization with Admin Configuration System Implemented

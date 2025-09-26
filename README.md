@@ -1,11 +1,11 @@
-# WhatsApp AI Bot - AI Integration
+# WhatsApp AI Bot - Yue-F Integration
 
-An intelligent WhatsApp bot integrated with AI models via Ollama API, featuring customizable business context and persona.
+An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context and persona.
 
 ## 🚀 Features
 
 ### Core Features
-- **Natural Conversations**: Interact with AI models directly through WhatsApp
+- **Natural Conversations**: Interact with Yue-F AI directly through WhatsApp
 - **Business Context**: Customizable AI persona with your business information
 - **Advanced Persistence**: Permanent conversation storage with automatic backup
 - **Analytics & Reporting**: Comprehensive usage analytics and performance metrics
@@ -29,101 +29,12 @@ An intelligent WhatsApp bot integrated with AI models via Ollama API, featuring 
 
 ## 📋 Prerequisites
 
-- Node.js 18+ installed OR Docker
-- Chrome/Chromium browser (if running locally)
+- Node.js 18+ installed
+- Chrome/Chromium browser
 - Stable internet connection
 - Access to WhatsApp Web
 
-## 🛠️ Installation & Deployment
-
-### Docker Deployment Options
-
-We provide 4 different Docker Compose configurations to suit different deployment needs:
-
-#### 1. Build + Environment Variables Inline (`docker-compose.yml`)
-**Use case**: Development, testing, quick setup with custom environment variables
-```bash
-# Clone the repository
-git clone https://github.com/isyuricunha/whatsapp-ai.git
-cd whatsapp-ai
-
-# Create your config.json from the example
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-
-# Edit environment variables directly in docker-compose.yml
-# Then build and run
-docker-compose up --build
-```
-
-#### 2. Build + Environment Variables from .env (`docker-compose.env.yml`)
-**Use case**: Development with secure environment variable management
-```bash
-# Clone the repository
-git clone https://github.com/isyuricunha/whatsapp-ai.git
-cd whatsapp-ai
-
-# Create your config.json from the example
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-
-# Create and configure .env file
-cp .env.example .env
-nano .env  # Edit with your settings
-
-# Build and run
-docker-compose -f docker-compose.env.yml up --build
-```
-
-#### 3. Docker Hub + Environment Variables Inline (`docker-compose.hub.yml`)
-**Use case**: Production deployment without building, quick deployment
-```bash
-# Download the compose file and config example
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
-
-# Create your config.json
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-
-# Edit environment variables in the file
-nano docker-compose.hub.yml
-
-# Run with pre-built image
-docker-compose -f docker-compose.hub.yml up
-```
-
-#### 4. Docker Hub + Environment Variables from .env (`docker-compose.hub-env.yml`)
-**Use case**: Production deployment with secure environment management
-```bash
-# Download the compose file, env example, and config example
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
-
-# Create your config.json
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-
-# Configure environment
-cp .env.example .env
-nano .env  # Edit with your settings
-
-# Run with pre-built image
-docker-compose -f docker-compose.hub-env.yml up
-```
-
-#### Building from Source
-```bash
-# Clone the repository
-git clone <repository-url>
-cd whatsapp-ai
-
-# Build and run with docker-compose
-docker-compose up -d --build
-```
-
-### Option 2: Local Installation
+## 🛠️ Installation
 
 1. **Clone the repository**:
 ```bash
@@ -146,105 +57,14 @@ ADMIN_WHATSAPP_NUMBER=your_number@c.us
 ```
 Replace `your_number@c.us` with your actual WhatsApp number in the format `551234567890@c.us`.
 
-## 🐳 Docker Configuration
-
-### Environment Variables Configuration
-
-All Docker Compose files support environment variables. Choose your preferred method:
-
-**Method 1: Direct in compose file** - Edit environment variables directly in the Docker Compose file
-**Method 2: Using .env file** - Create a `.env` file for secure environment management
-
-```bash
-# Create .env file from example
-cp .env.example .env
-nano .env  # Edit with your actual values
-```
-
-**Required Variables:**
-- `ADMIN_WHATSAPP_NUMBER` - Your WhatsApp number for admin access (format: `5511987654321@c.us`)
-- `AI_API_URL` - Your AI API endpoint (default: `https://api.example-ai.com/v1`)
-- `AI_MODEL_NAME` - AI model name (default: `llama3.1:8b`)
-
-**Optional Variables:**
-- `NODE_ENV` - Environment mode (`production`/`development`)
-- `API_TIMEOUT` - API timeout in milliseconds (default: `30000`)
-- `BOT_NAME` - Custom bot display name (default: `WhatsApp AI Assistant`)
-- `DEBUG` - Enable debug logging (`true`/`false`)
-- `MAX_CONTEXT_MESSAGES` - Maximum context messages (default: `20`)
-- `MESSAGE_SPLIT_LENGTH` - Maximum message length (default: `1500`)
-
-### Quick Start Guide
-
-```bash
-# Option 1: Use pre-built image with .env file (Recommended)
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
-cp config.example.json config.json
-nano config.json  # Configure your business information
-cp .env.example .env
-nano .env  # Configure your settings
-docker-compose -f docker-compose.hub-env.yml up -d
-
-# Option 2: Use pre-built image with inline variables
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
-curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/config.example.json
-cp config.example.json config.json
-nano config.json  # Configure your business information
-nano docker-compose.hub.yml  # Edit environment variables
-docker-compose -f docker-compose.hub.yml up -d
-```
-
-**For Development:**
-```bash
-# Option 1: Build with .env file
-git clone https://github.com/isyuricunha/whatsapp-ai.git
-cd whatsapp-ai
-cp config.example.json config.json
-nano config.json  # Configure your business information
-cp .env.example .env
-nano .env  # Configure your settings
-docker-compose -f docker-compose.env.yml up --build
-
-# Option 2: Build with inline variables
-git clone https://github.com/isyuricunha/whatsapp-ai.git
-cd whatsapp-ai
-cp config.example.json config.json
-nano config.json  # Configure your business information
-nano docker-compose.yml  # Edit environment variables
-docker-compose up --build
-```
-
-### Data Persistence
-Docker volumes automatically persist:
-- WhatsApp session data (`.wwebjs_auth`, `.wwebjs_cache`)
-- Application data (`conversations`, `analytics`, `logs`)
-- Configuration file (`config.json`) - mounted from host for easy editing
-
-### Health Checks
-Built-in health checks monitor container status:
-```bash
-docker ps  # Check container health status
-docker logs whatsapp-ai-bot  # View application logs
-```
-
 4. **Customize your AI assistant** (Important!):
-**For Docker users**: Create `config.json` from the example template before running containers:
-```bash
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-```
-
-**For local installation**: Edit `config.json` in the root directory to set up your business information:
+Edit `config.json` in the root directory to set up your business information:
 - AI identity (name, gender, personality)
 - Business details (services, products, contact info)
 - Owner information and expertise
 - FAQ and standard responses
 
 **No coding required!** Just edit the simple JSON file.
-
-**Important**: The `config.json` file is mounted as a volume in Docker, so you can edit it on your host system and changes will be reflected in the container immediately after using the `/reload` command.
 
 5. **Run the bot**:
 ```bash
@@ -304,7 +124,7 @@ The configuration is now in simple JSON format that anyone can edit.
 
 ### Normal Conversation
 
-Simply send any text message to the bot and it will respond using AI with your business context. The bot automatically maintains conversation context.
+Simply send any text message to the bot and it will respond using Yue-F AI with your business context. The bot automatically maintains conversation context.
 
 ### Usage Examples
 
@@ -320,7 +140,7 @@ Bot: We offer the following services:
 
 User: /status
 Bot: 📊 Bot Status
-AI API: ✅ Online
+Yue-F API: ✅ Online
 Active conversations: 1
 ...
 ```
@@ -331,8 +151,8 @@ Active conversations: 1
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `AI_API_URL` | AI API URL | `https://api.example-ai.com/v1` |
-| `AI_MODEL_NAME` | Model name | `llama3.1:8b` |
+| `YUE_F_API_URL` | Yue-F API URL | `https://llms.yuricunha.com` |
+| `YUE_F_MODEL_NAME` | Model name | `yue-f` |
 | `API_TIMEOUT` | API timeout (ms) | `30000` |
 | `BOT_NAME` | Bot name | `WhatsApp AI Bot` |
 | `MAX_CONTEXT_MESSAGES` | Max messages in context | `20` |
@@ -500,7 +320,7 @@ whatsapp-ai/
 │   │   ├── config.js             # System configuration
 │   │   └── context.js            # AI context & business info
 │   ├── services/
-│   │   ├── yueApiService.js      # AI API client
+│   │   ├── yueApiService.js      # Yue-F API client
 │   │   ├── conversationService.js # Context management
 │   │   └── messageService.js     # Message processing
 │   └── index.js                  # Application entry point
@@ -539,7 +359,7 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
 
 ### ✅ Phase 1 - Core Functionality (Completed)
 - [x] Basic WhatsApp connection
-- [x] AI API integration (Ollama compatible)
+- [x] Yue-F API integration (Ollama compatible)
 - [x] Message echo functionality
 - [x] Basic error handling
 - [x] Basic command system
@@ -596,7 +416,7 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
    - Try running with `DEBUG=true npm start`
 
 2. **Bot doesn't respond**:
-   - Check if AI API is online using `/status`
+   - Check if Yue-F API is online using `/status`
    - Check your internet connection
    - Restart the bot
 
@@ -626,7 +446,7 @@ DEBUG=true npm start
 
 - **Issues**: Open a GitHub issue for technical problems
 - **Documentation**: Check this README for common questions
-- **API**: Check AI API documentation for connectivity issues
+- **API**: Check Yue-F API documentation for connectivity issues
 - **Context Setup**: See `config.json` for business configuration examples
 - **JSON Help**: Use online JSON validators to check your configuration syntax
 
@@ -700,18 +520,18 @@ DEBUG=true npm start
 ### v1.0.0 (September 2025)
 - Initial Phase 1 implementation
 - Basic WhatsApp Web connection
-- AI API integration via Ollama
+- Yue-F API integration via Ollama
 - Basic command system
 - Conversation context management
 - Basic error handling
 
 ## 📄 License
 
-LGPL-2.1 license - see LICENSE file for details.
+MIT License - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
 
 ## 🎯 Perfect for:
 - **Business Customer Service**: Set up Yue as your professional assistant

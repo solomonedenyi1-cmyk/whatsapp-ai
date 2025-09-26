@@ -1,10 +1,10 @@
 require('dotenv').config();
 
 const config = {
-  // AI API Configuration
+  // Yue-F API Configuration
   yuef: {
-    apiUrl: process.env.AI_API_URL || 'https://api.example-ai.com/v1',
-    modelName: process.env.AI_MODEL_NAME || 'llama3.1:8b',
+    apiUrl: process.env.YUE_F_API_URL || 'https://llms.yuricunha.com',
+    modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
     timeout: parseInt(process.env.API_TIMEOUT) || 30000,
   },
 
@@ -23,21 +23,19 @@ const config = {
 
   // WhatsApp Configuration
   whatsapp: {
-    sessionPath: './.wwebjs_auth',
+    sessionPath: './session',
     puppeteerOptions: {
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu',
+        '--disable-accelerated-2d-canvas',
         '--no-first-run',
-        '--disable-extensions',
-        '--disable-default-apps'
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
-      defaultViewport: null,
-      timeout: 60000
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ]
     }
   },
 

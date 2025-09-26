@@ -41,95 +41,44 @@ class WhatsAppBot {
     
     this.isReady = false;
     this.startTime = Date.now();
-    this.isReconnecting = false;
   }
 
   /**
-   * Initialize the WhatsApp bot with retry logic
+   * Initialize the WhatsApp bot
    */
   async initialize() {
-    const maxRetries = 3;
-    let lastError;
+    try {
+      console.log('🤖 Initializing WhatsApp AI Bot...');
+      
+      // Update component status
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
+      
+      // Create WhatsApp client
+      this.client = new Client({
+        authStrategy: new LocalAuth({
+          dataPath: config.whatsapp.sessionPath
+        }),
+        puppeteer: config.whatsapp.puppeteerOptions
+      });
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🤖 Initializing WhatsApp AI Bot... (Attempt ${attempt}/${maxRetries})`);
-        
-        // Update component status
-        await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
-        
-        // Clean up any existing client
-        if (this.client) {
-          try {
-            await this.client.destroy();
-          } catch (cleanupError) {
-            console.warn('⚠️ Error cleaning up previous client:', cleanupError.message);
-          }
-          this.client = null;
-        }
+      // Set up event listeners
+      this.setupEventListeners();
 
-        // Wait a bit before retry
-        if (attempt > 1) {
-          console.log(`⏳ Waiting ${attempt * 2} seconds before retry...`);
-          await this.delay(attempt * 2000);
-        }
-
-        // Create WhatsApp client with minimal configuration
-        const userDataDir = `/tmp/chrome-user-data-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const puppeteerOptions = {
-          ...config.whatsapp.puppeteerOptions,
-          args: [
-            ...config.whatsapp.puppeteerOptions.args,
-            `--user-data-dir=${userDataDir}`
-          ]
-        };
-        
-        this.client = new Client({
-          authStrategy: new LocalAuth({
-            dataPath: config.whatsapp.sessionPath
-          }),
-          puppeteer: puppeteerOptions,
-          webVersionCache: {
-            type: 'remote',
-            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-          }
-        });
-
-        // Set up event listeners
-        this.setupEventListeners();
-
-        // Initialize the client with extended timeout
-        const initPromise = this.client.initialize();
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Client initialization timeout')), 300000); // 5 minutes
-        });
-
-        await Promise.race([initPromise, timeoutPromise]);
-        
-        // Update component status
-        await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
-        
-        console.log('✅ WhatsApp bot initialized successfully');
-        return;
-        
-      } catch (error) {
-        lastError = error;
-        console.error(`❌ Failed to initialize WhatsApp bot (attempt ${attempt}/${maxRetries}):`, error.message);
-        
-        await this.errorHandler.handleError(error, {
-          component: 'whatsappBot',
-          operation: 'initialize',
-          attempt: attempt
-        });
-
-        if (attempt === maxRetries) {
-          await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
-          break;
-        }
-      }
+      // Initialize the client
+      await this.client.initialize();
+      
+      // Update component status
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize WhatsApp bot:', error);
+      await this.errorHandler.handleError(error, {
+        component: 'whatsappBot',
+        operation: 'initialize'
+      });
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
+      throw error;
     }
-
-    throw new Error(`Failed to initialize WhatsApp bot after ${maxRetries} attempts. Last error: ${lastError.message}`);
   }
 
   /**
@@ -153,21 +102,6 @@ class WhatsAppBot {
       console.log('🔐 WhatsApp authenticated successfully');
     });
 
-    // Loading screen progress
-    this.client.on('loading_screen', (percent, message) => {
-      console.log(`⏳ Loading: ${percent}% - ${message}`);
-      
-      // If we're stuck at 0% for too long after logout, it might be a reconnection issue
-      if (percent === 0 && message === 'Do not close this window') {
-        // This is normal initial loading, but if it persists, we might need to restart
-        setTimeout(() => {
-          if (!this.isReady) {
-            console.log('⚠️ Still loading after extended time, this is normal for initial connection');
-          }
-        }, 30000); // 30 seconds
-      }
-    });
-
     // Authentication failure
     this.client.on('auth_failure', (msg) => {
       console.error('❌ WhatsApp authentication failed:', msg);
@@ -177,33 +111,6 @@ class WhatsAppBot {
     this.client.on('disconnected', (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
-      
-      // If disconnected due to logout, handle reconnection
-      if (reason === 'LOGOUT') {
-        console.log('🔄 Logout detected, clearing session and preparing for new QR...');
-        this.isReconnecting = true;
-        
-        // Clear the session to force new QR generation
-        setTimeout(async () => {
-          try {
-            if (this.client) {
-              await this.client.destroy();
-              this.client = null;
-            }
-            console.log('🔄 Session cleared, ready for new authentication');
-            this.isReconnecting = false;
-          } catch (error) {
-            console.error('❌ Error clearing session:', error);
-            this.isReconnecting = false;
-          }
-        }, 2000);
-      }
-    });
-
-    // Authentication failure - restart QR process
-    this.client.on('auth_failure', (msg) => {
-      console.error('❌ WhatsApp authentication failed:', msg);
-      console.log('🔄 Restarting authentication process...');
     });
 
     // Incoming messages
@@ -222,67 +129,71 @@ class WhatsAppBot {
    * @param {Object} message - WhatsApp message object
    */
   async handleMessage(message) {
+    const startTime = Date.now();
+    
     try {
-      console.log(`📨 Received message from ${message.from}: ${message.body}`);
-      
-      // Skip own messages and status updates
-      if (message.fromMe || message.isStatus) {
+      // Check if message should be ignored
+      if (this.messageService.shouldIgnoreMessage(message)) {
         return;
       }
 
       const chatId = message.from;
-      const messageText = message.body || '';
+      const messageText = this.messageService.cleanMessage(message.body);
 
-      if (!messageText.trim()) {
-        return;
+      if (config.env.debug) {
+        console.log(`📨 Received message from ${chatId}: ${messageText}`);
       }
+
+      // Record performance metrics
+      this.performanceOptimizer.recordMessageReceived(chatId, messageText.length);
 
       // Show typing indicator
       await this.client.sendSeen(chatId);
-      const chat = await message.getChat();
-      await chat.sendStateTyping();
+      await message.getChat().then(chat => chat.sendStateTyping());
 
-      // Simple AI response
-      const response = await this.getAIResponse(messageText, chatId);
-      
+      let response;
+
+      // Check if it's a command
+      if (this.messageService.isCommand(messageText)) {
+        const { command, args } = this.messageService.parseCommand(messageText);
+        
+        // Check admin access for commands
+        const accessCheck = this.adminService.validateAdminAccess(chatId, command);
+        if (!accessCheck.allowed) {
+          response = accessCheck.message;
+        } else {
+          response = await this.commandHandler.handleCommand(command, args, chatId);
+        }
+      } else {
+        // Regular message - send to AI with timeout handling and performance optimizations
+        response = await this.performanceOptimizations.optimizeMessageProcessing(
+          chatId, 
+          messageText, 
+          (msg) => this.processAIMessageWithTimeout(msg, chatId)
+        );
+      }
+
       // Send response
-      await this.client.sendMessage(chatId, response);
-      
-      console.log(`✅ Sent response to ${chatId}`);
+      await this.sendResponse(chatId, response);
+
+      // Record response time
+      const responseTime = Date.now() - startTime;
+      this.performanceOptimizer.recordResponseTime(responseTime);
 
     } catch (error) {
       console.error('❌ Error handling message:', error);
-      try {
-        await this.client.sendMessage(message.from, 'Desculpe, ocorreu um erro. Tente novamente.');
-      } catch (sendError) {
-        console.error('❌ Error sending error message:', sendError);
-      }
+      await this.errorHandler.handleError(error, {
+        component: 'whatsappBot',
+        operation: 'handleMessage',
+        chatId: message.from,
+        messageText: message.body?.substring(0, 100)
+      });
+      await this.sendErrorResponse(message.from);
     }
   }
 
   /**
-   * Get AI response for message
-   * @param {string} messageText - User message
-   * @param {string} chatId - WhatsApp chat ID
-   * @returns {Promise<string>} - AI response
-   */
-  async getAIResponse(messageText, chatId) {
-    try {
-      console.log(`🤖 Processing AI request for: ${messageText.substring(0, 50)}...`);
-      
-      const response = await this.conversationService.processMessage(messageText, chatId);
-      
-      console.log(`✅ AI response generated: ${response.substring(0, 50)}...`);
-      return response;
-      
-    } catch (error) {
-      console.error('❌ Error getting AI response:', error);
-      return 'Desculpe, não consegui processar sua mensagem no momento. Tente novamente.';
-    }
-  }
-
-  /**
-   * Process message with AI with timeout handling (legacy)
+   * Process message with AI with timeout handling
    * @param {string} messageText - User message
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response

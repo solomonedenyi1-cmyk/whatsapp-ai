@@ -26,7 +26,7 @@ This guide provides comprehensive instructions for deploying the WhatsApp AI Bot
 ### Dependencies
 
 - WhatsApp account with access to WhatsApp Web
-- AI API endpoint (or compatible Ollama API)
+- Yue-F AI API endpoint (or compatible Ollama API)
 - Chrome/Chromium browser (for Puppeteer)
 
 ## Environment Setup
@@ -34,7 +34,7 @@ This guide provides comprehensive instructions for deploying the WhatsApp AI Bot
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/isyuricunha/whatsapp-ai.git
+git clone https://github.com/your-username/whatsapp-ai.git
 cd whatsapp-ai
 ```
 
@@ -57,7 +57,7 @@ Edit `.env` with your configuration:
 ```env
 # API Configuration
 YUEF_API_URL=http://localhost:11434
-YUEF_MODEL_NAME=AI
+YUEF_MODEL_NAME=yue-f
 YUEF_TIMEOUT=30000
 
 # Bot Configuration
@@ -109,35 +109,25 @@ npm start
 
 ### 1. AI Configuration (`config.json`)
 
-**IMPORTANT**: For Docker deployments, you must create `config.json` on your host system before starting the container, as it's mounted as a read-only volume.
-
-```bash
-# Create config.json from example
-cp config.example.json config.json
-nano config.json  # Edit with your business information
-```
-
-The configuration file structure:
+Edit `config.json` to customize the AI's behavior:
 
 ```json
 {
-  "ai_identity": {
-    "name": "Your AI Assistant",
-    "role": "Professional AI Assistant",
-    "personality": "Helpful, professional, and knowledgeable"
-  },
-  "business": {
-    "name": "Your Company",
-    "description": "Your business description",
-    "services": [{
-      "name": "Service 1",
-      "description": "Service description",
-      "price": "$100"
-    }],
-    "contact": {
-      "phone": "+1234567890",
-      "email": "contact@yourcompany.com",
-      "website": "https://yourcompany.com"
+  "ai": {
+    "identity": {
+      "name": "Your AI Assistant",
+      "role": "Professional AI Assistant",
+      "personality": "Helpful, professional, and knowledgeable"
+    },
+    "business": {
+      "name": "Your Company",
+      "description": "Your business description",
+      "services": ["Service 1", "Service 2"],
+      "contact": {
+        "phone": "+1234567890",
+        "email": "contact@yourcompany.com",
+        "website": "https://yourcompany.com"
+      }
     }
   }
 }
@@ -239,7 +229,7 @@ CMD ["npm", "start"]
 Create `docker-compose.yml`:
 
 ```yaml
-
+version: '3.8'
 
 services:
   whatsapp-ai-bot:
@@ -250,8 +240,7 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./sessions:/app/sessions
-      # Mount config.json from host (must exist before starting)
-      - ./config.json:/app/config.json:ro
+      - ./config.json:/app/config.json
     environment:
       - NODE_ENV=production
     depends_on:
@@ -268,17 +257,6 @@ services:
 
 volumes:
   ollama_data:
-```
-
-**Important**: Before running `docker-compose up`, ensure you have created `config.json`:
-
-```bash
-# Create config.json from example
-cp config.example.json config.json
-nano config.json  # Customize with your business information
-
-# Then start the containers
-docker-compose up -d
 ```
 
 Deploy with Docker:
@@ -372,12 +350,10 @@ sudo nano /etc/logrotate.d/whatsapp-ai-bot
 
 Important data to backup:
 
-- `config.json` - AI configuration (mounted from host in Docker)
+- `config.json` - AI configuration
 - `data/` - Conversation and analytics data
 - `sessions/` - WhatsApp session data
 - `.env` - Environment configuration
-
-**Note**: For Docker deployments, `config.json` is stored on the host system and mounted into the container, making it easy to backup and edit.
 
 Backup script example:
 
