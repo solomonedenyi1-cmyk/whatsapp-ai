@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 env:
-  DOCKER_IMAGE: yuricunha/whatsapp-ai-bot
+  DOCKER_IMAGE: isyuricunha/whatsapp-ai-bot
   REGISTRY: docker.io
 
 jobs:

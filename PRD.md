@@ -347,7 +347,7 @@ POST /api/chat
 
 **Implementation**:
 - GitHub Actions workflow: `.github/workflows/docker-hub.yml`
-- Docker Hub repository: `yuricunha/whatsapp-ai-bot`
+- Docker Hub repository: `isyuricunha/whatsapp-ai-bot`
 - Automated builds on main/develop branches
 - Tag-based releases with semantic versioning
 

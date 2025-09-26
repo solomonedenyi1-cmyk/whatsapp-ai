@@ -41,7 +41,7 @@ An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, f
 #### Using Docker Hub (Pre-built Image)
 ```bash
 # Pull the latest image
-docker pull yuricunha/whatsapp-ai-bot:latest
+docker pull isyuricunha/whatsapp-ai-bot:latest
 
 # Run with docker-compose (production)
 curl -O https://raw.githubusercontent.com/your-repo/whatsapp-ai/main/docker-compose.prod.yml
