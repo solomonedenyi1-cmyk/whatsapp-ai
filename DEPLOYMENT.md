@@ -26,7 +26,7 @@ This guide provides comprehensive instructions for deploying the WhatsApp AI Bot
 ### Dependencies
 
 - WhatsApp account with access to WhatsApp Web
-- Yue-F AI API endpoint (or compatible Ollama API)
+- AI API endpoint (or compatible Ollama API)
 - Chrome/Chromium browser (for Puppeteer)
 
 ## Environment Setup
@@ -57,7 +57,7 @@ Edit `.env` with your configuration:
 ```env
 # API Configuration
 YUEF_API_URL=http://localhost:11434
-YUEF_MODEL_NAME=yue-f
+YUEF_MODEL_NAME=AI
 YUEF_TIMEOUT=30000
 
 # Bot Configuration

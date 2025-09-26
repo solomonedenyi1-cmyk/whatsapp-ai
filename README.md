@@ -267,7 +267,7 @@ The configuration is now in simple JSON format that anyone can edit.
 
 ### Normal Conversation
 
-Simply send any text message to the bot and it will respond using Yue-F AI with your business context. The bot automatically maintains conversation context.
+Simply send any text message to the bot and it will respond using AI with your business context. The bot automatically maintains conversation context.
 
 ### Usage Examples
 
@@ -283,7 +283,7 @@ Bot: We offer the following services:
 
 User: /status
 Bot: 📊 Bot Status
-Yue-F API: ✅ Online
+AI API: ✅ Online
 Active conversations: 1
 ...
 ```
@@ -463,7 +463,7 @@ whatsapp-ai/
 │   │   ├── config.js             # System configuration
 │   │   └── context.js            # AI context & business info
 │   ├── services/
-│   │   ├── yueApiService.js      # Yue-F API client
+│   │   ├── yueApiService.js      # AI API client
 │   │   ├── conversationService.js # Context management
 │   │   └── messageService.js     # Message processing
 │   └── index.js                  # Application entry point
@@ -502,7 +502,7 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
 
 ### ✅ Phase 1 - Core Functionality (Completed)
 - [x] Basic WhatsApp connection
-- [x] Yue-F API integration (Ollama compatible)
+- [x] AI API integration (Ollama compatible)
 - [x] Message echo functionality
 - [x] Basic error handling
 - [x] Basic command system
@@ -559,7 +559,7 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
    - Try running with `DEBUG=true npm start`
 
 2. **Bot doesn't respond**:
-   - Check if Yue-F API is online using `/status`
+   - Check if AI API is online using `/status`
    - Check your internet connection
    - Restart the bot
 
@@ -589,7 +589,7 @@ DEBUG=true npm start
 
 - **Issues**: Open a GitHub issue for technical problems
 - **Documentation**: Check this README for common questions
-- **API**: Check Yue-F API documentation for connectivity issues
+- **API**: Check AI API documentation for connectivity issues
 - **Context Setup**: See `config.json` for business configuration examples
 - **JSON Help**: Use online JSON validators to check your configuration syntax
 
@@ -663,18 +663,18 @@ DEBUG=true npm start
 ### v1.0.0 (September 2025)
 - Initial Phase 1 implementation
 - Basic WhatsApp Web connection
-- Yue-F API integration via Ollama
+- AI API integration via Ollama
 - Basic command system
 - Conversation context management
 - Basic error handling
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+LGPL-2.1 license - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + AI**
 
 ## 🎯 Perfect for:
 - **Business Customer Service**: Set up Yue as your professional assistant

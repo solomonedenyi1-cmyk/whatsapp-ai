@@ -6,7 +6,7 @@ This document outlines the requirements for developing a WhatsApp Bot integrated
 ## 🎯 Product Overview
 
 ### Vision
-To create a seamless conversational AI experience within WhatsApp, allowing users to interact with the Yue-F model through a familiar messaging interface with enterprise-grade containerization and deployment capabilities.
+To create a seamless conversational AI experience within WhatsApp, allowing users to interact with the AI model through a familiar messaging interface with enterprise-grade containerization and deployment capabilities.
 
 ### Goals
 - Provide 24/7 AI-powered assistance through WhatsApp
@@ -121,7 +121,7 @@ To create a seamless conversational AI experience within WhatsApp, allowing user
 ```json
 POST /api/chat
 {
-  "model": "yue-f",
+  "model": "AI",
   "messages": [
     {"role": "user", "content": "user message"}
   ],
@@ -130,7 +130,7 @@ POST /api/chat
 ```
 
 **Acceptance Criteria**:
-- [x] Successfully connects to Yue-F API
+- [x] Successfully connects to AI API
 - [x] Sends properly formatted Ollama-compatible requests
 - [x] Correctly parses Ollama API responses
 - [x] Handles API timeouts (30s max)
@@ -223,7 +223,7 @@ POST /api/chat
 ### Phase 1: Core Functionality (Completed)
 - [x] Basic WhatsApp connection setup
 - [x] Simple message echo functionality
-- [x] Yue-F API integration
+- [x] AI API integration
 - [x] Basic error handling
 - [x] Conversation context system
 - [x] Command system implementation
@@ -286,7 +286,7 @@ POST /api/chat
 - [x] PRD documentation created
 - [x] Basic Node.js project initialization
 - [x] WhatsApp Web integration
-- [x] Yue-F API client implementation
+- [x] AI API client implementation
 - [x] Message processing logic
 - [x] Command system with context management
 - [x] Business context configuration system
@@ -369,7 +369,7 @@ POST /api/chat
 ## 🔄 API Response Format (Ollama Compatible)
 ```json
 {
-  "model": "yue-f",
+  "model": "AI",
   "created_at": "2024-01-01T00:00:00.000000000Z",
   "message": {
     "role": "assistant",
