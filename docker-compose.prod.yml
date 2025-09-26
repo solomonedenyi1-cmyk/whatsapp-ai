@@ -1,0 +1,62 @@
+
+
+services:
+  whatsapp-ai-bot:
+    image: isyuricunha/whatsapp-ai-bot:latest
+    container_name: whatsapp-ai-bot-prod
+    restart: unless-stopped
+    environment:
+      # AI API Configuration
+      - YUE_F_API_URL=${YUE_F_API_URL:-https://llms.com}
+      - YUE_F_MODEL_NAME=${YUE_F_MODEL_NAME:-ollama}
+      - API_TIMEOUT=${API_TIMEOUT:-30000}
+      
+      # Bot Configuration
+      - BOT_NAME=${BOT_NAME:-WhatsApp AI Bot}
+      - MAX_CONTEXT_MESSAGES=${MAX_CONTEXT_MESSAGES:-20}
+      - MESSAGE_SPLIT_LENGTH=${MESSAGE_SPLIT_LENGTH:-1500}
+      
+      # Production
+      - NODE_ENV=production
+      - DEBUG=false
+      
+      # Admin Configuration (REQUIRED)
+      - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER}
+      
+      # Docker-specific
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+    volumes:
+      # Persist WhatsApp session data
+      - whatsapp_session_prod:/usr/src/app/.wwebjs_auth
+      - whatsapp_cache_prod:/usr/src/app/.wwebjs_cache
+      # Persist application data (conversations, analytics, etc.)
+      - app_data_prod:/usr/src/app/data
+      # Mount config.json from host (users must create this file)
+      - ./config.json:/usr/src/app/config.json:ro
+    shm_size: 2gb
+    networks:
+      - whatsapp-network-prod
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  whatsapp_session_prod:
+    driver: local
+  whatsapp_cache_prod:
+    driver: local
+  app_data_prod:
+    driver: local
+
+networks:
+  whatsapp-network-prod:
+    driver: bridge
