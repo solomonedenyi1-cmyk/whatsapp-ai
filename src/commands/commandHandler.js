@@ -27,6 +27,12 @@ class CommandHandler {
       case 'about':
         return this.handleAbout();
       
+      case 'context':
+        return this.handleContext();
+      
+      case 'reload':
+        return this.handleReload();
+      
       default:
         return this.handleUnknownCommand(command);
     }
@@ -37,23 +43,25 @@ class CommandHandler {
    * @returns {string} - Help message
    */
   handleHelp() {
-    return `🤖 *${config.bot.name} - Comandos Disponíveis*
+    return `🤖 *${config.bot.name} - Available Commands*
 
-*Comandos básicos:*
-• /help - Mostra esta mensagem de ajuda
-• /reset - Limpa o histórico da conversa
-• /status - Verifica o status do bot e da API
-• /about - Informações sobre o bot
+*Basic Commands:*
+• /help - Show this help message
+• /reset - Clear conversation history
+• /status - Check bot and API status
+• /about - Information about the bot
+• /context - Show current AI context/persona
+• /reload - Reload AI context configuration
 
-*Como usar:*
-• Envie qualquer mensagem para conversar com a IA
-• Use os comandos acima para controlar o bot
-• O bot mantém o contexto da conversa automaticamente
+*How to use:*
+• Send any message to chat with the AI
+• Use the commands above to control the bot
+• The bot maintains conversation context automatically
 
-*Dicas:*
-• Mensagens muito longas são divididas automaticamente
-• Emojis sozinhos são ignorados
-• O bot responde apenas a mensagens de texto`;
+*Tips:*
+• Long messages are automatically split
+• Emoji-only messages are ignored
+• The bot responds only to text messages`;
   }
 
   /**
@@ -63,7 +71,7 @@ class CommandHandler {
    */
   handleReset(chatId) {
     this.conversationService.clearContext(chatId);
-    return '🔄 *Contexto da conversa limpo!*\n\nVocê pode começar uma nova conversa. O histórico anterior foi removido.';
+    return '🔄 *Conversation context cleared!*\n\nYou can start a new conversation. Previous history has been removed.';
   }
 
   /**
@@ -78,20 +86,20 @@ class CommandHandler {
       const statusEmoji = apiStatus ? '✅' : '❌';
       const apiStatusText = apiStatus ? 'Online' : 'Offline';
       
-      return `📊 *Status do Bot*
+      return `📊 *Bot Status*
 
-*API Yue-F:* ${statusEmoji} ${apiStatusText}
-*Conversas ativas:* ${stats.activeConversations}
-*Total de mensagens:* ${stats.totalMessages}
-*Modelo:* ${config.yuef.modelName}
-*Versão:* 1.0.0
+*Yue-F API:* ${statusEmoji} ${apiStatusText}
+*Active conversations:* ${stats.activeConversations}
+*Total messages:* ${stats.totalMessages}
+*Model:* ${config.yuef.modelName}
+*Version:* 1.1.0
 
-*Configurações:*
-• Timeout da API: ${config.yuef.timeout}ms
-• Máx. contexto: ${config.bot.maxContextMessages} mensagens
-• Tamanho máx. mensagem: ${config.bot.messageSplitLength} caracteres`;
+*Settings:*
+• API timeout: ${config.yuef.timeout}ms
+• Max context: ${config.bot.maxContextMessages} messages
+• Max message size: ${config.bot.messageSplitLength} characters`;
     } catch (error) {
-      return '❌ *Erro ao verificar status*\n\nNão foi possível verificar o status da API no momento.';
+      return '❌ *Error checking status*\n\nCould not verify API status at the moment.';
     }
   }
 
@@ -102,24 +110,58 @@ class CommandHandler {
   handleAbout() {
     return `🤖 *${config.bot.name}*
 
-*Sobre este bot:*
-Este é um assistente de IA integrado ao WhatsApp, powered by Yue-F AI model.
+*About this bot:*
+This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 
-*Características:*
-• Conversas naturais em português
-• Mantém contexto da conversa
-• Respostas rápidas e inteligentes
-• Interface familiar do WhatsApp
+*Features:*
+• Natural conversations with business context
+• Maintains conversation context
+• Fast and intelligent responses
+• Familiar WhatsApp interface
+• Customizable AI persona and knowledge base
 
-*Tecnologia:*
-• Modelo: Yue-F (via Ollama)
+*Technology:*
+• Model: Yue-F (via Ollama)
 • API: ${config.yuef.apiUrl}
-• Plataforma: Node.js + WhatsApp Web
+• Platform: Node.js + WhatsApp Web
 
-*Desenvolvido em:* Setembro 2025
-*Versão:* 1.0.0 (Fase 1)
+*Developed:* September 2025
+*Version:* 1.1.0 (Phase 1 + Context System)
 
-Para mais informações, use /help`;
+For more information, use /help`;
+  }
+
+  /**
+   * Handle /context command
+   * @returns {string} - Context information
+   */
+  handleContext() {
+    const { businessContext } = require('../config/context');
+    return `🎭 *Current AI Context*
+
+*Identity:*
+• Name: ${businessContext.identity.name}
+• Role: ${businessContext.identity.role}
+• Personality: ${businessContext.identity.personality}
+
+*Business:*
+• Company: ${businessContext.business.name}
+• Services: ${businessContext.business.services.length} configured
+• Products: ${businessContext.business.products.length} configured
+
+*Owner:*
+• ${businessContext.owner.name}, ${businessContext.owner.title}
+
+*Note:* Edit src/config/context.js to customize the AI's knowledge and personality.`;
+  }
+
+  /**
+   * Handle /reload command
+   * @returns {string} - Reload confirmation
+   */
+  handleReload() {
+    this.conversationService.reloadSystemPrompt();
+    return '🔄 *AI context reloaded!*\n\nThe AI has been updated with the latest configuration from context.js';
   }
 
   /**
@@ -128,9 +170,9 @@ Para mais informações, use /help`;
    * @returns {string} - Error message
    */
   handleUnknownCommand(command) {
-    return `❓ *Comando desconhecido: /${command}*
+    return `❓ *Unknown command: /${command}*
 
-Use /help para ver os comandos disponíveis.`;
+Use /help to see available commands.`;
   }
 }
 

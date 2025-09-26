@@ -1,198 +1,295 @@
 # WhatsApp AI Bot - Yue-F Integration
 
-Um bot inteligente para WhatsApp integrado com o modelo de IA Yue-F via API Ollama.
+An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context and persona.
 
-## 🚀 Características
+## 🚀 Features
 
-- **Conversas Naturais**: Interaja com a IA Yue-F diretamente pelo WhatsApp
-- **Contexto Persistente**: Mantém o histórico da conversa para respostas mais relevantes
-- **Comandos Úteis**: Sistema de comandos para controlar o bot
-- **Respostas Inteligentes**: Divisão automática de mensagens longas
-- **Interface Familiar**: Usa o WhatsApp Web para máxima compatibilidade
+- **Natural Conversations**: Interact with Yue-F AI directly through WhatsApp
+- **Business Context**: Customizable AI persona with your business information
+- **Persistent Context**: Maintains conversation history for more relevant responses
+- **Useful Commands**: Command system to control the bot and manage context
+- **Smart Responses**: Automatic splitting of long messages
+- **Familiar Interface**: Uses WhatsApp Web for maximum compatibility
 
-## 📋 Pré-requisitos
+## 📋 Prerequisites
 
-- Node.js 18+ instalado
+- Node.js 18+ installed
 - Chrome/Chromium browser
-- Conexão estável com a internet
-- Acesso ao WhatsApp Web
+- Stable internet connection
+- Access to WhatsApp Web
 
-## 🛠️ Instalação
+## 🛠️ Installation
 
-1. **Clone o repositório**:
+1. **Clone the repository**:
 ```bash
 git clone <repository-url>
 cd whatsapp-ai
 ```
 
-2. **Instale as dependências**:
+2. **Install dependencies**:
 ```bash
 npm install
 ```
 
-3. **Configure as variáveis de ambiente**:
+3. **Configure environment variables**:
 ```bash
 cp .env.example .env
 ```
-Edite o arquivo `.env` se necessário (as configurações padrão devem funcionar).
+Edit the `.env` file if needed (default settings should work).
 
-4. **Execute o bot**:
+4. **Customize your AI assistant** (Important!):
+Edit `src/config/context.js` to set up your business information:
+- Business name, services, and products
+- AI assistant name and personality
+- Owner information and expertise
+- FAQ and standard responses
+
+5. **Run the bot**:
 ```bash
 npm start
 ```
 
-5. **Escaneie o QR Code**:
-   - Um QR code aparecerá no terminal
-   - Abra o WhatsApp no seu celular
-   - Vá em "Dispositivos Conectados" > "Conectar um dispositivo"
-   - Escaneie o QR code exibido no terminal
+6. **Scan the QR Code**:
+   - A QR code will appear in the terminal
+   - Open WhatsApp on your phone
+   - Go to "Linked Devices" > "Link a device"
+   - Scan the QR code displayed in the terminal
 
-## 🎮 Como Usar
+## 🎮 How to Use
 
-### Comandos Disponíveis
+### Available Commands
 
-- `/help` - Mostra a lista de comandos disponíveis
-- `/reset` - Limpa o histórico da conversa atual
-- `/status` - Verifica o status do bot e da API
-- `/about` - Informações sobre o bot
+- `/help` - Show list of available commands
+- `/reset` - Clear current conversation history
+- `/status` - Check bot and API status
+- `/about` - Information about the bot
+- `/context` - Show current AI context/persona
+- `/reload` - Reload AI context configuration
 
-### Conversação Normal
+### Business Context Setup
 
-Simplesmente envie qualquer mensagem de texto para o bot e ele responderá usando a IA Yue-F. O bot mantém o contexto da conversa automaticamente.
+The bot comes with a powerful context system that allows you to create a professional AI assistant:
 
-### Exemplos de Uso
+1. **Edit `src/config/context.js`** to customize:
+   - **Identity**: AI name, role, personality
+   - **Business Info**: Company name, services, products, contact info
+   - **Owner Details**: Your information and expertise
+   - **FAQ**: Common questions and answers
+   - **Capabilities**: What the AI can and cannot do
+
+2. **Use `/reload`** command to apply changes without restarting
+
+3. **Use `/context`** to verify current configuration
+
+### Normal Conversation
+
+Simply send any text message to the bot and it will respond using Yue-F AI with your business context. The bot automatically maintains conversation context.
+
+### Usage Examples
 
 ```
-Usuário: Olá! Como você pode me ajudar?
-Bot: Olá! Sou um assistente de IA powered by Yue-F. Posso ajudar com...
+User: Hello! How can you help me?
+Bot: Hello! I'm Yue, your AI assistant for [Your Company]. I can help with...
 
-Usuário: /status
-Bot: 📊 Status do Bot
-API Yue-F: ✅ Online
-Conversas ativas: 1
+User: What services do you offer?
+Bot: We offer the following services:
+- Service 1: Description (R$ 299, 2 hours)
+- Service 2: Description (R$ 599, 1 day)
 ...
 
-Usuário: /reset
-Bot: 🔄 Contexto da conversa limpo!
+User: /status
+Bot: 📊 Bot Status
+Yue-F API: ✅ Online
+Active conversations: 1
+...
 ```
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-### Variáveis de Ambiente
+### Environment Variables
 
-| Variável | Descrição | Padrão |
-|----------|-----------|---------|
-| `YUE_F_API_URL` | URL da API Yue-F | `https://llms.yuricunha.com` |
-| `YUE_F_MODEL_NAME` | Nome do modelo | `yue-f` |
-| `API_TIMEOUT` | Timeout da API (ms) | `30000` |
-| `BOT_NAME` | Nome do bot | `WhatsApp AI Bot` |
-| `MAX_CONTEXT_MESSAGES` | Máx. mensagens no contexto | `20` |
-| `MESSAGE_SPLIT_LENGTH` | Tamanho máx. da mensagem | `1500` |
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `YUE_F_API_URL` | Yue-F API URL | `https://llms.yuricunha.com` |
+| `YUE_F_MODEL_NAME` | Model name | `yue-f` |
+| `API_TIMEOUT` | API timeout (ms) | `30000` |
+| `BOT_NAME` | Bot name | `WhatsApp AI Bot` |
+| `MAX_CONTEXT_MESSAGES` | Max messages in context | `20` |
+| `MESSAGE_SPLIT_LENGTH` | Max message size | `1500` |
 
-### Estrutura do Projeto
+### Business Context Configuration
+
+The most important configuration is in `src/config/context.js`. This file defines:
+
+- **AI Identity**: Name, role, personality, communication style
+- **Business Information**: Company details, services, products, contact info
+- **Owner Profile**: Your information, expertise, and background
+- **FAQ Database**: Pre-configured answers to common questions
+- **Capabilities & Limitations**: What the AI can and cannot do
+
+**Example customization:**
+```javascript
+const businessContext = {
+  identity: {
+    name: "Yue",
+    role: "Customer Service AI Assistant",
+    personality: "Professional, helpful, and knowledgeable"
+  },
+  business: {
+    name: "Tech Solutions Inc",
+    description: "We provide innovative tech solutions for businesses",
+    services: [
+      {
+        name: "Web Development",
+        description: "Custom websites and web applications",
+        price: "R$ 2,999",
+        duration: "2-4 weeks"
+      }
+    ]
+  }
+};
+```
+
+### Project Structure
 
 ```
 whatsapp-ai/
 ├── src/
 │   ├── bot/
-│   │   └── whatsappBot.js      # Classe principal do bot
+│   │   └── whatsappBot.js         # Main bot class
 │   ├── commands/
-│   │   └── commandHandler.js   # Manipulador de comandos
+│   │   └── commandHandler.js      # Command handler
 │   ├── config/
-│   │   └── config.js          # Configurações
+│   │   ├── config.js             # System configuration
+│   │   └── context.js            # AI context & business info
 │   ├── services/
-│   │   ├── yueApiService.js   # Cliente da API Yue-F
-│   │   ├── conversationService.js # Gerenciamento de contexto
-│   │   └── messageService.js  # Processamento de mensagens
-│   └── index.js               # Ponto de entrada
-├── .env                       # Variáveis de ambiente
-├── package.json              # Dependências do projeto
-└── README.md                 # Este arquivo
+│   │   ├── yueApiService.js      # Yue-F API client
+│   │   ├── conversationService.js # Context management
+│   │   └── messageService.js     # Message processing
+│   └── index.js                  # Application entry point
+├── .env                          # Environment variables
+├── package.json                  # Project dependencies
+└── README.md                     # This file
 ```
 
-## 🔧 Desenvolvimento
+## 🔧 Development
 
-### Scripts Disponíveis
+### Available Scripts
 
 ```bash
-npm start      # Inicia o bot
-npm run dev    # Inicia com nodemon (auto-reload)
+npm start      # Start the bot
+npm run dev    # Start with nodemon (auto-reload)
 ```
 
-### Logs e Debug
+### Logs and Debug
 
-Para habilitar logs detalhados, defina `DEBUG=true` no arquivo `.env`.
+To enable detailed logs, set `DEBUG=true` in the `.env` file.
 
-## 📊 Status da Implementação
+### Customizing the AI Assistant
 
-### ✅ Fase 1 - Funcionalidade Básica (Atual)
-- [x] Conexão básica com WhatsApp
-- [x] Integração com API Yue-F (Ollama compatible)
-- [x] Funcionalidade de echo de mensagens
-- [x] Tratamento básico de erros
-- [x] Sistema de comandos básico
-- [x] Gerenciamento de contexto de conversa
+1. **Edit Context**: Modify `src/config/context.js` to customize the AI's knowledge and personality
+2. **Test Changes**: Use `/reload` command to apply changes without restarting
+3. **Verify Setup**: Use `/context` command to check current configuration
+4. **Monitor Performance**: Use `/status` to check system health
 
-### 🔄 Próximas Fases
-- [ ] Sistema de contexto avançado
-- [ ] Indicadores de digitação
-- [ ] Divisão inteligente de mensagens
-- [ ] Monitoramento e logs avançados
-- [ ] Testes automatizados
-- [ ] Deploy em produção
+## 📊 Implementation Status
 
-## 🛡️ Segurança e Privacidade
+### ✅ Phase 1 - Core Functionality (Completed)
+- [x] Basic WhatsApp connection
+- [x] Yue-F API integration (Ollama compatible)
+- [x] Message echo functionality
+- [x] Basic error handling
+- [x] Basic command system
+- [x] Conversation context management
 
-- **Dados Temporários**: O contexto da conversa é armazenado apenas em memória
-- **Sem Logs Pessoais**: Não fazemos log de dados pessoais dos usuários
-- **HTTPS**: Toda comunicação com a API é criptografada
-- **Conformidade**: Respeita os Termos de Serviço do WhatsApp
+### ✅ Phase 1.5 - Business Context System (Completed)
+- [x] Customizable AI persona and business context
+- [x] Dynamic context loading and reloading
+- [x] Business information integration (services, products, FAQ)
+- [x] Context management commands (/context, /reload)
+- [x] Professional assistant capabilities
 
-## 🐛 Solução de Problemas
+### 🔄 Next Phases
+- [ ] Advanced context system with persistence
+- [ ] Typing indicators
+- [ ] Smart message splitting
+- [ ] Advanced monitoring and logs
+- [ ] Automated testing
+- [ ] Production deployment
 
-### Problemas Comuns
+## 🛡️ Security and Privacy
 
-1. **QR Code não aparece**:
-   - Verifique se o Chrome/Chromium está instalado
-   - Tente executar com `DEBUG=true npm start`
+- **Temporary Data**: Conversation context is stored only in memory
+- **No Personal Logs**: We don't log users' personal data
+- **HTTPS**: All API communication is encrypted
+- **Compliance**: Respects WhatsApp Terms of Service
+- **Business Data**: Your business information stays in your configuration files
 
-2. **Bot não responde**:
-   - Verifique se a API Yue-F está online usando `/status`
-   - Verifique sua conexão com a internet
-   - Reinicie o bot
+## 🐛 Troubleshooting
 
-3. **Erro de autenticação**:
-   - Delete a pasta `session/` e escaneie o QR code novamente
-   - Certifique-se de que o WhatsApp Web não está aberto em outro lugar
+### Common Issues
 
-### Logs de Erro
+1. **QR Code doesn't appear**:
+   - Check if Chrome/Chromium is installed
+   - Try running with `DEBUG=true npm start`
 
-Os logs são exibidos no console. Para logs detalhados:
+2. **Bot doesn't respond**:
+   - Check if Yue-F API is online using `/status`
+   - Check your internet connection
+   - Restart the bot
+
+3. **Authentication error**:
+   - Delete the `session/` folder and scan QR code again
+   - Make sure WhatsApp Web is not open elsewhere
+
+4. **AI responses seem generic**:
+   - Edit `src/config/context.js` with your business information
+   - Use `/reload` to apply changes
+   - Use `/context` to verify configuration
+
+### Error Logs
+
+Logs are displayed in the console. For detailed logs:
 
 ```bash
 DEBUG=true npm start
 ```
 
-## 📞 Suporte
+## 📞 Support
 
-- **Issues**: Abra uma issue no GitHub para problemas técnicos
-- **Documentação**: Consulte este README para dúvidas comuns
-- **API**: Verifique a documentação da API Yue-F em caso de problemas de conectividade
+- **Issues**: Open a GitHub issue for technical problems
+- **Documentation**: Check this README for common questions
+- **API**: Check Yue-F API documentation for connectivity issues
+- **Context Setup**: See `src/config/context.js` for business configuration examples
 
 ## 📝 Changelog
 
-### v1.0.0 (Setembro 2025)
-- Implementação inicial da Fase 1
-- Conexão básica com WhatsApp Web
-- Integração com API Yue-F via Ollama
-- Sistema de comandos básico
-- Gerenciamento de contexto de conversa
-- Tratamento básico de erros
+### v1.1.0 (September 2025)
+- **NEW**: Business context system for professional AI assistants
+- **NEW**: Customizable AI persona and knowledge base
+- **NEW**: `/context` and `/reload` commands for context management
+- **NEW**: Dynamic business information integration
+- **IMPROVED**: All content converted to English
+- **IMPROVED**: Enhanced command system with context features
 
-## 📄 Licença
+### v1.0.0 (September 2025)
+- Initial Phase 1 implementation
+- Basic WhatsApp Web connection
+- Yue-F API integration via Ollama
+- Basic command system
+- Conversation context management
+- Basic error handling
 
-MIT License - veja o arquivo LICENSE para detalhes.
+## 📄 License
+
+MIT License - see LICENSE file for details.
 
 ---
 
-**Desenvolvido com ❤️ usando Node.js + WhatsApp Web + Yue-F AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
+
+## 🎯 Perfect for:
+- **Business Customer Service**: Set up Yue as your professional assistant
+- **Personal Productivity**: AI helper with your specific knowledge base
+- **Technical Support**: AI that knows your products and services
+- **Sales Assistant**: AI that can provide pricing and product information

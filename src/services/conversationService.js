@@ -1,4 +1,5 @@
 const config = require('../config/config');
+const { generateSystemPrompt } = require('../config/context');
 
 class ConversationService {
   constructor() {
@@ -6,6 +7,7 @@ class ConversationService {
     // In production, this should be persisted to a database
     this.conversations = new Map();
     this.maxContextMessages = config.bot.maxContextMessages;
+    this.systemPrompt = generateSystemPrompt();
   }
 
   /**
@@ -54,21 +56,29 @@ class ConversationService {
   getFormattedContext(chatId) {
     const context = this.getContext(chatId);
     
-    // Add system message if this is the first interaction
-    if (context.length === 0) {
-      return [{
-        role: 'system',
-        content: 'Você é um assistente AI útil e amigável. Responda em português de forma clara e concisa.'
-      }];
-    }
-    
+    // Always include the business context system prompt
     return [
       {
         role: 'system',
-        content: 'Você é um assistente AI útil e amigável. Responda em português de forma clara e concisa.'
+        content: this.systemPrompt
       },
       ...context
     ];
+  }
+
+  /**
+   * Update system prompt (useful for dynamic context changes)
+   * @param {string} newPrompt - New system prompt
+   */
+  updateSystemPrompt(newPrompt) {
+    this.systemPrompt = newPrompt;
+  }
+
+  /**
+   * Reload system prompt from context configuration
+   */
+  reloadSystemPrompt() {
+    this.systemPrompt = generateSystemPrompt();
   }
 
   /**

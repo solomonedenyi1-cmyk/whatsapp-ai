@@ -32,6 +32,7 @@ class Application {
       
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
+      console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
       
     } catch (error) {
       console.error('❌ Failed to start application:', error);
