@@ -6,9 +6,11 @@ An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, f
 
 - **Natural Conversations**: Interact with Yue-F AI directly through WhatsApp
 - **Business Context**: Customizable AI persona with your business information
-- **Persistent Context**: Maintains conversation history for more relevant responses
-- **Useful Commands**: Command system to control the bot and manage context
+- **Advanced Persistence**: Permanent conversation storage with automatic backup
+- **Analytics & Reporting**: Comprehensive usage analytics and performance metrics
+- **Useful Commands**: Enhanced command system with analytics and data management
 - **Smart Responses**: Automatic splitting of long messages
+- **Data Management**: Automatic cleanup and storage optimization
 - **Familiar Interface**: Uses WhatsApp Web for maximum compatibility
 
 ## 📋 Prerequisites
@@ -54,19 +56,26 @@ npm start
 6. **Scan the QR Code**:
    - A QR code will appear in the terminal
    - Open WhatsApp on your phone
-   - Go to "Linked Devices" > "Link a device"
+   - Go to "WhatsApp Settings" > "Linked Devices" > "Link a device"
    - Scan the QR code displayed in the terminal
 
 ## 🎮 How to Use
 
-### Available Commands
+### 📱 Available Commands
 
-- `/help` - Show list of available commands
-- `/reset` - Clear current conversation history
-- `/status` - Check bot and API status
-- `/about` - Information about the bot
-- `/context` - Show current AI context/persona
-- `/reload` - Reload AI context configuration
+**Basic Commands:**
+- `/help` - Show available commands and usage tips
+- `/status` - Check bot status, API connectivity, and analytics overview
+- `/about` - Information about the bot and its capabilities
+- `/reset` - Clear conversation history and start fresh
+
+**Context Management:**
+- `/context` - View current AI configuration and business context
+- `/reload` - Reload AI context from config.json (apply changes without restart)
+
+**Analytics & Data Management:**
+- `/analytics` - View detailed conversation analytics and usage reports
+- `/cleanup` - Clean up old conversation data (30+ days) to optimize storage
 
 ### Business Context Setup
 
@@ -243,6 +252,33 @@ These are automatically processed when the configuration is loaded.
 
 **No more hardcoded values in the code!** All customization happens through the simple JSON file.
 
+### Phase 2 Features: Advanced Persistence & Analytics
+
+#### Persistent Conversation Storage
+- **Automatic Backup**: All conversations are automatically saved to JSON files in the `data/` directory
+- **Cross-Session Continuity**: Conversations persist across bot restarts and system reboots
+- **Smart Loading**: Conversations are loaded on-demand to optimize memory usage
+- **Data Integrity**: Robust error handling and data validation
+
+#### Comprehensive Analytics System
+- **Message Tracking**: Records all messages with timestamps and metadata
+- **User Analytics**: Tracks user engagement, message counts, and activity patterns
+- **Command Usage**: Monitors which commands are most popular
+- **Performance Metrics**: Response time tracking and system performance analysis
+- **Daily Statistics**: Aggregated daily stats for trend analysis
+- **Error Monitoring**: Automatic error tracking and categorization
+
+#### Enhanced Commands
+- **`/status`**: Now includes persistence stats and analytics overview
+- **`/analytics`**: Detailed 7-day analytics report with charts and insights
+- **`/cleanup`**: Automated cleanup of old data (30+ days) for storage optimization
+
+#### Data Management
+- **Automatic Cleanup**: Built-in maintenance functions to prevent storage bloat
+- **File-Based Storage**: Simple JSON files for easy backup and migration
+- **Scalable Architecture**: Designed to handle thousands of conversations efficiently
+- **Privacy Focused**: All data stored locally, no external dependencies
+
 ### Project Structure
 
 ```
@@ -368,6 +404,17 @@ DEBUG=true npm start
 - **JSON Help**: Use online JSON validators to check your configuration syntax
 
 ## 📝 Changelog
+
+### v2.0.0 (September 2025) - Phase 2 Complete
+- **NEW**: Advanced persistent conversation storage system
+- **NEW**: Comprehensive analytics and reporting dashboard
+- **NEW**: Enhanced command system with `/analytics` and `/cleanup`
+- **NEW**: Automatic data backup and cross-session continuity
+- **NEW**: Performance metrics and user engagement tracking
+- **NEW**: Smart data management with automatic cleanup
+- **IMPROVED**: Enhanced `/status` command with analytics overview
+- **IMPROVED**: Memory-efficient conversation loading system
+- **IMPROVED**: Robust error handling and data validation
 
 ### v1.3.0 (September 2025)
 - **NEW**: Complete migration of all hardcoded values to `config.json`

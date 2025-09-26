@@ -33,6 +33,12 @@ class CommandHandler {
       case 'reload':
         return this.handleReload();
       
+      case 'analytics':
+        return await this.handleAnalytics();
+      
+      case 'cleanup':
+        return await this.handleCleanup();
+      
       default:
         return this.handleUnknownCommand(command);
     }
@@ -40,51 +46,60 @@ class CommandHandler {
 
   /**
    * Handle /help command
-   * @returns {string} - Help message
+   * @returns {string} - Help message with available commands
    */
   handleHelp() {
-    return `🤖 *${config.bot.name} - Available Commands*
+    return `🤖 *Available Commands*
 
 *Basic Commands:*
 • /help - Show this help message
+• /status - Check bot and API status (with analytics)
+• /about - Information about this bot
 • /reset - Clear conversation history
-• /status - Check bot and API status
-• /about - Information about the bot
-• /context - Show current AI context/persona
-• /reload - Reload AI context configuration
 
-*How to use:*
-• Send any message to chat with the AI
-• Use the commands above to control the bot
-• The bot maintains conversation context automatically
+*Context Management:*
+• /context - View current AI configuration
+• /reload - Reload AI context from config.json
 
-*Tips:*
-• Long messages are automatically split
-• Emoji-only messages are ignored
-• The bot responds only to text messages`;
+*Analytics & Reports:*
+• /analytics - View conversation analytics report
+• /cleanup - Clean up old conversation data
+
+*Usage Tips:*
+• Just send a normal message to chat with the AI
+• The AI remembers our conversation context permanently
+• Conversations are automatically saved and restored
+• Use /reset if you want to start fresh
+• Edit config.json to customize the AI's personality
+
+*Need help?* Just ask me anything! 😊`;
   }
 
   /**
    * Handle /reset command
-   * @param {string} chatId - WhatsApp chat ID
-   * @returns {string} - Reset confirmation message
+   * @returns {string} - Reset confirmation
    */
-  handleReset(chatId) {
-    this.conversationService.clearContext(chatId);
-    return '🔄 *Conversation context cleared!*\n\nYou can start a new conversation. Previous history has been removed.';
+  async handleReset() {
+    const chatId = this.currentChatId;
+    if (chatId) {
+      await this.conversationService.clearContext(chatId);
+      return '🔄 *Conversation reset!*\n\nYour chat history has been cleared from both memory and storage. We can start fresh! 😊';
+    }
+    return '❌ Unable to reset conversation context.';
   }
 
   /**
    * Handle /status command
-   * @returns {Promise<string>} - Status message
+   * @returns {string} - Bot status information
    */
   async handleStatus() {
     try {
-      const apiStatus = await this.yueApiService.checkApiStatus();
-      const stats = this.conversationService.getStats();
+      // Test API connection
+      const testResponse = await this.yueApiService.testConnection();
+      const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
+      const statusEmoji = testResponse ? '✅' : '❌';
       
-      const statusEmoji = apiStatus ? '✅' : '❌';
-      const apiStatusText = apiStatus ? 'Online' : 'Offline';
+      const stats = await this.conversationService.getStats();
       
       return `📊 *Bot Status*
 
@@ -92,14 +107,27 @@ class CommandHandler {
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
 *Model:* ${config.yuef.modelName}
-*Version:* 1.1.0
+*API URL:* ${config.yuef.apiUrl}
 
-*Settings:*
-• API timeout: ${config.yuef.timeout}ms
-• Max context: ${config.bot.maxContextMessages} messages
-• Max message size: ${config.bot.messageSplitLength} characters`;
+*Persistence:*
+• Stored conversations: ${stats.persistent.conversations || 0}
+• Total users: ${stats.persistent.users || 0}
+• Analytics messages: ${stats.persistent.totalMessages || 0}
+
+*Analytics (7 days):*
+• Daily average: ${Math.round((stats.analytics.summary?.totalMessages || 0) / 7)} msgs/day
+• Total users: ${stats.analytics.summary?.totalUsers || 0}
+• Popular commands: ${Object.keys(stats.analytics.popularCommands || {}).slice(0, 3).join(', ') || 'None'}
+
+*System:* Running with enhanced features 🚀`;
+      
     } catch (error) {
-      return '❌ *Error checking status*\n\nCould not verify API status at the moment.';
+      return `📊 *Bot Status*
+
+*Yue-F API:* ❌ Error
+*Error:* ${error.message}
+
+*System:* Operational with API issues ⚠️`;
     }
   }
 
@@ -166,6 +194,61 @@ For more information, use /help`;
   }
 
   /**
+   * Handle /analytics command
+   * @returns {string} - Analytics report
+   */
+  async handleAnalytics() {
+    try {
+      const report = await this.conversationService.getAnalyticsReport(7);
+      
+      const dailyStatsText = Object.entries(report.dailyStats || {})
+        .slice(-3)
+        .map(([date, stats]) => `• ${date}: ${stats.messages} msgs, ${stats.conversations} convs`)
+        .join('\n') || 'No data available';
+      
+      const commandsText = Object.entries(report.popularCommands || {})
+        .slice(0, 5)
+        .map(([cmd, count]) => `• /${cmd}: ${count}x`)
+        .join('\n') || 'No commands recorded';
+      
+      return `📈 *Analytics Report (7 days)*
+
+*Summary:*
+• Total messages: ${report.summary?.totalMessages || 0}
+• Total conversations: ${report.summary?.totalConversations || 0}
+• Total users: ${report.summary?.totalUsers || 0}
+• Average response time: ${Math.round(report.averageResponseTime || 0)}ms
+
+*Recent Activity:*
+${dailyStatsText}
+
+*Popular Commands:*
+${commandsText}
+
+*Errors:*
+${Object.keys(report.errorStats || {}).length > 0 ? 
+  Object.entries(report.errorStats).map(([type, count]) => `• ${type}: ${count}x`).join('\n') : 
+  '• No errors recorded ✅'}`;
+  
+    } catch (error) {
+      return `❌ *Analytics Error*\n\nUnable to generate report: ${error.message}`;
+    }
+  }
+
+  /**
+   * Handle /cleanup command
+   * @returns {string} - Cleanup confirmation
+   */
+  async handleCleanup() {
+    try {
+      const cleaned = await this.conversationService.cleanupOldData(30);
+      return `🧹 *Data Cleanup Complete*\n\nCleaned up ${cleaned} old conversations (older than 30 days).\n\nStorage optimized! ✨`;
+    } catch (error) {
+      return `❌ *Cleanup Error*\n\nUnable to cleanup data: ${error.message}`;
+    }
+  }
+
+  /**
    * Handle unknown command
    * @param {string} command - Unknown command name
    * @returns {string} - Error message
@@ -173,7 +256,7 @@ For more information, use /help`;
   handleUnknownCommand(command) {
     return `❓ *Unknown command: /${command}*
 
-Use /help to see available commands.`;
+Type /help to see available commands.`;
   }
 }
 
