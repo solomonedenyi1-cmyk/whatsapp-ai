@@ -71,7 +71,7 @@ docker-compose -f docker-compose.env.yml up --build
 **Use case**: Production deployment without building, quick deployment
 ```bash
 # Download the compose file
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
 
 # Edit environment variables in the file
 nano docker-compose.hub.yml
@@ -84,8 +84,8 @@ docker-compose -f docker-compose.hub.yml up
 **Use case**: Production deployment with secure environment management
 ```bash
 # Download the compose file and env example
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub-env.yml
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/.env.example
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
 
 # Configure environment
 cp .env.example .env
@@ -160,14 +160,14 @@ nano .env  # Edit with your actual values
 
 ```bash
 # Option 1: Use pre-built image with .env file (Recommended)
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub-env.yml
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/.env.example
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub-env.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/.env.example
 cp .env.example .env
 nano .env  # Configure your settings
 docker-compose -f docker-compose.hub-env.yml up -d
 
 # Option 2: Use pre-built image with inline variables
-curl -O https://raw.githubusercontent.com/your-username/whatsapp-ai/main/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/isyuricunha/whatsapp-ai/main/docker-compose.hub.yml
 nano docker-compose.hub.yml  # Edit environment variables
 docker-compose -f docker-compose.hub.yml up -d
 ```
