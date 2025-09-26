@@ -74,17 +74,25 @@ class WhatsAppBot {
         }
 
         // Create WhatsApp client with enhanced options
+        const puppeteerOptions = {
+          ...config.whatsapp.puppeteerOptions,
+          // Add retry-specific options
+          handleSIGINT: false,
+          handleSIGTERM: false,
+          handleSIGHUP: false
+        };
+        
+        // Generate unique user data directory for each attempt
+        const userDataDir = `/tmp/chrome-user-data-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        puppeteerOptions.args = puppeteerOptions.args.map(arg => 
+          arg.startsWith('--user-data-dir=') ? `--user-data-dir=${userDataDir}` : arg
+        );
+        
         this.client = new Client({
           authStrategy: new LocalAuth({
             dataPath: config.whatsapp.sessionPath
           }),
-          puppeteer: {
-            ...config.whatsapp.puppeteerOptions,
-            // Add retry-specific options
-            handleSIGINT: false,
-            handleSIGTERM: false,
-            handleSIGHUP: false
-          }
+          puppeteer: puppeteerOptions
         });
 
         // Set up event listeners
