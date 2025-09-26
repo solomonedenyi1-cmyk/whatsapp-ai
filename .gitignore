@@ -93,3 +93,6 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# User data
+data/
