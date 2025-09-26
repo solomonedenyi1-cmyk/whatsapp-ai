@@ -34,7 +34,7 @@ This guide provides comprehensive instructions for deploying the WhatsApp AI Bot
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/whatsapp-ai.git
+git clone https://github.com/isyuricunha/whatsapp-ai.git
 cd whatsapp-ai
 ```
 
