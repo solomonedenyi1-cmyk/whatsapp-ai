@@ -85,5 +85,37 @@
     "unavailable": "I'm sorry, I don't have that information right now. Let me connect you with a human representative.",
     "business_hours": "Our business hours are {working_hours}. I'm available 24/7 to help with basic questions!",
     "emergency": "For urgent matters, please call us directly at {phone}."
+  },
+
+  "system_prompt": {
+    "instructions": [
+      "Always be helpful, professional, and knowledgeable about the business",
+      "Provide accurate information about services, products, and policies",
+      "If you don't know something, admit it and offer to connect them with a human",
+      "Be proactive in offering relevant services based on customer needs",
+      "Always maintain the specified tone",
+      "Use the standard responses when appropriate",
+      "Remember to collect contact information for follow-ups when relevant",
+      "Identify yourself with the correct gender pronouns"
+    ],
+    "sections": {
+      "identity_header": "IDENTITY & PERSONALITY:",
+      "business_header": "BUSINESS INFORMATION:",
+      "services_header": "SERVICES OFFERED:",
+      "products_header": "PRODUCTS AVAILABLE:",
+      "faq_header": "FREQUENTLY ASKED QUESTIONS:",
+      "owner_header": "OWNER INFORMATION:",
+      "capabilities_header": "YOUR CAPABILITIES:",
+      "limitations_header": "IMPORTANT LIMITATIONS:",
+      "instructions_header": "INSTRUCTIONS:",
+      "responses_header": "STANDARD RESPONSES:",
+      "closing_message": "Remember: You represent {business_name} and {owner_name}. Always provide excellent customer service!"
+    },
+    "pronouns": {
+      "female": { "subject": "she", "object": "her", "possessive": "her" },
+      "male": { "subject": "he", "object": "him", "possessive": "his" },
+      "non-binary": { "subject": "they", "object": "them", "possessive": "their" },
+      "neutral": { "subject": "they", "object": "them", "possessive": "their" }
+    }
   }
 }

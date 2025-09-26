@@ -141,6 +141,7 @@ For more information, use /help`;
 
 *Identity:*
 • Name: ${businessContext.identity.name}
+• Gender: ${businessContext.identity.gender}
 • Role: ${businessContext.identity.role}
 • Personality: ${businessContext.identity.personality}
 
@@ -152,7 +153,7 @@ For more information, use /help`;
 *Owner:*
 • ${businessContext.owner.name}, ${businessContext.owner.title}
 
-*Note:* Edit src/config/context.js to customize the AI's knowledge and personality.`;
+*Note:* Edit config.json in the root directory to customize the AI's knowledge and personality.`;
   }
 
   /**
@@ -161,7 +162,7 @@ For more information, use /help`;
    */
   handleReload() {
     this.conversationService.reloadSystemPrompt();
-    return '🔄 *AI context reloaded!*\n\nThe AI has been updated with the latest configuration from context.js';
+    return '🔄 *AI context reloaded!*\n\nThe AI has been updated with the latest configuration from config.json';
   }
 
   /**

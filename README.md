@@ -123,49 +123,125 @@ Active conversations: 1
 | `MESSAGE_SPLIT_LENGTH` | Max message size | `1500` |
 
 ### Business Context Configuration
-
-The most important configuration is in `config.json` (root directory). This file defines:
-
-- **AI Identity**: Name, gender, role, personality, communication style
-- **Business Information**: Company details, services, products, contact info
-- **Owner Profile**: Your information, expertise, and background
-- **FAQ Database**: Pre-configured answers to common questions
-- **Capabilities & Limitations**: What the AI can and cannot do
-
-**Example customization:**
 ```json
 {
   "ai_identity": {
     "name": "Yue",
     "gender": "female",
-    "role": "Customer Service AI Assistant",
-    "personality": "professional, helpful, and knowledgeable",
+    "role": "AI Assistant", 
+    "personality": "friendly, professional, and helpful",
     "language": "Portuguese (Brazilian)",
     "tone": "professional but approachable"
-  },
+  }
+}
+```
+
+**Gender Identity Support**: The system automatically uses appropriate pronouns (she/her, he/him, they/them) based on the gender setting.
+
+### Business Information
+
+Configure your business details:
+
+```json
+{
   "business": {
-    "name": "Tech Solutions Inc",
-    "description": "We provide innovative tech solutions for businesses",
-    "website": "https://techsolutions.com",
-    "email": "contact@techsolutions.com",
-    "phone": "+55 11 99999-9999"
-  },
+    "name": "Your Company Name",
+    "description": "Brief description of your business",
+    "website": "https://yourwebsite.com",
+    "email": "contact@yourcompany.com", 
+    "phone": "+55 11 99999-9999",
+    "address": "Your business address",
+    "working_hours": "Monday to Friday, 9 AM to 6 PM (GMT-3)"
+  }
+}
+```
+
+### Services and Products
+
+Add your offerings:
+
+```json
+{
   "services": [
     {
-      "name": "Web Development",
-      "description": "Custom websites and web applications",
-      "price": "R$ 2,999",
-      "duration": "2-4 weeks"
+      "name": "Service 1",
+      "description": "Description of your service",
+      "price": "R$ 299",
+      "duration": "2 hours"
+    }
+  ],
+  "products": [
+    {
+      "name": "Product 1", 
+      "description": "Description of your product",
+      "price": "R$ 199",
+      "availability": "In stock"
     }
   ]
 }
 ```
 
-**Gender Identity Support:**
-The AI can identify as:
-- `"female"` - Uses she/her/her pronouns
-- `"male"` - Uses he/him/his pronouns  
-- `"non-binary"` or `"neutral"` - Uses they/them/their pronouns
+### Advanced Configuration Options
+
+#### System Prompt Customization
+
+The `system_prompt` section allows complete customization of how the AI generates its personality and responses:
+
+```json
+{
+  "system_prompt": {
+    "instructions": [
+      "Always be helpful, professional, and knowledgeable about the business",
+      "Provide accurate information about services, products, and policies",
+      "If you don't know something, admit it and offer to connect them with a human",
+      "Be proactive in offering relevant services based on customer needs"
+    ],
+    "sections": {
+      "identity_header": "IDENTITY & PERSONALITY:",
+      "business_header": "BUSINESS INFORMATION:",
+      "services_header": "SERVICES OFFERED:",
+      "products_header": "PRODUCTS AVAILABLE:",
+      "faq_header": "FREQUENTLY ASKED QUESTIONS:",
+      "owner_header": "OWNER INFORMATION:",
+      "capabilities_header": "YOUR CAPABILITIES:",
+      "limitations_header": "IMPORTANT LIMITATIONS:",
+      "instructions_header": "INSTRUCTIONS:",
+      "responses_header": "STANDARD RESPONSES:",
+      "closing_message": "Remember: You represent {business_name} and {owner_name}. Always provide excellent customer service!"
+    },
+    "pronouns": {
+      "female": { "subject": "she", "object": "her", "possessive": "her" },
+      "male": { "subject": "he", "object": "him", "possessive": "his" },
+      "non-binary": { "subject": "they", "object": "them", "possessive": "their" },
+      "neutral": { "subject": "they", "object": "them", "possessive": "their" }
+    }
+  }
+}
+```
+
+#### Dynamic Template Variables
+
+The configuration supports template variables in various sections:
+- `{name}` - Replaced with AI identity name
+- `{working_hours}` - Replaced with business working hours
+- `{phone}` - Replaced with business phone number
+- `{business_name}` - Replaced with business name
+- `{owner_name}` - Replaced with owner name
+
+These are automatically processed when the configuration is loaded.
+
+#### Complete Customization
+
+**Everything is now configurable in `config.json`:**
+- ✅ AI personality and behavior instructions
+- ✅ System prompt section headers and structure
+- ✅ Gender pronouns and language rules
+- ✅ Business information and context
+- ✅ Standard responses and templates
+- ✅ Capabilities and limitations
+- ✅ FAQ and knowledge base
+
+**No more hardcoded values in the code!** All customization happens through the simple JSON file.
 
 ### Project Structure
 
@@ -293,12 +369,25 @@ DEBUG=true npm start
 
 ## 📝 Changelog
 
+### v1.3.0 (September 2025)
+- **NEW**: Complete migration of all hardcoded values to `config.json`
+- **NEW**: Fully customizable system prompt structure and instructions
+- **NEW**: Configurable section headers and prompt formatting
+- **NEW**: Advanced template variable system with business/owner name support
+- **IMPROVED**: Zero hardcoded values remaining in codebase
+- **IMPROVED**: Complete separation of configuration from code logic
+- **IMPROVED**: Enhanced customization capabilities for non-developers
+
 ### v1.2.0 (September 2025)
 - **NEW**: Simplified JSON configuration system (no coding required!)
 - **NEW**: Gender identity support with automatic pronoun usage
 - **NEW**: User-friendly configuration format for non-developers
+- **NEW**: Dynamic template variables in standard responses
 - **IMPROVED**: Configuration now in simple `config.json` file
 - **IMPROVED**: Better error handling for configuration issues
+- **IMPROVED**: Eliminated code duplication between config files
+- **FIXED**: Export issues with reloadConfig function
+- **FIXED**: Command handler references to use config.json instead of context.js
 
 ### v1.1.0 (September 2025)
 - **NEW**: Business context system for professional AI assistants
