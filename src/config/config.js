@@ -49,7 +49,7 @@ const config = {
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor'
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? undefined : '/usr/bin/google-chrome-stable')
     }
   },
 
