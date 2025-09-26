@@ -25,6 +25,9 @@ class YueApiService {
    * @returns {Promise<string>} - The AI response content
    */
   async sendChatMessage(messages, warningCallback = null) {
+    let warningTimer = null;
+    let warningSent = false;
+    
     try {
       const requestData = {
         model: this.modelName,
@@ -37,20 +40,23 @@ class YueApiService {
       }
 
       // Set up warning timer for 5 minutes
-      let warningTimer = null;
       if (warningCallback) {
         warningTimer = setTimeout(() => {
-          console.log('⏰ 5-minute warning sent to user');
-          warningCallback();
+          if (!warningSent) {
+            warningSent = true;
+            console.log('⏰ 5-minute warning sent to user');
+            warningCallback();
+          }
         }, this.warningTimeout);
       }
 
       // Make request with no timeout - wait indefinitely
       const response = await this.client.post('/api/chat', requestData);
 
-      // Clear warning timer if response comes before 5 minutes
+      // Clear warning timer immediately when response arrives
       if (warningTimer) {
         clearTimeout(warningTimer);
+        warningTimer = null;
       }
 
       if (config.env.debug) {
@@ -65,6 +71,12 @@ class YueApiService {
       }
 
     } catch (error) {
+      // Clear warning timer on error as well
+      if (warningTimer) {
+        clearTimeout(warningTimer);
+        warningTimer = null;
+      }
+      
       console.error('Error calling Yue-F API:', error.message);
       
       if (error.response) {
@@ -79,6 +91,11 @@ class YueApiService {
       
       // For connection issues, throw the error to be handled upstream
       throw error;
+    } finally {
+      // Ensure timer is always cleared
+      if (warningTimer) {
+        clearTimeout(warningTimer);
+      }
     }
   }
 
