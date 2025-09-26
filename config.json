@@ -2,20 +2,20 @@
   "ai_identity": {
     "name": "Yue",
     "gender": "female",
-    "role": "AI Assistant",
+    "role": "Atendente",
     "personality": "friendly, professional, and helpful",
     "language": "Portuguese (Brazilian)",
     "tone": "professional but approachable"
   },
   
   "business": {
-    "name": "Your Company Name",
-    "description": "Brief description of your business",
-    "website": "https://yourwebsite.com",
-    "email": "contact@yourcompany.com",
-    "phone": "+55 11 99999-9999",
-    "address": "Your business address",
-    "working_hours": "Monday to Friday, 9 AM to 6 PM (GMT-3)"
+    "name": "YC Inc.",
+    "description": "Dos servidores até o website. Tudo o que você precisa para administrar sua empresa e clientes.",
+    "website": "https://yuricunha.com",
+    "email": "comercial@yuricunha.com",
+    "phone": "+55 11 91788-7469",
+    "address": "Apenas digital, sem endereço físico.",
+    "working_hours": "Segunda a Sexta, das 8h às 17h (GMT-3)"
   },
   
   "services": [
@@ -43,7 +43,7 @@
   ],
   
   "owner": {
-    "name": "Your Name",
+    "name": "Yuri Cunha",
     "title": "Founder & CEO",
     "bio": "Brief bio about yourself and your expertise",
     "experience": "X years of experience in your field",
