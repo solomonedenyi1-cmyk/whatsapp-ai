@@ -93,19 +93,7 @@ class WhatsAppClient:
             if chrome_path:
                 # Use the Chrome/Chromium path set by Docker startup script
                 self.chrome_options.binary_location = chrome_path
-                
-                # Try to use system chromedriver first, fallback to WebDriverManager
-                try:
-                    import shutil
-                    system_chromedriver = shutil.which("chromedriver")
-                    if system_chromedriver:
-                        service = Service(system_chromedriver)
-                    else:
-                        # Disable WebDriverManager cache to avoid corrupted downloads
-                        os.environ['WDM_LOCAL'] = '1'
-                        service = Service(ChromeDriverManager(cache_valid_range=1).install())
-                except Exception:
-                    service = Service(ChromeDriverManager(cache_valid_range=1).install())
+                service = Service(ChromeDriverManager().install())
             elif config.chrome.executable_path == "auto":
                 service = Service(ChromeDriverManager().install())
             else:
