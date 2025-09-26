@@ -29,12 +29,36 @@ An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, f
 
 ## 📋 Prerequisites
 
-- Node.js 18+ installed
-- Chrome/Chromium browser
+- Node.js 18+ installed OR Docker
+- Chrome/Chromium browser (if running locally)
 - Stable internet connection
 - Access to WhatsApp Web
 
 ## 🛠️ Installation
+
+### Option 1: Docker (Recommended)
+
+#### Using Docker Hub (Pre-built Image)
+```bash
+# Pull the latest image
+docker pull yuricunha/whatsapp-ai-bot:latest
+
+# Run with docker-compose (production)
+curl -O https://raw.githubusercontent.com/your-repo/whatsapp-ai/main/docker-compose.prod.yml
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### Building from Source
+```bash
+# Clone the repository
+git clone <repository-url>
+cd whatsapp-ai
+
+# Build and run with docker-compose
+docker-compose up -d --build
+```
+
+### Option 2: Local Installation
 
 1. **Clone the repository**:
 ```bash
@@ -56,6 +80,51 @@ Edit the `.env` file and set your admin WhatsApp number:
 ADMIN_WHATSAPP_NUMBER=your_number@c.us
 ```
 Replace `your_number@c.us` with your actual WhatsApp number in the format `551234567890@c.us`.
+
+## 🐳 Docker Configuration
+
+### Environment Variables
+Both docker-compose files support environment variables via `.env` file or direct environment variable injection:
+
+```bash
+# Create .env file for Docker
+cp .env.example .env
+```
+
+**Required Variables:**
+- `ADMIN_WHATSAPP_NUMBER` - Your WhatsApp number for admin access
+- `YUE_F_API_URL` - API endpoint (default: https://llms.yuricunha.com)
+- `YUE_F_MODEL_NAME` - Model name (default: yue-f)
+
+**Optional Variables:**
+- `NODE_ENV` - Environment (production/development)
+- `API_TIMEOUT` - API timeout in ms (default: 30000)
+- `BOT_NAME` - Bot display name
+- `DEBUG` - Enable debug logging
+
+### Docker Compose Options
+
+**Development (Build from source):**
+```bash
+docker-compose up -d --build
+```
+
+**Production (Pre-built image):**
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Data Persistence
+Docker volumes automatically persist:
+- WhatsApp session data (`.wwebjs_auth`, `.wwebjs_cache`)
+- Application data (`conversations`, `analytics`, `logs`)
+
+### Health Checks
+Built-in health checks monitor container status:
+```bash
+docker ps  # Check container health status
+docker logs whatsapp-ai-bot  # View application logs
+```
 
 4. **Customize your AI assistant** (Important!):
 Edit `config.json` in the root directory to set up your business information:
