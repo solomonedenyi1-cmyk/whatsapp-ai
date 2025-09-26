@@ -229,7 +229,7 @@ CMD ["npm", "start"]
 Create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+
 
 services:
   whatsapp-ai-bot:

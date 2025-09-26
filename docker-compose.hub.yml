@@ -1,6 +1,6 @@
 # Docker Compose - Docker Hub Image + Environment Variables Inline
 # Usage: docker-compose -f docker-compose.hub.yml up
-version: '3.8'
+
 
 services:
   whatsapp-ai-bot:

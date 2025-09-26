@@ -1,6 +1,6 @@
 # Docker Compose - Build + Environment Variables Inline
 # Usage: docker-compose up --build
-version: '3.8'
+
 
 services:
   whatsapp-ai-bot:
