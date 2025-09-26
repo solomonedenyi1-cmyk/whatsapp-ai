@@ -1,0 +1,83 @@
+# Docker Compose - Custom Configuration (Based on Previous Setup)
+# Usage: docker-compose -f docker-compose.custom.yml up --build
+
+services:
+  whatsapp-ai-bot:
+    image: isyuricunha/whatsapp-ai-bot:latest
+    container_name: whatsapp-ai-bot
+    restart: unless-stopped
+    
+    # Environment variables adapted for Python version
+    environment:
+      # Production environment
+      - PYTHON_ENV=production
+      
+      # Ollama API Configuration
+      - AI_PROVIDER=ollama
+      - OLLAMA_API_URL=https://llms.yuricunha.com/v1
+      - OLLAMA_MODEL=yue-f
+      - API_TIMEOUT=30000
+      
+      # Bot Configuration
+      - BOT_NAME=WhatsApp AI Assistant
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      
+      # Admin Configuration
+      - ADMIN_WHATSAPP_NUMBER=5511987654321@c.us
+      
+      # Message Configuration
+      - MAX_CONTEXT_MESSAGES=50
+      - MESSAGE_SPLIT_LENGTH=1500
+      
+      # Chrome Configuration for Docker (Python/Selenium equivalent)
+      - CHROME_HEADLESS=true
+      - CHROME_NO_SANDBOX=true
+      - CHROME_DISABLE_GPU=true
+      - CHROME_PATH=/usr/bin/google-chrome-stable
+    
+    # Volume mounts matching your previous structure
+    volumes:
+      # WhatsApp session data (equivalent to .wwebjs_auth)
+      - ~/docker/docker-data/whatsapp-ai/whatsapp_sessions:/usr/src/app/.wwebjs_auth
+      
+      # App data directory
+      - ~/docker/docker-data/whatsapp-ai/app_data:/usr/src/app/data
+      
+      # Configuration file
+      - ./config.json:/usr/src/app/config.json:ro
+      
+      # Additional Python-specific volumes
+      - ~/docker/docker-data/whatsapp-ai/logs:/usr/src/app/logs
+      - ~/docker/docker-data/whatsapp-ai/chrome_data:/usr/src/app/.chrome_user_data
+    
+    # Network configuration
+    networks:
+      - whatsapp-network
+    
+    # Security options for Chrome in container
+    security_opt:
+      - seccomp:unconfined
+    
+    # Shared memory for Chrome
+    shm_size: 2gb
+    
+    # Health check adapted for Python version
+    healthcheck:
+      test: ["CMD", "python", "-m", "whatsapp_ai.main", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Named volumes
+volumes:
+  whatsapp_sessions:
+    driver: local
+  app_data:
+    driver: local
+
+# Network configuration
+networks:
+  whatsapp-network:
+    driver: bridge

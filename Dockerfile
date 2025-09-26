@@ -92,6 +92,9 @@ echo "🐳 Starting WhatsApp AI Bot in Docker..."
 # Setup display for headless Chrome
 export DISPLAY=:99
 
+# Clean up any existing X11 locks
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
+
 # Start Xvfb in background
 echo "🖥️ Starting virtual display..."
 Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
@@ -120,6 +123,7 @@ cleanup() {
     if [ ! -z "\$XVFB_PID" ]; then
         kill \$XVFB_PID 2>/dev/null || true
     fi
+    rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
 }
 
 # Set trap for cleanup
@@ -130,8 +134,8 @@ echo "🤖 Starting WhatsApp AI Bot..."
 cd /usr/src/app
 
 # Set Chrome/Chromium path based on architecture
-ARCH=$(dpkg --print-architecture)
-if [ "$ARCH" = "amd64" ]; then
+ARCH=\$(dpkg --print-architecture)
+if [ "\$ARCH" = "amd64" ]; then
     export CHROME_PATH="/usr/bin/google-chrome-stable"
 else
     export CHROME_PATH="/usr/bin/chromium"
