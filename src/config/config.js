@@ -70,7 +70,7 @@ const config = {
         '--disable-dev-tools',
         '--disable-background-mode',
         '--force-device-scale-factor=1',
-        '--user-data-dir=/tmp/chrome-user-data'
+        `--user-data-dir=/tmp/chrome-user-data-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       ],
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? undefined : '/usr/bin/google-chrome-stable'),
       ignoreDefaultArgs: ['--disable-extensions'],
