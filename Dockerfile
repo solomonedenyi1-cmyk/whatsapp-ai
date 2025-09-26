@@ -33,7 +33,7 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     DISPLAY=:99
 
-# Install Chrome and system dependencies
+# Install Chrome/Chromium and system dependencies
 RUN apt-get update && apt-get install -y \
     # Chrome dependencies
     wget \
@@ -43,14 +43,22 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     x11-utils \
     ca-certificates \
-    # Chrome browser - modern approach without apt-key
-    && wget -q -O /tmp/google-chrome-key.gpg https://dl-ssl.google.com/linux/linux_signing_key.pub \
-    && gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    # Architecture detection and browser installation
+    && ARCH=$(dpkg --print-architecture) \
+    && if [ "$ARCH" = "amd64" ]; then \
+        # Install Google Chrome for AMD64
+        wget -q -O /tmp/google-chrome-key.gpg https://dl-ssl.google.com/linux/linux_signing_key.pub \
+        && gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.gpg \
+        && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+        && apt-get update \
+        && apt-get install -y google-chrome-stable \
+        && rm -f /tmp/google-chrome-key.gpg; \
+    else \
+        # Install Chromium for ARM64 and other architectures
+        apt-get install -y chromium chromium-driver; \
+    fi \
     # Cleanup
-    && rm -rf /var/lib/apt/lists/* /tmp/google-chrome-key.gpg \
+    && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 # Copy virtual environment from builder
@@ -120,6 +128,15 @@ trap cleanup EXIT INT TERM
 # Start the bot
 echo "🤖 Starting WhatsApp AI Bot..."
 cd /usr/src/app
+
+# Set Chrome/Chromium path based on architecture
+ARCH=$(dpkg --print-architecture)
+if [ "$ARCH" = "amd64" ]; then
+    export CHROME_PATH="/usr/bin/google-chrome-stable"
+else
+    export CHROME_PATH="/usr/bin/chromium"
+fi
+
 python -m whatsapp_ai.main start
 EOF
 

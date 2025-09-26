@@ -6,6 +6,7 @@ import time
 import qrcode
 import io
 import base64
+import os
 from typing import Optional, List, Dict, Any, Callable
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -88,7 +89,12 @@ class WhatsAppClient:
             self.logger.info("🤖 Initializing WhatsApp Web client...")
             
             # Setup Chrome driver
-            if config.chrome.executable_path == "auto":
+            chrome_path = os.getenv("CHROME_PATH")
+            if chrome_path:
+                # Use the Chrome/Chromium path set by Docker startup script
+                self.chrome_options.binary_location = chrome_path
+                service = Service(ChromeDriverManager().install())
+            elif config.chrome.executable_path == "auto":
                 service = Service(ChromeDriverManager().install())
             else:
                 service = Service(config.chrome.executable_path)
