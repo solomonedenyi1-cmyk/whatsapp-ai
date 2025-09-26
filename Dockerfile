@@ -48,7 +48,8 @@ RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
 WORKDIR /usr/src/app
 
 # Create non-root user for security with specific UID/GID for volume compatibility
-RUN groupadd -r whatsapp --gid=1000 && useradd -r -g whatsapp --uid=1000 -G audio,video whatsapp \
+RUN (groupadd -r whatsapp --gid=1000 || groupmod -n whatsapp $(getent group 1000 | cut -d: -f1)) \
+    && (useradd -r -g whatsapp --uid=1000 -G audio,video whatsapp || usermod -l whatsapp -g whatsapp $(getent passwd 1000 | cut -d: -f1)) \
     && mkdir -p /home/whatsapp/Downloads \
     && chown -R whatsapp:whatsapp /home/whatsapp \
     && chown -R whatsapp:whatsapp /usr/src/app
