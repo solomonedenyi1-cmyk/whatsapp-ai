@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /opt/venv /opt/venv
 
 # Create non-root user for security
-RUN groupadd -r whatsapp && useradd -r -g whatsapp -s /bin/bash -m whatsapp
+RUN groupadd -r whatsapp && useradd -r -g whatsapp -s /bin/bash whatsapp
 
 # Create application directory
 WORKDIR /usr/src/app
@@ -77,9 +77,7 @@ COPY config.example.json .
 
 # Create necessary directories and set permissions
 RUN mkdir -p data logs .chrome_user_data .wwebjs_auth && \
-    chown -R whatsapp:whatsapp /usr/src/app && \
-    mkdir -p /home/whatsapp/.local/share/applications && \
-    chown -R whatsapp:whatsapp /home/whatsapp
+    chown -R whatsapp:whatsapp /usr/src/app
 
 # Switch to non-root user
 USER whatsapp
