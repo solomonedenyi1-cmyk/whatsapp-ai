@@ -114,7 +114,7 @@ class BotRunner:
 
 @click.group()
 @click.option('--debug', is_flag=True, help='Enable debug mode')
-@click.option('--config', 'config_file', default='config.json', help='Configuration file path')
+@click.option('--config', default='config.json', help='Configuration file path')
 def cli(debug, config_file):
     """WhatsApp AI Bot - Python Edition"""
     if debug:
