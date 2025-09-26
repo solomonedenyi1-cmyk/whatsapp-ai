@@ -80,13 +80,13 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/whatsapp-ai-bot:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/whatsapp-ai-bot:${{ steps.version.outputs.docker_version }}
+            ${{ secrets.DOCKER_USERNAME }}/whatsapp-ai-bot:latest
+            ${{ secrets.DOCKER_USERNAME }}/whatsapp-ai-bot:${{ steps.version.outputs.docker_version }}
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.docker_version }}
           labels: |
-            org.opencontainers.image.title=WhatsApp AI Bot - Yue-F Integration
-            org.opencontainers.image.description=An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context and persona.
+            org.opencontainers.image.title=WhatsApp AI Bot - AI Integration
+            org.opencontainers.image.description=An intelligent WhatsApp bot integrated with AI models via Ollama API, featuring customizable business context and persona.
             org.opencontainers.image.version=${{ steps.version.outputs.new_tag }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
             org.opencontainers.image.revision=${{ github.sha }}

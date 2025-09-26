@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-ai-bot",
   "version": "1.0.0",
-  "description": "WhatsApp Bot integrated with Yue-F AI model via Ollama API",
+  "description": "WhatsApp Bot integrated with AI models via Ollama API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -13,7 +13,7 @@
     "bot",
     "ai",
     "ollama",
-    "yue-f"
+    "llama"
   ],
   "author": "",
   "license": "MIT",

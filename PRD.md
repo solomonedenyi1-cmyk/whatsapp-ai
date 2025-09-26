@@ -333,8 +333,10 @@ POST /api/chat
 - [x] Logging configuration
 
 **Files Created**:
-- `docker-compose.yml` - Development with build from source
-- `docker-compose.prod.yml` - Production with pre-built image
+- `docker-compose.yml` - Build with environment variables inline
+- `docker-compose.env.yml` - Build with .env file
+- `docker-compose.hub.yml` - Docker Hub image with environment variables inline
+- `docker-compose.hub-env.yml` - Docker Hub image with .env file
 - `.dockerignore` - Optimized build context
 
 ### 4.3 GitHub Actions CI/CD
