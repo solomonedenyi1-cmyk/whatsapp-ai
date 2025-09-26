@@ -25,7 +25,7 @@ const config = {
   whatsapp: {
     sessionPath: './.wwebjs_auth',
     puppeteerOptions: {
-      headless: 'new', // Use new headless mode for better stability
+      headless: true, // Use stable headless mode
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -33,7 +33,6 @@ const config = {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--single-process',
         '--disable-gpu',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
@@ -76,9 +75,9 @@ const config = {
       ignoreDefaultArgs: ['--disable-extensions'],
       defaultViewport: null,
       devtools: false,
-      timeout: 60000,
-      protocolTimeout: 60000,
-      slowMo: 0
+      timeout: 120000,
+      protocolTimeout: 120000,
+      slowMo: 100
     }
   },
 
