@@ -60,8 +60,10 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy application code
 COPY . .
 
-# Create data directory for persistence
-RUN mkdir -p /usr/src/app/data && chown -R whatsapp:whatsapp /usr/src/app
+# Create data directory for persistence and set proper permissions
+RUN mkdir -p /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache \
+    && chown -R whatsapp:whatsapp /usr/src/app \
+    && chmod -R 755 /usr/src/app/data /usr/src/app/.wwebjs_auth /usr/src/app/.wwebjs_cache
 
 # Switch to non-root user
 USER whatsapp
@@ -69,7 +71,7 @@ USER whatsapp
 # Set environment variables for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu"
+ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --no-first-run --no-zygote --disable-gpu --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
 
 # Expose port (if needed for health checks)
 EXPOSE 3000
