@@ -15,7 +15,7 @@ services:
       - ADMIN_WHATSAPP_NUMBER=5511987654321@c.us
       
       # AI Configuration - Choose your provider
-      - AI_PROVIDER=ollama
+      - AI_PROVIDER=openai
       
       # OpenAI Configuration (if using OpenAI)
       - OPENAI_API_KEY=your_openai_api_key_here
@@ -26,7 +26,7 @@ services:
       - ANTHROPIC_MODEL=claude-3-sonnet-20240229
       
       # Ollama Configuration (if using Ollama)
-      - OLLAMA_API_URL=https://host.docker.internal:11434/v1
+      - OLLAMA_API_URL=http://host.docker.internal:11434/v1
       - OLLAMA_MODEL=llama3.1:8b
       
       # Bot Configuration
