@@ -247,15 +247,45 @@ class WhatsAppClient:
     async def _wait_for_ready(self):
         """Wait for WhatsApp to be fully ready"""
         try:
-            # Wait for chat list to be fully loaded
-            WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="chat-list"]'))
-            )
+            self.logger.info("⏳ Waiting for WhatsApp Web to be fully ready...")
             
+            # Wait for any of these elements that indicate WhatsApp is ready
+            ready_selectors = [
+                '[data-testid="chat-list"]',
+                '#pane-side',
+                '[data-testid="conversation-compose-box-input"]',
+                '.two',
+                '#main',
+                '[role="main"]'
+            ]
+            
+            ready = False
+            timeout = 60
+            start_time = time.time()
+            
+            while time.time() - start_time < timeout and not ready:
+                for selector in ready_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                        if elements:
+                            self.logger.info(f"✅ WhatsApp Web ready! (Found: {selector})")
+                            ready = True
+                            break
+                    except:
+                        continue
+                
+                if not ready:
+                    time.sleep(2)
+            
+            if not ready:
+                raise Exception("WhatsApp Web failed to become ready")
+                
             # Wait a bit more for full initialization
             time.sleep(5)
+            self.logger.info("🎉 WhatsApp Web is fully initialized!")
             
-        except TimeoutException:
+        except Exception as e:
+            self.logger.error(f"❌ Error waiting for ready state: {e}")
             raise Exception("WhatsApp Web failed to become ready")
     
     async def _setup_message_monitoring(self):
