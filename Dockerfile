@@ -53,8 +53,8 @@ RUN apt-get update && apt-get install -y \
         && apt-get update \
         && apt-get install -y google-chrome-stable \
         && rm -f /tmp/google-chrome-key.gpg \
-        # Install matching chromedriver for Chrome 140
-        && wget -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/140.0.7339.207/linux64/chromedriver-linux64.zip" \
+        # Install latest chromedriver
+        && wget -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/130.0.6723.69/linux64/chromedriver-linux64.zip" \
         && unzip /tmp/chromedriver.zip -d /tmp/ \
         && mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
         && chmod +x /usr/local/bin/chromedriver \
