@@ -87,7 +87,11 @@ class WhatsAppBot {
           authStrategy: new LocalAuth({
             dataPath: config.whatsapp.sessionPath
           }),
-          puppeteer: puppeteerOptions
+          puppeteer: puppeteerOptions,
+          webVersionCache: {
+            type: 'remote',
+            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+          }
         });
 
         // Set up event listeners
