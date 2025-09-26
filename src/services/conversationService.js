@@ -225,6 +225,56 @@ class ConversationService {
   }
   
   /**
+   * Process message with AI API
+   * @param {string} messageText - User message
+   * @param {string} chatId - WhatsApp chat ID
+   * @returns {Promise<string>} - AI response
+   */
+  async processMessage(messageText, chatId) {
+    try {
+      // Add user message to context
+      this.addMessage(chatId, 'user', messageText);
+      
+      // Get formatted context for API
+      const messages = this.getFormattedContext(chatId);
+      
+      // Make API request
+      const response = await fetch(config.yuef.apiUrl + '/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: config.yuef.modelName,
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.7
+        }),
+        timeout: config.yuef.timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
+      
+      // Add AI response to context
+      this.addMessage(chatId, 'assistant', aiResponse);
+      
+      // Save conversation to persistence
+      await this.persistenceService.saveConversation(chatId, this.getContext(chatId));
+      
+      return aiResponse;
+      
+    } catch (error) {
+      console.error('❌ Error processing message with AI:', error);
+      return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente em alguns instantes.';
+    }
+  }
+
+  /**
    * Cleanup old conversations
    */
   async cleanupOldData(daysToKeep = 30) {

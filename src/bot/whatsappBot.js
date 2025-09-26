@@ -184,71 +184,67 @@ class WhatsAppBot {
    * @param {Object} message - WhatsApp message object
    */
   async handleMessage(message) {
-    const startTime = Date.now();
-    
     try {
-      // Check if message should be ignored
-      if (this.messageService.shouldIgnoreMessage(message)) {
+      console.log(`📨 Received message from ${message.from}: ${message.body}`);
+      
+      // Skip own messages and status updates
+      if (message.fromMe || message.isStatus) {
         return;
       }
 
       const chatId = message.from;
-      const messageText = this.messageService.cleanMessage(message.body);
+      const messageText = message.body || '';
 
-      if (config.env.debug) {
-        console.log(`📨 Received message from ${chatId}: ${messageText}`);
+      if (!messageText.trim()) {
+        return;
       }
-
-      // Record performance metrics
-      this.performanceOptimizer.recordMessageReceived(chatId, messageText.length);
 
       // Show typing indicator
       await this.client.sendSeen(chatId);
-      await message.getChat().then(chat => chat.sendStateTyping());
+      const chat = await message.getChat();
+      await chat.sendStateTyping();
 
-      let response;
-
-      // Check if it's a command
-      if (this.messageService.isCommand(messageText)) {
-        const { command, args } = this.messageService.parseCommand(messageText);
-        
-        // Check admin access for commands
-        const accessCheck = this.adminService.validateAdminAccess(chatId, command);
-        if (!accessCheck.allowed) {
-          response = accessCheck.message;
-        } else {
-          response = await this.commandHandler.handleCommand(command, args, chatId);
-        }
-      } else {
-        // Regular message - send to AI with timeout handling and performance optimizations
-        response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId, 
-          messageText, 
-          (msg) => this.processAIMessageWithTimeout(msg, chatId)
-        );
-      }
-
+      // Simple AI response
+      const response = await this.getAIResponse(messageText, chatId);
+      
       // Send response
-      await this.sendResponse(chatId, response);
-
-      // Record response time
-      const responseTime = Date.now() - startTime;
-      this.performanceOptimizer.recordResponseTime(responseTime);
+      await this.client.sendMessage(chatId, response);
+      
+      console.log(`✅ Sent response to ${chatId}`);
 
     } catch (error) {
       console.error('❌ Error handling message:', error);
-      await this.errorHandler.handleError(error, {
-        component: 'whatsappBot',
-        operation: 'handleMessage',
-        chatId: message.from,
-        messageText: message.body?.substring(0, 100)
-      });
-      await this.sendErrorResponse(message.from);
+      try {
+        await this.client.sendMessage(message.from, 'Desculpe, ocorreu um erro. Tente novamente.');
+      } catch (sendError) {
+        console.error('❌ Error sending error message:', sendError);
+      }
     }
   }
 
   /**
-   * Process message with AI with timeout handling
+   * Get AI response for message
+   * @param {string} messageText - User message
+   * @param {string} chatId - WhatsApp chat ID
+   * @returns {Promise<string>} - AI response
+   */
+  async getAIResponse(messageText, chatId) {
+    try {
+      console.log(`🤖 Processing AI request for: ${messageText.substring(0, 50)}...`);
+      
+      const response = await this.conversationService.processMessage(messageText, chatId);
+      
+      console.log(`✅ AI response generated: ${response.substring(0, 50)}...`);
+      return response;
+      
+    } catch (error) {
+      console.error('❌ Error getting AI response:', error);
+      return 'Desculpe, não consegui processar sua mensagem no momento. Tente novamente.';
+    }
+  }
+
+  /**
+   * Process message with AI with timeout handling (legacy)
    * @param {string} messageText - User message
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response
