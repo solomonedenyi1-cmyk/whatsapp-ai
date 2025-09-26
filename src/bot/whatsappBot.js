@@ -97,10 +97,10 @@ class WhatsAppBot {
         // Set up event listeners
         this.setupEventListeners();
 
-        // Initialize the client with timeout
+        // Initialize the client with extended timeout
         const initPromise = this.client.initialize();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Client initialization timeout')), 120000);
+          setTimeout(() => reject(new Error('Client initialization timeout')), 300000); // 5 minutes
         });
 
         await Promise.race([initPromise, timeoutPromise]);
@@ -150,6 +150,11 @@ class WhatsAppBot {
     // Authentication success
     this.client.on('authenticated', () => {
       console.log('🔐 WhatsApp authenticated successfully');
+    });
+
+    // Loading screen
+    this.client.on('loading_screen', (percent, message) => {
+      console.log(`⏳ Loading: ${percent}% - ${message}`);
     });
 
     // Authentication failure
