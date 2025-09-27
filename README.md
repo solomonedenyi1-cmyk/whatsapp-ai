@@ -527,7 +527,7 @@ DEBUG=true npm start
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+LGPL2v.1 License - see LICENSE file for details.
 
 ---
 
