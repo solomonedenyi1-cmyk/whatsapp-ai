@@ -130,7 +130,7 @@
   "owner": {
     "name": "Yuri Cunha",
     "title": "Fundador e CEO",
-    "bio": "Especialista em Infraestrutura de Servidores com expertise em cloud, networking, containers e integração de IA.",
+    "bio": "Especialista em Infraestrutura de Servidores com expertise em cloud, webserver, infraestrutura de servidores e IAs.",
     "experience": "Mais de 10 anos em TI, atendendo empresas em hospedagem, infra e automação",
     "specialties": [
       "Infraestrutura de servidores e cloud",
@@ -156,7 +156,7 @@
     },
     {
       "question": "Vocês trabalham apenas remotamente?",
-      "answer": "Sim — todos os nossos serviços e produtos são entregues remotamente para uma entrega rápida e eficiente."
+      "answer": "Sim - todos os nossos serviços e produtos são entregues remotamente para uma entrega rápida e eficiente."
     },
     {
       "question": "Vocês podem gerenciar minha infraestrutura continuamente?",
@@ -179,7 +179,7 @@
   ],
   
   "standard_responses": {
-    "greeting": "Olá! Eu sou a Yue, como posso te ajudar hoje?",
+    "greeting": "Eu sou a Yue, como posso te ajudar hoje?",
     "goodbye": "Obrigada por entrar em contato conosco! Tenha um ótimo dia!",
     "unavailable": "Não tenho essa informação no momento. Deixe-me encaminhar isso para alguém da nossa equipe.",
     "business_hours": "Nosso horário de funcionamento é de segunda a sexta, das 8h às 17h (GMT-3). Estou disponível 24h para perguntas básicas!",
