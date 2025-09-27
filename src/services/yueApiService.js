@@ -32,7 +32,7 @@ class YueApiService {
       const requestData = {
         model: this.modelName,
         messages: messages,
-        stream: false
+        stream: true
       };
 
       if (config.env.debug) {
