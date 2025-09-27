@@ -372,7 +372,7 @@ class PersistenceService {
   }
 
   /**
-   * Cleanup old data (maintenance function)
+   * Cleanup old data (maintenance function) - Now runs weekly instead of daily
    */
   async cleanupOldData(daysToKeep = 30) {
     try {
@@ -382,7 +382,7 @@ class PersistenceService {
 
       let cleanedCount = 0;
 
-      // Clean old conversations
+      // Clean old conversations (keep more recent ones for better context retention)
       for (const [chatId, data] of this.conversationsCache.entries()) {
         if (data.lastUpdated && data.lastUpdated < cutoffStr) {
           this.conversationsCache.delete(chatId);
@@ -390,7 +390,7 @@ class PersistenceService {
         }
       }
 
-      // Clean old daily stats
+      // Clean old daily stats (keep more history for analytics)
       if (this.analyticsCache && this.analyticsCache.dailyStats) {
         const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
         Object.keys(this.analyticsCache.dailyStats).forEach(date => {
@@ -404,12 +404,35 @@ class PersistenceService {
       await this.saveConversationsToFile();
       await this.saveAnalyticsToFile();
 
-      console.log(`🧹 Cleaned up ${cleanedCount} old conversations`);
+      console.log(`🧹 Weekly cleanup: removed ${cleanedCount} old conversations`);
       return cleanedCount;
 
     } catch (error) {
       console.error('❌ Error cleaning up old data:', error.message);
       return 0;
+    }
+  }
+  
+  /**
+   * Check if weekly cleanup is needed
+   */
+  shouldRunWeeklyCleanup() {
+    const lastCleanup = this.analyticsCache?.lastCleanup;
+    if (!lastCleanup) return true;
+    
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    return new Date(lastCleanup) < weekAgo;
+  }
+  
+  /**
+   * Mark cleanup as completed
+   */
+  async markCleanupCompleted() {
+    if (this.analyticsCache) {
+      this.analyticsCache.lastCleanup = new Date().toISOString();
+      await this.saveAnalyticsToFile();
     }
   }
 }

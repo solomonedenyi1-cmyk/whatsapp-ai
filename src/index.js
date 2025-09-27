@@ -1,4 +1,5 @@
 const WhatsAppBot = require('./bot/whatsappBot');
+const WeeklyCleanupService = require('./services/weeklyCleanupService');
 const config = require('./config/config');
 
 // Global error handlers
@@ -16,6 +17,7 @@ process.on('unhandledRejection', (reason, promise) => {
 class Application {
   constructor() {
     this.bot = null;
+    this.weeklyCleanupService = null;
   }
 
   async start() {
@@ -30,6 +32,10 @@ class Application {
       this.bot = new WhatsAppBot();
       await this.bot.initialize();
       
+      // Initialize weekly cleanup service
+      this.weeklyCleanupService = new WeeklyCleanupService();
+      this.weeklyCleanupService.start();
+      
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
       console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
@@ -43,6 +49,10 @@ class Application {
   async stop() {
     try {
       console.log('🛑 Stopping application...');
+      
+      if (this.weeklyCleanupService) {
+        await this.weeklyCleanupService.shutdown();
+      }
       
       if (this.bot) {
         await this.bot.shutdown();

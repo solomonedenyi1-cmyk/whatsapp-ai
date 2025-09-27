@@ -34,6 +34,22 @@ class ConversationService {
     const startTime = Date.now();
     let context = this.conversations.get(chatId) || [];
     
+    // Check for duplicate messages (same content within last 2 minutes)
+    const now = new Date();
+    const recentMessages = context.filter(msg => {
+      const msgTime = new Date(msg.timestamp);
+      return (now - msgTime) < 2 * 60 * 1000; // 2 minutes
+    });
+    
+    const isDuplicate = recentMessages.some(msg => 
+      msg.role === role && msg.content.trim() === content.trim()
+    );
+    
+    if (isDuplicate && role === 'user') {
+      // For duplicate user messages, add a flag to help assistant recognize repetition
+      metadata.isDuplicate = true;
+    }
+    
     // Add new message with timestamp
     const message = {
       role,
@@ -46,8 +62,11 @@ class ConversationService {
     
     // Limit context size to prevent performance issues
     if (context.length > this.maxContextMessages * 2) {
-      // Keep only the most recent messages
-      context = context.slice(-this.maxContextMessages * 2);
+      // Keep only the most recent messages, but preserve system context
+      const systemMessages = context.filter(msg => msg.role === 'system');
+      const userAssistantMessages = context.filter(msg => msg.role !== 'system');
+      const recentMessages = userAssistantMessages.slice(-this.maxContextMessages * 2);
+      context = [...systemMessages, ...recentMessages];
     }
     
     this.conversations.set(chatId, context);
@@ -225,10 +244,50 @@ class ConversationService {
   }
   
   /**
-   * Cleanup old conversations
+   * Cleanup old conversations (now runs weekly instead of daily)
    */
   async cleanupOldData(daysToKeep = 30) {
     return await this.persistenceService.cleanupOldData(daysToKeep);
+  }
+  
+  /**
+   * Check if user message is a duplicate and needs special handling
+   */
+  isDuplicateMessage(chatId, content) {
+    const context = this.conversations.get(chatId) || [];
+    const now = new Date();
+    
+    // Check last 3 messages for duplicates within 5 minutes
+    const recentMessages = context.slice(-3).filter(msg => {
+      const msgTime = new Date(msg.timestamp);
+      return (now - msgTime) < 5 * 60 * 1000; // 5 minutes
+    });
+    
+    return recentMessages.some(msg => 
+      msg.role === 'user' && msg.content.trim().toLowerCase() === content.trim().toLowerCase()
+    );
+  }
+  
+  /**
+   * Get conversation summary for context awareness
+   */
+  getConversationSummary(chatId) {
+    const context = this.conversations.get(chatId) || [];
+    if (context.length === 0) return null;
+    
+    const userMessages = context.filter(msg => msg.role === 'user').length;
+    const assistantMessages = context.filter(msg => msg.role === 'assistant').length;
+    const lastMessage = context[context.length - 1];
+    const firstMessage = context[0];
+    
+    return {
+      messageCount: context.length,
+      userMessages,
+      assistantMessages,
+      conversationStarted: firstMessage?.timestamp,
+      lastActivity: lastMessage?.timestamp,
+      hasOngoingConversation: context.length > 2
+    };
   }
 }
 

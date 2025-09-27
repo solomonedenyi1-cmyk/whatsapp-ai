@@ -165,12 +165,21 @@ class WhatsAppBot {
           response = await this.commandHandler.handleCommand(command, args, chatId);
         }
       } else {
-        // Regular message - send to AI with timeout handling and performance optimizations
-        response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId, 
-          messageText, 
-          (msg) => this.processAIMessageWithTimeout(msg, chatId)
-        );
+        // Check if this is a duplicate message
+        const isDuplicate = this.conversationService.isDuplicateMessage(chatId, messageText);
+        const conversationSummary = this.conversationService.getConversationSummary(chatId);
+        
+        if (isDuplicate) {
+          // Handle duplicate message with context awareness
+          response = await this.handleDuplicateMessage(chatId, messageText, conversationSummary);
+        } else {
+          // Regular message - send to AI with timeout handling and performance optimizations
+          response = await this.performanceOptimizations.optimizeMessageProcessing(
+            chatId, 
+            messageText, 
+            (msg) => this.processAIMessageWithTimeout(msg, chatId)
+          );
+        }
       }
 
       // Send response
@@ -212,11 +221,20 @@ class WhatsAppBot {
         }
       });
       
-      // Get conversation context
-      const context = this.conversationService.getFormattedContext(chatId);
+      // Check for duplicate messages and get conversation summary
+      const isDuplicate = this.conversationService.isDuplicateMessage(chatId, messageText);
+      const conversationSummary = this.conversationService.getConversationSummary(chatId);
       
-      // Add user message to context
-      await this.conversationService.addMessage(chatId, 'user', messageText);
+      // Get conversation context (enhanced with persistence)
+      const context = await this.conversationService.getFormattedContextEnhanced(chatId);
+      
+      // Add user message to context with duplicate flag if needed
+      const metadata = isDuplicate ? { isDuplicate: true } : {};
+      if (conversationSummary?.hasOngoingConversation) {
+        metadata.hasContext = true;
+      }
+      
+      await this.conversationService.addMessage(chatId, 'user', messageText, metadata);
       
       // Update API status
       await this.monitoringService.updateComponentStatus('yueApi', 'processing');
@@ -351,6 +369,42 @@ class WhatsAppBot {
     };
   }
 
+  /**
+   * Handle duplicate messages with context awareness
+   */
+  async handleDuplicateMessage(chatId, messageText, conversationSummary) {
+    try {
+      // Get the last assistant response to avoid repeating the same answer
+      const context = await this.conversationService.getContextEnhanced(chatId);
+      const lastAssistantMessage = context.filter(msg => msg.role === 'assistant').pop();
+      
+      if (lastAssistantMessage && conversationSummary?.hasOngoingConversation) {
+        // Acknowledge the repetition and offer to clarify
+        const responses = [
+          `Como mencionei anteriormente: ${lastAssistantMessage.content}\n\nPrecisa de mais algum esclarecimento sobre isso?`,
+          `Já respondi essa pergunta há pouco. ${lastAssistantMessage.content}\n\nGostaria que eu explique melhor algum ponto?`,
+          `Conforme expliquei antes: ${lastAssistantMessage.content}\n\nTem alguma dúvida específica sobre essa informação?`
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        return this.messageService.formatResponse(randomResponse);
+      } else {
+        // If no previous context, process normally but with shorter response
+        const enhancedContext = await this.conversationService.getFormattedContextEnhanced(chatId);
+        const aiResponse = await this.yueApiService.sendMessage(
+          `${messageText} (pergunta repetida - resposta breve)`, 
+          enhancedContext
+        );
+        
+        await this.conversationService.addMessage(chatId, 'assistant', aiResponse);
+        return this.messageService.formatResponse(aiResponse);
+      }
+    } catch (error) {
+      console.error('❌ Error handling duplicate message:', error);
+      return 'Desculpe, pode repetir sua pergunta?';
+    }
+  }
+  
   /**
    * Gracefully shutdown the bot
    */
