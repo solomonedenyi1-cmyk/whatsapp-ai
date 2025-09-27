@@ -6,13 +6,12 @@
  */
 
 const cron = require('node-cron');
-const ConversationService = require('./conversationService');
-const PersistenceService = require('./persistenceService');
 
 class WeeklyCleanupService {
-  constructor() {
-    this.conversationService = new ConversationService();
-    this.persistenceService = new PersistenceService();
+  constructor(conversationService = null, persistenceService = null) {
+    // Use provided services or create new ones to avoid multiple initializations
+    this.conversationService = conversationService;
+    this.persistenceService = persistenceService;
     this.isRunning = false;
     this.lastCleanup = null;
     this.cleanupJob = null;
@@ -59,6 +58,11 @@ class WeeklyCleanupService {
    */
   async checkCleanupOnStartup() {
     try {
+      if (!this.persistenceService) {
+        console.log('⏭️ Skipping cleanup check - no persistence service available');
+        return;
+      }
+      
       const shouldCleanup = this.persistenceService.shouldRunWeeklyCleanup();
       
       if (shouldCleanup) {
@@ -87,14 +91,20 @@ class WeeklyCleanupService {
       
       console.log('🧹 Starting weekly cleanup process...');
       
-      // Clean old conversations (keep 30 days)
-      const conversationsCleanedCount = await this.conversationService.cleanupOldData(30);
+      let conversationsCleanedCount = 0;
+      let analyticsCleanedCount = 0;
       
-      // Clean old analytics data (keep 90 days for analytics)
-      const analyticsCleanedCount = await this.persistenceService.cleanupOldData(90);
+      // Clean old conversations (keep 30 days) - only if service is available
+      if (this.conversationService) {
+        conversationsCleanedCount = await this.conversationService.cleanupOldData(30);
+      }
       
-      // Mark cleanup as completed
-      await this.persistenceService.markCleanupCompleted();
+      // Clean old analytics data (keep 90 days for analytics) - only if service is available
+      if (this.persistenceService) {
+        analyticsCleanedCount = await this.persistenceService.cleanupOldData(90);
+        // Mark cleanup as completed
+        await this.persistenceService.markCleanupCompleted();
+      }
       
       console.log(`✅ Weekly cleanup completed:`);
       console.log(`   📊 Conversations cleaned: ${conversationsCleanedCount}`);

@@ -72,24 +72,64 @@ class PersistenceService {
   async loadAllData() {
     try {
       // Load conversations
-      const conversationsData = await fs.readFile(this.conversationsFile, 'utf8');
-      const conversations = JSON.parse(conversationsData);
-      this.conversationsCache.clear();
-      Object.entries(conversations).forEach(([chatId, data]) => {
-        this.conversationsCache.set(chatId, data);
-      });
+      try {
+        const conversationsData = await fs.readFile(this.conversationsFile, 'utf8');
+        if (conversationsData.trim()) {
+          const conversations = JSON.parse(conversationsData);
+          this.conversationsCache.clear();
+          Object.entries(conversations).forEach(([chatId, data]) => {
+            this.conversationsCache.set(chatId, data);
+          });
+        }
+      } catch (error) {
+        console.log('📝 Creating new conversations file');
+        await fs.writeFile(this.conversationsFile, JSON.stringify({}, null, 2));
+      }
 
       // Load analytics
-      const analyticsData = await fs.readFile(this.analyticsFile, 'utf8');
-      this.analyticsCache = JSON.parse(analyticsData);
+      try {
+        const analyticsData = await fs.readFile(this.analyticsFile, 'utf8');
+        if (analyticsData.trim()) {
+          this.analyticsCache = JSON.parse(analyticsData);
+        } else {
+          this.analyticsCache = {
+            totalMessages: 0,
+            totalConversations: 0,
+            dailyStats: {},
+            userStats: {},
+            popularCommands: {},
+            responseTimeStats: [],
+            errorStats: {}
+          };
+        }
+      } catch (error) {
+        console.log('📊 Creating new analytics file');
+        this.analyticsCache = {
+          totalMessages: 0,
+          totalConversations: 0,
+          dailyStats: {},
+          userStats: {},
+          popularCommands: {},
+          responseTimeStats: [],
+          errorStats: {}
+        };
+        await fs.writeFile(this.analyticsFile, JSON.stringify(this.analyticsCache, null, 2));
+      }
 
       // Load user preferences
-      const preferencesData = await fs.readFile(this.userPreferencesFile, 'utf8');
-      const preferences = JSON.parse(preferencesData);
-      this.userPreferencesCache.clear();
-      Object.entries(preferences).forEach(([userId, prefs]) => {
-        this.userPreferencesCache.set(userId, prefs);
-      });
+      try {
+        const preferencesData = await fs.readFile(this.userPreferencesFile, 'utf8');
+        if (preferencesData.trim()) {
+          const preferences = JSON.parse(preferencesData);
+          this.userPreferencesCache.clear();
+          Object.entries(preferences).forEach(([userId, prefs]) => {
+            this.userPreferencesCache.set(userId, prefs);
+          });
+        }
+      } catch (error) {
+        console.log('👤 Creating new user preferences file');
+        await fs.writeFile(this.userPreferencesFile, JSON.stringify({}, null, 2));
+      }
 
     } catch (error) {
       console.error('❌ Error loading data:', error.message);
@@ -247,7 +287,7 @@ class PersistenceService {
       }
 
       // Save analytics periodically (every 10 events)
-      if (this.analyticsCache.totalMessages % 10 === 0) {
+      if (this.analyticsCache && this.analyticsCache.totalMessages % 10 === 0) {
         await this.saveAnalyticsToFile();
       }
 
