@@ -12,7 +12,7 @@ const config = {
   // Bot Configuration
   bot: {
     name: process.env.BOT_NAME || 'WhatsApp AI Bot',
-    maxContextMessages: parseInt(process.env.MAX_CONTEXT_MESSAGES) || 50, // Increased from 20 to 50 for better context retention
+    maxContextMessages: parseInt(process.env.MAX_CONTEXT_MESSAGES) || 20,
     messageSplitLength: parseInt(process.env.MESSAGE_SPLIT_LENGTH) || 1500,
   },
 
