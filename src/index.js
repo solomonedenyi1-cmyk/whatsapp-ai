@@ -32,11 +32,8 @@ class Application {
       this.bot = new WhatsAppBot();
       await this.bot.initialize();
       
-      // Initialize weekly cleanup service with existing services to avoid multiple initializations
-      this.weeklyCleanupService = new WeeklyCleanupService(
-        this.bot.conversationService,
-        this.bot.conversationService.persistenceService
-      );
+      // Initialize weekly cleanup service
+      this.weeklyCleanupService = new WeeklyCleanupService();
       this.weeklyCleanupService.start();
       
       console.log('✅ Application started successfully!');
