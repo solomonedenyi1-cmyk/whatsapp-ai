@@ -149,7 +149,7 @@ class CommandHandler {
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
 *Model:* ${config.yuef.modelName}
-*API URL:* ${config.yuef.apiUrl}
+*API URL:* [REDACTED FOR SECURITY]
 
 *Persistence:*
 • Stored conversations: ${stats.persistent.conversations || 0}
@@ -192,7 +192,7 @@ This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 
 *Technology:*
 • Model: Yue-F (via Ollama)
-• API: ${config.yuef.apiUrl}
+• *API:* [REDACTED FOR SECURITY]
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025

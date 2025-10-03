@@ -141,7 +141,7 @@ class WhatsAppBot {
       const messageText = this.messageService.cleanMessage(message.body);
 
       if (config.env.debug) {
-        console.log(`📨 Received message from ${chatId}: ${messageText}`);
+        console.log(`📨 Received message from ${chatId} (length: ${messageText.length} chars)`);
       }
 
       // Record performance metrics
@@ -296,7 +296,7 @@ class WhatsAppBot {
       }
       
       if (config.env.debug) {
-        console.log(`📤 Sent response to ${chatId}: ${response.substring(0, 100)}...`);
+        console.log(`📤 Sent response to ${chatId} (length: ${response.length} chars)`);
       }
       
     } catch (error) {

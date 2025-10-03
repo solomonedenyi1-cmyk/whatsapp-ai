@@ -36,7 +36,7 @@ class YueApiService {
       };
 
       if (config.env.debug) {
-        console.log('Sending request to Yue-F API:', JSON.stringify(requestData, null, 2));
+        console.log('🔗 Sending request to Yue-F API (model:', requestData.model, ', messages count:', requestData.messages.length, ')');
       }
 
       // Set up warning timer for 5 minutes
@@ -60,7 +60,7 @@ class YueApiService {
       }
 
       if (config.env.debug) {
-        console.log('Received response from Yue-F API:', JSON.stringify(response.data, null, 2));
+        console.log('✅ Received response from Yue-F API (status:', response.status, ')');
       }
 
       // Extract the content from Ollama-compatible response
@@ -81,7 +81,7 @@ class YueApiService {
       
       if (error.response) {
         console.error('API Response Status:', error.response.status);
-        console.error('API Response Data:', error.response.data);
+        console.error('API Response Error: [REDACTED FOR SECURITY]');
       }
 
       // Only return fallback for actual errors, not timeouts
