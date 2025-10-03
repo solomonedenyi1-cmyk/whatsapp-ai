@@ -137,7 +137,7 @@ class CommandHandler {
   async handleStatus() {
     try {
       // Test API connection
-      const testResponse = await this.yueApiService.testConnection();
+      const testResponse = await this.yueApiService.checkApiStatus();
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
       

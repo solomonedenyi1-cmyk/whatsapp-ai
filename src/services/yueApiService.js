@@ -159,6 +159,14 @@ class YueApiService {
       return false;
     }
   }
+
+  /**
+   * Alias for checkApiStatus() for backward compatibility
+   * @returns {Promise<boolean>} - True if API is available
+   */
+  async testConnection() {
+    return await this.checkApiStatus();
+  }
 }
 
 module.exports = YueApiService;

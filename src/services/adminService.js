@@ -14,16 +14,22 @@ class AdminService {
       config.admin.whatsappNumber
     ];
     
-    // Admin-only commands
+    // Admin-only commands - ALL commands are now admin-only for security
     this.adminCommands = [
-      'health',
-      'monitor', 
-      'performance',
-      'errors',
+      'help',
+      'reset',
+      'status',
+      'about',
+      'context',
+      'reload',
       'analytics',
       'cleanup',
-      'status',
-      'reload'
+      'health',
+      'monitor',
+      'performance',
+      'errors',
+      'admin',
+      'sqlite'
     ];
     
     // Command usage tracking
