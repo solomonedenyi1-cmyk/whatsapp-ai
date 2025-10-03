@@ -215,7 +215,7 @@ class InputValidator {
   detectInjectionAttempt(input) {
     const injectionPatterns = [
       // SQL injection
-      /('|(\\')|(;)|(\\;)|(\|)|(\*)|(%27)|(%3D)|(%3B)|(%7C)|(%2A))/gi,
+      /('|(\\')|(;)|(\\;)|(\|)|(\*)|(%27)|(%3D)|(%3B)|(%7C)|(%2A)/gi,
       
       // NoSQL injection
       /(\$where|\$ne|\$gt|\$lt|\$gte|\$lte|\$in|\$nin|\$regex)/gi,
