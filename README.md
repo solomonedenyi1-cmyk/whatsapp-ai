@@ -164,7 +164,7 @@ Active conversations: 1
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `YUE_F_API_URL` | Yue-F API URL | `https://llms.yuricunha.com` |
+| `YUE_F_API_URL` | Yue-F API URL | `http://localhost:11434` |
 | `YUE_F_MODEL_NAME` | Model name | `yue-f` |
 | `API_TIMEOUT` | API timeout (ms) | `30000` |
 | `BOT_NAME` | Bot name | `WhatsApp AI Bot` |

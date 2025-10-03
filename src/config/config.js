@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
   // Yue-F API Configuration
   yuef: {
-    apiUrl: process.env.YUE_F_API_URL || 'https://llms.yuricunha.com',
+    apiUrl: process.env.YUE_F_API_URL || 'http://localhost:11434',
     modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
