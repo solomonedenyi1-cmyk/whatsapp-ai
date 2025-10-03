@@ -1,6 +1,6 @@
 # WhatsApp AI Bot - Yue-F Integration
 
-An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context, persona, and enterprise-grade security features.
+An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, featuring customizable business context and persona.
 
 ## 🚀 Features
 
@@ -26,13 +26,6 @@ An intelligent WhatsApp bot integrated with the Yue-F AI model via Ollama API, f
 - **Advanced Caching**: Intelligent response caching with 70-90% hit rates
 - **Memory Optimization**: Automatic cleanup, garbage collection, and resource management
 - **Queue Processing**: Priority-based message processing with batch optimization
-
-### Phase 4: Enterprise Security Features
-- **Input Validation & Sanitization**: Protection against XSS, SQL injection, command injection, and malicious content
-- **Rate Limiting System**: Sliding window rate limiting with progressive penalties and admin exemptions
-- **Enhanced Admin Authentication**: Session-based access with 2FA codes and lockout protection
-- **Security Monitoring**: Comprehensive security statistics and threat detection
-- **Multi-layer Protection**: Input validation, rate limiting, and admin session management
 
 ## 📋 Prerequisites
 
@@ -111,12 +104,6 @@ npm start
 - `/sqlite` - SQLite performance comparison and migration tools
 - `/optimize` - Advanced performance optimization controls
 
-**Security Commands (Admin Only):**
-- `/admin auth` - Generate/use authentication codes for secure access
-- `/admin session` - View current admin session information
-- `/security stats` - Security monitoring and threat statistics
-- `/ratelimit stats` - Rate limiting statistics and user management
-
 ### Business Context Setup
 
 The bot comes with a powerful context system that allows you to create a professional AI assistant:
@@ -171,7 +158,6 @@ Active conversations: 1
 | `MAX_CONTEXT_MESSAGES` | Max messages in context | `20` |
 | `MESSAGE_SPLIT_LENGTH` | Max message size | `1500` |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number for restricted commands | `551234567890@c.us` |
-| `SUPER_ADMIN_WHATSAPP_NUMBER` | Super admin number for elevated privileges | (optional) |
 
 ### Business Context Configuration
 ```json
@@ -327,27 +313,18 @@ These are automatically processed when the configuration is loaded.
 whatsapp-ai/
 ├── src/
 │   ├── bot/
-│   │   └── whatsappBot.js         # Main bot class with security integration
+│   │   └── whatsappBot.js         # Main bot class
 │   ├── commands/
-│   │   ├── commandHandler.js      # Command handler with security validation
-│   │   └── securityCommands.js    # Security-specific commands
+│   │   └── commandHandler.js      # Command handler
 │   ├── config/
 │   │   ├── config.js             # System configuration
-│   │   ├── context.js            # AI context & business info
-│   │   └── envValidator.js       # Environment variable validation
+│   │   └── context.js            # AI context & business info
 │   ├── services/
-│   │   ├── yueApiService.js      # Yue-F API client with connection pooling
+│   │   ├── yueApiService.js      # Yue-F API client
 │   │   ├── conversationService.js # Context management
-│   │   ├── messageService.js     # Message processing
-│   │   ├── inputValidator.js     # Input validation & sanitization
-│   │   ├── rateLimiter.js        # Rate limiting system
-│   │   ├── securityManager.js    # Admin authentication & security
-│   │   ├── lightweightCache.js   # Selective response caching
-│   │   ├── timeoutHandler.js     # Request timeout management
-│   │   └── [+12 other services]  # Performance, monitoring, etc.
+│   │   └── messageService.js     # Message processing
 │   └── index.js                  # Application entry point
 ├── .env                          # Environment variables
-├── config.json                   # Business configuration & AI context
 ├── package.json                  # Project dependencies
 └── README.md                     # This file
 ```
@@ -419,59 +396,16 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
 - [x] Queue processing and batch optimization
 - [x] Enhanced monitoring and analytics commands
 
-### ✅ Phase 4 - Enterprise Security (Completed)
-- [x] Input validation and sanitization system
-- [x] Rate limiting with sliding window algorithm
-- [x] Enhanced admin authentication with 2FA
-- [x] Security monitoring and threat detection
-- [x] Multi-layer protection integration
-- [x] Security command system
-- [x] Progressive penalty and lockout system
-- [x] Comprehensive security statistics
-
 ### 🔄 Next Phase
-- [ ] Phase 5: Testing & Launch - End-to-end testing and production deployment
+- [ ] Phase 4: Testing & Launch - End-to-end testing and production deployment
 
 ## 🛡️ Security and Privacy
 
-### Enterprise Security Features
-
-#### Input Validation & Sanitization
-- **XSS Protection**: Detects and blocks cross-site scripting attempts
-- **SQL Injection Prevention**: Identifies and sanitizes SQL injection patterns
-- **Command Injection Protection**: Blocks system command execution attempts
-- **Path Traversal Prevention**: Prevents directory traversal attacks
-- **Content Sanitization**: Automatically sanitizes user inputs before processing
-- **Security Logging**: All security events are logged for monitoring
-
-#### Rate Limiting System
-- **Sliding Window Algorithm**: Advanced rate limiting with time-based windows
-- **User Limits**: 10 messages/minute, 100 messages/hour for regular users
-- **Admin Exemptions**: Higher limits (30/min, 500/hour) for administrators
-- **Progressive Penalties**: Temporary bans with escalating durations
-- **Burst Allowance**: Allows quick message bursts for new users
-- **Anti-Spam Protection**: Automatic detection and prevention of spam patterns
-
-#### Enhanced Admin Authentication
-- **Session Management**: Secure 1-hour admin sessions with automatic expiration
-- **Two-Factor Authentication**: 5-minute authentication codes for sensitive operations
-- **Lockout Protection**: Progressive lockouts after failed authentication attempts
-- **Super Admin Privileges**: Elevated access for critical system operations
-- **Session Monitoring**: Real-time tracking of admin sessions and activities
-
-#### Security Monitoring
-- **Threat Detection**: Real-time monitoring of suspicious activities
-- **Security Statistics**: Comprehensive reporting on security events
-- **Failed Attempt Tracking**: Monitoring and alerting on authentication failures
-- **User Behavior Analysis**: Detection of unusual usage patterns
-
-### Privacy Protection
-- **Local Data Storage**: All conversations stored locally, no external dependencies
-- **No Personal Logs**: User personal data is not logged or stored permanently
-- **HTTPS Encryption**: All API communication is encrypted end-to-end
-- **WhatsApp Compliance**: Fully respects WhatsApp Terms of Service
-- **Business Data Security**: Your configuration stays in your local files
-- **Memory Management**: Sensitive data cleared from memory after processing
+- **Temporary Data**: Conversation context is stored only in memory
+- **No Personal Logs**: We don't log users' personal data
+- **HTTPS**: All API communication is encrypted
+- **Compliance**: Respects WhatsApp Terms of Service
+- **Business Data**: Your business information stays in your configuration files
 
 ## 🐛 Troubleshooting
 
@@ -500,21 +434,6 @@ To enable detailed logs, set `DEBUG=true` in the `.env` file.
    - Use a JSON validator online if needed
    - The bot will use default settings if config.json has errors
 
-6. **Rate limiting issues**:
-   - Users hitting message limits will see automatic warnings
-   - Admins can check `/ratelimit stats` for user status
-   - Use `/ratelimit reset [chatId]` to reset user limits if needed
-
-7. **Admin authentication problems**:
-   - Use `/admin auth` to generate a new authentication code
-   - Codes expire after 5 minutes - generate a new one if needed
-   - Check admin WhatsApp number is correctly set in `.env`
-
-8. **Security warnings or blocked messages**:
-   - The system automatically blocks potentially malicious content
-   - Check console logs for security event details
-   - Use `/security stats` to monitor security events
-
 ### Error Logs
 
 Logs are displayed in the console. For detailed logs:
@@ -532,19 +451,6 @@ DEBUG=true npm start
 - **JSON Help**: Use online JSON validators to check your configuration syntax
 
 ## 📝 Changelog
-
-### v4.0.0 (October 2025) - Phase 4 Complete: Enterprise Security
-- **NEW**: Input validation and sanitization system with XSS, SQLi, and command injection protection
-- **NEW**: Rate limiting system with sliding window algorithm and progressive penalties
-- **NEW**: Enhanced admin authentication with session management and 2FA codes
-- **NEW**: Security monitoring with comprehensive threat detection and statistics
-- **NEW**: Multi-layer security protection integrated throughout the system
-- **NEW**: Security commands (`/admin auth`, `/security stats`, `/ratelimit stats`)
-- **NEW**: Progressive penalty system with temporary bans and lockout protection
-- **NEW**: Super admin privileges for elevated system operations
-- **IMPROVED**: All user inputs are now validated and sanitized before processing
-- **IMPROVED**: Admin access now requires secure session-based authentication
-- **IMPROVED**: Comprehensive security logging and monitoring capabilities
 
 ### v3.5.0 (September 2025) - Phase 3.5 Complete: Full Performance Optimization
 - **NEW**: AI response timeout handling with smart notifications (60s/120s)
@@ -628,22 +534,9 @@ LGPL2v.1 License - see LICENSE file for details.
 **Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
 
 ## 🎯 Perfect for:
-- **Enterprise Businesses**: Production-ready with enterprise-grade security features
-- **Customer Service**: Professional AI assistant with business context and security
-- **Technical Support**: Secure AI that knows your products with input validation
-- **Sales Teams**: Protected AI assistant with rate limiting and admin controls
-- **Security-Conscious Organizations**: Multi-layer protection against threats
-- **High-Volume Operations**: Rate limiting and performance optimization
-- **Non-Technical Users**: Simple JSON configuration with built-in security
-- **Compliance Requirements**: Comprehensive logging and security monitoring
-
-## 🛡️ Security Highlights
-
-- **🔒 Input Validation**: Automatic protection against XSS, SQL injection, and malicious content
-- **⏰ Rate Limiting**: Intelligent spam prevention with progressive penalties
-- **🔐 Admin Security**: Session-based authentication with 2FA codes
-- **📊 Security Monitoring**: Real-time threat detection and comprehensive statistics
-- **🚫 Auto-blocking**: Suspicious content automatically blocked and logged
-- **👮 Admin Controls**: Secure command access with lockout protection
-- **📈 Usage Analytics**: Detailed security and usage reporting
-- **🧹 Auto-cleanup**: Automatic cleanup of expired sessions and security data
+- **Business Customer Service**: Set up Yue as your professional assistant
+- **Personal Productivity**: AI helper with your specific knowledge base
+- **Technical Support**: AI that knows your products and services
+- **Sales Assistant**: AI that can provide pricing and product information
+- **Non-Technical Users**: Simple JSON configuration, no coding required!
+- **Gender-Inclusive AI**: Supports all gender identities with proper pronouns

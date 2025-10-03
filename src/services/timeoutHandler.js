@@ -65,13 +65,10 @@ class TimeoutHandler extends EventEmitter {
     
     this.activeRequests.set(requestId, request);
     
-    // Set individual timeout for this request and store the timer reference
-    const timeoutTimer = setTimeout(() => {
+    // Set individual timeout for this request
+    setTimeout(() => {
       this.handleMaxTimeout(requestId);
     }, this.config.maxTimeout);
-    
-    // Store timer reference for cleanup
-    request.timeoutTimer = timeoutTimer;
     
     return requestId;
   }
@@ -83,13 +80,6 @@ class TimeoutHandler extends EventEmitter {
     const request = this.activeRequests.get(requestId);
     if (request) {
       const duration = Date.now() - request.startTime;
-      
-      // Clear the timeout timer to prevent memory leak
-      if (request.timeoutTimer) {
-        clearTimeout(request.timeoutTimer);
-        request.timeoutTimer = null;
-      }
-      
       this.activeRequests.delete(requestId);
       
       // Emit completion event with timing
@@ -247,13 +237,6 @@ class TimeoutHandler extends EventEmitter {
     const request = this.activeRequests.get(requestId);
     if (request) {
       const duration = Date.now() - request.startTime;
-      
-      // Clear the timeout timer to prevent memory leak
-      if (request.timeoutTimer) {
-        clearTimeout(request.timeoutTimer);
-        request.timeoutTimer = null;
-      }
-      
       this.activeRequests.delete(requestId);
       
       console.log(`🔧 Request ${requestId} force completed after ${Math.round(duration / 1000)}s - Reason: ${reason}`);
@@ -299,14 +282,11 @@ class TimeoutHandler extends EventEmitter {
     try {
       this.stopTimeoutMonitoring();
       
-      // Complete all active requests and clear their timers
+      // Complete all active requests
       const activeCount = this.activeRequests.size;
       for (const requestId of this.activeRequests.keys()) {
         this.forceCompleteRequest(requestId, 'shutdown');
       }
-      
-      // Remove all event listeners to prevent memory leaks
-      this.removeAllListeners();
       
       console.log(`⏱️ Timeout handler shutdown complete (${activeCount} requests completed)`);
     } catch (error) {

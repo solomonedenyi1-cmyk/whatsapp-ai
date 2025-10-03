@@ -1,15 +1,13 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null, securityManager = null, rateLimiter = null) {
+  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
     this.yueApiService = yueApiService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
     this.monitoringService = monitoringService;
     this.adminService = adminService;
-    this.securityManager = securityManager;
-    this.rateLimiter = rateLimiter;
   }
 
   /**
@@ -65,12 +63,6 @@ class CommandHandler {
 
       case 'optimize':
         return await this.handleOptimizeCommand(args, chatId);
-
-      case 'security':
-        return await this.handleSecurityCommand(args, chatId);
-
-      case 'ratelimit':
-        return await this.handleRateLimitCommand(args, chatId);
 
       default:
         return `❓ Comando desconhecido: ${command}\n\n` +
