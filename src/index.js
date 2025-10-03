@@ -23,7 +23,7 @@ class Application {
       console.log('🚀 Starting WhatsApp AI Bot Application...');
       console.log(`📊 Environment: ${config.env.nodeEnv}`);
       console.log(`🤖 Bot Name: ${config.bot.name}`);
-      console.log(`🔗 API URL: [REDACTED FOR SECURITY]`);
+      console.log(`🔗 API URL: ${config.yuef.apiUrl}`);
       console.log(`📱 Model: ${config.yuef.modelName}`);
       
       // Initialize bot
