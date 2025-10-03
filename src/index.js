@@ -1,5 +1,6 @@
 const WhatsAppBot = require('./bot/whatsappBot');
 const config = require('./config/config');
+const EnvValidator = require('./config/envValidator');
 
 // Global error handlers
 process.on('uncaughtException', (error) => {
@@ -21,6 +22,26 @@ class Application {
   async start() {
     try {
       console.log('🚀 Starting WhatsApp AI Bot Application...');
+      
+      // Validate environment variables first
+      const envValidator = new EnvValidator();
+      const validationResult = envValidator.validate();
+      
+      envValidator.printResults(validationResult);
+      
+      if (!validationResult.valid) {
+        console.log('\n💡 To fix these issues:');
+        console.log('1. Copy .env.example to .env');
+        console.log('2. Fill in the required values');
+        console.log('3. Restart the application\n');
+        
+        console.log('📝 Example .env content:');
+        console.log('========================');
+        console.log(envValidator.generateExampleEnv());
+        
+        process.exit(1);
+      }
+      
       console.log(`📊 Environment: ${config.env.nodeEnv}`);
       console.log(`🤖 Bot Name: ${config.bot.name}`);
       console.log(`🔗 API URL: ${config.yuef.apiUrl}`);
@@ -32,7 +53,7 @@ class Application {
       
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
-      console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
+      console.log('💡 Tip: Edit config.json to customize your AI assistant!');
       
     } catch (error) {
       console.error('❌ Failed to start application:', error);

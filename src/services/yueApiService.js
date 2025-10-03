@@ -1,5 +1,8 @@
 const axios = require('axios');
+const http = require('http');
+const https = require('https');
 const config = require('../config/config');
+const businessConfig = require('../../config.json');
 
 class YueApiService {
   constructor() {
@@ -8,13 +11,32 @@ class YueApiService {
     this.timeout = config.yuef.timeout;
     this.warningTimeout = config.yuef.warningTimeout;
     
-    // Create axios instance with no timeout
+    // Create HTTP/HTTPS agents with connection pooling
+    const isHttps = this.apiUrl.startsWith('https');
+    const Agent = isHttps ? https.Agent : http.Agent;
+    
+    this.httpAgent = new Agent({
+      keepAlive: true,
+      keepAliveMsecs: 30000, // Keep connections alive for 30 seconds
+      maxSockets: 10, // Maximum 10 concurrent connections
+      maxFreeSockets: 5, // Keep 5 free connections in pool
+      timeout: 60000, // Socket timeout 60 seconds
+      freeSocketTimeout: 30000 // Free socket timeout
+    });
+
+    // Create axios instance with connection pooling and no timeout
     this.client = axios.create({
       baseURL: this.apiUrl,
       timeout: 0, // No timeout - wait indefinitely
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      httpAgent: isHttps ? undefined : this.httpAgent,
+      httpsAgent: isHttps ? this.httpAgent : undefined,
+      // Additional performance optimizations
+      maxRedirects: 5,
+      maxContentLength: 50 * 1024 * 1024, // 50MB max response
+      validateStatus: (status) => status < 500 // Don't reject on 4xx errors
     });
   }
 
@@ -125,25 +147,29 @@ class YueApiService {
     const isTimeoutError = error?.code === 'ECONNABORTED' || error?.response?.status === 524;
     
     if (isTimeoutError) {
-      const timeoutMessages = [
-        'Desculpe, minha resposta está demorando mais que o esperado. A API está sobrecarregada no momento. Tente novamente em alguns minutos.',
-        'Ops! O servidor está processando muitas solicitações. Por favor, aguarde alguns minutos e tente novamente.',
-        'Estou enfrentando alta demanda no momento. Tente enviar sua mensagem novamente em 2-3 minutos.',
+      const timeoutMessages = businessConfig.error_messages?.api_timeout || [
+        'Desculpe, minha resposta está demorando mais que o esperado. A API está sobrecarregada no momento. Tente novamente em alguns minutos.'
       ];
       const randomIndex = Math.floor(Math.random() * timeoutMessages.length);
       return timeoutMessages[randomIndex];
     }
 
     // General fallback messages for other errors
-    const fallbackMessages = [
-      'Desculpe, estou enfrentando dificuldades técnicas no momento. Tente novamente em alguns instantes.',
-      'Ops! Parece que há um problema com minha conexão. Por favor, tente novamente.',
-      'Estou temporariamente indisponível. Tente enviar sua mensagem novamente em breve.',
+    const fallbackMessages = businessConfig.error_messages?.api_general || [
+      'Desculpe, estou enfrentando dificuldades técnicas no momento. Tente novamente em alguns instantes.'
     ];
 
     // Return a random fallback message
     const randomIndex = Math.floor(Math.random() * fallbackMessages.length);
     return fallbackMessages[randomIndex];
+  }
+
+  /**
+   * Test connection to the API (alias for checkApiStatus)
+   * @returns {Promise<boolean>} - True if API is available
+   */
+  async testConnection() {
+    return await this.checkApiStatus();
   }
 
   /**
@@ -157,6 +183,20 @@ class YueApiService {
     } catch (error) {
       console.error('API health check failed:', error.message);
       return false;
+    }
+  }
+
+  /**
+   * Cleanup resources and close connections
+   */
+  async cleanup() {
+    try {
+      if (this.httpAgent) {
+        this.httpAgent.destroy();
+      }
+      console.log('✅ YueApiService cleanup completed');
+    } catch (error) {
+      console.error('❌ Error during YueApiService cleanup:', error.message);
     }
   }
 }

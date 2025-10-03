@@ -11,6 +11,10 @@ const MonitoringService = require('../services/monitoringService');
 const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
+const LightweightCache = require('../services/lightweightCache');
+const InputValidator = require('../services/inputValidator');
+const RateLimiter = require('../services/rateLimiter');
+const SecurityManager = require('../services/securityManager');
 
 class WhatsAppBot {
   constructor() {
@@ -25,6 +29,12 @@ class WhatsAppBot {
     this.timeoutHandler = new TimeoutHandler();
     this.adminService = new AdminService();
     this.performanceOptimizations = new PerformanceOptimizations();
+    this.lightweightCache = new LightweightCache();
+    
+    // Initialize security services
+    this.inputValidator = new InputValidator();
+    this.rateLimiter = new RateLimiter();
+    this.securityManager = new SecurityManager();
     
     // Initialize existing services with error handling
     this.yueApiService = new YueApiService();
@@ -36,7 +46,9 @@ class WhatsAppBot {
       this.errorHandler,
       this.performanceOptimizer,
       this.monitoringService,
-      this.adminService
+      this.adminService,
+      this.securityManager,
+      this.rateLimiter
     );
     
     this.isReady = false;
@@ -52,6 +64,11 @@ class WhatsAppBot {
       
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
+      
+      // Configure security services with admin numbers
+      const adminNumbers = [config.admin.whatsappNumber];
+      this.rateLimiter.setAdminNumbers(adminNumbers);
+      this.securityManager.setAdminNumbers(adminNumbers);
       
       // Create WhatsApp client
       this.client = new Client({
@@ -125,60 +142,84 @@ class WhatsAppBot {
   }
 
   /**
-   * Handle incoming WhatsApp messages
-   * @param {Object} message - WhatsApp message object
+   * Handle incoming messages
    */
   async handleMessage(message) {
-    const startTime = Date.now();
-    
     try {
-      // Check if message should be ignored
-      if (this.messageService.shouldIgnoreMessage(message)) {
+      const chatId = message.from;
+      const messageText = message.body;
+      
+      // Skip messages from status broadcast
+      if (chatId === 'status@broadcast') {
         return;
       }
 
-      const chatId = message.from;
-      const messageText = this.messageService.cleanMessage(message.body);
+      console.log(`📨 Message from ${chatId}: ${messageText.substring(0, 100)}${messageText.length > 100 ? '...' : ''}`);
 
-      if (config.env.debug) {
-        console.log(`📨 Received message from ${chatId}: ${messageText}`);
+      // Apply rate limiting
+      const rateLimitResult = this.rateLimiter.checkLimit(chatId, messageText.startsWith('/'));
+      if (!rateLimitResult.allowed) {
+        await this.sendMessage(chatId, rateLimitResult.message);
+        return;
       }
 
-      // Record performance metrics
-      this.performanceOptimizer.recordMessageReceived(chatId, messageText.length);
+      // Validate and sanitize input
+      const validationResult = this.inputValidator.validateMessage(messageText);
+      if (!validationResult.isValid) {
+        console.log(`🚫 Message blocked: ${validationResult.reason}`);
+        await this.sendMessage(chatId, validationResult.message || '❌ Mensagem contém conteúdo não permitido.');
+        return;
+      }
 
-      // Show typing indicator
-      await this.client.sendSeen(chatId);
-      await message.getChat().then(chat => chat.sendStateTyping());
+      // Use sanitized message for processing
+      const sanitizedMessage = validationResult.sanitized || messageText;
 
-      let response;
+      // Check if message is a command
+      if (sanitizedMessage.startsWith('/')) {
+        await this.handleCommand(message, sanitizedMessage);
+        return;
+      }
 
-      // Check if it's a command
-      if (this.messageService.isCommand(messageText)) {
-        const { command, args } = this.messageService.parseCommand(messageText);
-        
-        // Check admin access for commands
-        const accessCheck = this.adminService.validateAdminAccess(chatId, command);
-        if (!accessCheck.allowed) {
-          response = accessCheck.message;
-        } else {
-          response = await this.commandHandler.handleCommand(command, args, chatId);
+      // Check cache for static queries first
+      const cacheKey = this.lightweightCache.generateCacheKey(sanitizedMessage);
+      const cachedResponse = this.lightweightCache.get(cacheKey);
+      
+      if (cachedResponse) {
+        console.log('📋 Serving response from cache');
+        await this.sendMessage(chatId, cachedResponse);
+        return;
+      }
+
+      // Get conversation context
+      const context = await this.conversationService.getContext(chatId);
+      
+      // Add current message to context
+      context.push({
+        role: 'user',
+        content: sanitizedMessage,
+        timestamp: new Date().toISOString()
+      });
+
+      // Get AI response with timeout handling
+      const response = await this.timeoutHandler.handleWithTimeout(
+        () => this.yueApiService.generateResponse(sanitizedMessage, context),
+        chatId,
+        sanitizedMessage
+      );
+
+      if (response) {
+        // Cache static responses
+        if (this.lightweightCache.shouldCache(sanitizedMessage, response)) {
+          this.lightweightCache.set(cacheKey, response);
         }
-      } else {
-        // Regular message - send to AI with timeout handling and performance optimizations
-        response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId, 
-          messageText, 
-          (msg) => this.processAIMessageWithTimeout(msg, chatId)
-        );
+
+        // Send response
+        await this.sendMessage(chatId, response);
+
+        // Update conversation context
+        await this.conversationService.addMessage(chatId, 'user', sanitizedMessage);
+        await this.conversationService.addMessage(chatId, 'assistant', response);
       }
-
-      // Send response
-      await this.sendResponse(chatId, response);
-
-      // Record response time
-      const responseTime = Date.now() - startTime;
-      this.performanceOptimizer.recordResponseTime(responseTime);
 
     } catch (error) {
       console.error('❌ Error handling message:', error);
@@ -186,14 +227,47 @@ class WhatsAppBot {
         component: 'whatsappBot',
         operation: 'handleMessage',
         chatId: message.from,
-        messageText: message.body?.substring(0, 100)
+        messageText: message.body
       });
-      await this.sendErrorResponse(message.from);
+      
+      // Send error response to user
+      await this.sendErrorResponse(message.from, 'processing_error');
     }
   }
 
   /**
-   * Process message with AI with timeout handling
+   * Handle command messages with security validation
+   */
+  async handleCommand(message, sanitizedMessage) {
+    const chatId = message.from;
+    const command = sanitizedMessage.substring(1); // Remove '/' prefix
+    
+    // Validate command with security manager
+    const securityResult = this.securityManager.validateAdminAccess(chatId, command);
+    
+    if (!securityResult.allowed && securityResult.requiresAuth) {
+      await this.sendMessage(chatId, securityResult.message);
+      return;
+    }
+    
+    // Process command through command handler
+    await this.commandHandler.handleCommand(message);
+  }
+
+  /**
+   * Send message with proper method name
+   */
+  async sendMessage(chatId, message) {
+    try {
+      await this.client.sendMessage(chatId, message);
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process AI message with timeout (legacy method)
    * @param {string} messageText - User message
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response
@@ -262,7 +336,8 @@ class WhatsAppBot {
         messageLength: messageText.length
       });
       await this.monitoringService.updateComponentStatus('yueApi', 'error', { error: error.message });
-      return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
+      const businessConfig = require('../../config.json');
+      return businessConfig.error_messages?.processing_error || 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
     }
   }
 
@@ -311,7 +386,8 @@ class WhatsAppBot {
    */
   async sendErrorResponse(chatId) {
     try {
-      const errorMessage = '❌ Ops! Algo deu errado. Tente enviar sua mensagem novamente.';
+      const businessConfig = require('../../config.json');
+      const errorMessage = businessConfig.error_messages?.general_error || '❌ Ops! Algo deu errado. Tente enviar sua mensagem novamente.';
       await this.client.sendMessage(chatId, errorMessage);
     } catch (error) {
       console.error('❌ Error sending error response:', error);
@@ -369,6 +445,17 @@ class WhatsAppBot {
       // Shutdown Phase 3.5 services
       await this.timeoutHandler.shutdown();
       await this.performanceOptimizations.shutdown();
+      await this.lightweightCache.shutdown();
+      
+      // Shutdown security services
+      await this.inputValidator.shutdown();
+      await this.rateLimiter.shutdown();
+      await this.securityManager.shutdown();
+      
+      // Cleanup YueApiService connections
+      if (this.yueApiService) {
+        await this.yueApiService.cleanup();
+      }
       
       // Shutdown WhatsApp client
       if (this.client) {
