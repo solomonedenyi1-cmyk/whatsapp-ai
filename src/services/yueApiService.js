@@ -7,7 +7,7 @@ class YueApiService {
     this.modelName = config.yuef.modelName;
     this.timeout = config.yuef.timeout;
     this.warningTimeout = config.yuef.warningTimeout;
-    
+
     // Create axios instance with no timeout
     this.client = axios.create({
       baseURL: this.apiUrl,
@@ -27,12 +27,12 @@ class YueApiService {
   async sendChatMessage(messages, warningCallback = null) {
     let warningTimer = null;
     let warningSent = false;
-    
+
     try {
       const requestData = {
         model: this.modelName,
         messages: messages,
-        stream: true
+        stream: false
       };
 
       if (config.env.debug) {
@@ -76,9 +76,9 @@ class YueApiService {
         clearTimeout(warningTimer);
         warningTimer = null;
       }
-      
+
       console.error('Error calling Yue-F API:', error.message);
-      
+
       if (error.response) {
         console.error('API Response Status:', error.response.status);
         console.error('API Response Data:', error.response.data);
@@ -88,7 +88,7 @@ class YueApiService {
       if (error.code !== 'ECONNABORTED' && error.response?.status !== 524) {
         return this.getFallbackResponse(error);
       }
-      
+
       // For connection issues, throw the error to be handled upstream
       throw error;
     } finally {
@@ -123,7 +123,7 @@ class YueApiService {
   getFallbackResponse(error) {
     // Check if it's a timeout error (524 or ECONNABORTED)
     const isTimeoutError = error?.code === 'ECONNABORTED' || error?.response?.status === 524;
-    
+
     if (isTimeoutError) {
       const timeoutMessages = [
         'Desculpe, minha resposta está demorando mais que o esperado. A API está sobrecarregada no momento. Tente novamente em alguns minutos.',
