@@ -73,8 +73,8 @@ function loadConfig() {
 function getDefaultConfig() {
   const defaultConfig = {
     ai_identity: {
-      name: "Yue",
-      gender: "female",
+      name: "Mistral",
+      gender: "neutral",
       role: "AI Assistant",
       personality: "friendly, professional, and helpful",
       language: "Portuguese (Brazilian)",

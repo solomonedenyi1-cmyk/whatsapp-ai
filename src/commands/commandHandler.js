@@ -1,8 +1,8 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
-    this.yueApiService = yueApiService;
+  constructor(mistralApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
+    this.mistralApiService = mistralApiService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
@@ -137,7 +137,7 @@ class CommandHandler {
   async handleStatus() {
     try {
       // Test API connection
-      const testResponse = await this.yueApiService.checkApiStatus();
+      const testResponse = await this.mistralApiService.checkApiStatus();
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
       
@@ -145,11 +145,11 @@ class CommandHandler {
       
       return `📊 *Bot Status*
 
-*Yue-F API:* ${statusEmoji} ${apiStatusText}
+*Mistral API:* ${statusEmoji} ${apiStatusText}
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
-*Model:* ${config.yuef.modelName}
-*API URL:* ${config.yuef.apiUrl}
+*Model:* ${config.mistral.modelName}
+*API URL:* Mistral API
 
 *Persistence:*
 • Stored conversations: ${stats.persistent.conversations || 0}
@@ -166,7 +166,7 @@ class CommandHandler {
     } catch (error) {
       return `📊 *Bot Status*
 
-*Yue-F API:* ❌ Error
+*Mistral API:* ❌ Error
 *Error:* ${error.message}
 
 *System:* Operational with API issues ⚠️`;
@@ -181,7 +181,7 @@ class CommandHandler {
     return `🤖 *${config.bot.name}*
 
 *About this bot:*
-This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
+This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
 
 *Features:*
 • Natural conversations with business context
@@ -191,8 +191,8 @@ This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 • Customizable AI persona and knowledge base
 
 *Technology:*
-• Model: Yue-F (via Ollama)
-• API: ${config.yuef.apiUrl}
+• Model: Mistral (via Mistral API)
+• API: Mistral API
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025

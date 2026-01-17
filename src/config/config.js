@@ -1,7 +1,15 @@
 require('dotenv').config();
 
 const config = {
-  // Yue-F API Configuration
+  // Mistral API Configuration
+  mistral: {
+    apiKey: process.env.MISTRAL_API_KEY,
+    modelName: process.env.MISTRAL_MODEL_NAME || 'mistral-medium-latest',
+    timeout: 0, // No timeout - wait indefinitely
+    warningTimeout: 5 * 60 * 1000, // 5 minutes warning
+  },
+
+  // Yue-F API Configuration (kept for backward compatibility)
   yuef: {
     apiUrl: process.env.YUE_F_API_URL || 'http://localhost:11434',
     modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',

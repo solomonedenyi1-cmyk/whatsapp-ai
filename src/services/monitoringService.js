@@ -44,7 +44,7 @@ class MonitoringService extends EventEmitter {
     // Component status tracking
     this.componentStatus = {
       whatsappBot: 'unknown',
-      yueApi: 'unknown',
+      mistralApi: 'unknown',
       persistence: 'unknown',
       errorHandler: 'unknown',
       performanceOptimizer: 'unknown'

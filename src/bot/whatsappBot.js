@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const config = require('../config/config');
-const YueApiService = require('../services/yueApiService');
+const MistralApiService = require('../services/mistralApiService');
 const ConversationService = require('../services/conversationService');
 const MessageService = require('../services/messageService');
 const CommandHandler = require('../commands/commandHandler');
@@ -27,11 +27,11 @@ class WhatsAppBot {
     this.performanceOptimizations = new PerformanceOptimizations();
     
     // Initialize existing services with error handling
-    this.yueApiService = new YueApiService();
+    this.mistralApiService = new MistralApiService();
     this.conversationService = new ConversationService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
-      this.yueApiService, 
+      this.mistralApiService, 
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
@@ -219,7 +219,7 @@ class WhatsAppBot {
       await this.conversationService.addMessage(chatId, 'user', messageText);
       
       // Update API status
-      await this.monitoringService.updateComponentStatus('yueApi', 'processing');
+      await this.monitoringService.updateComponentStatus('mistralApi', 'processing');
       
       // Send to AI (this may take a long time)
       let responseReceived = false;
@@ -235,14 +235,14 @@ class WhatsAppBot {
         }
       };
       
-      const aiResponse = await this.yueApiService.sendMessage(messageText, context, warningCallback);
+      const aiResponse = await this.mistralApiService.sendMessage(messageText, context, warningCallback);
       responseReceived = true; // Mark that response was received
       
       // Complete the timeout request
       const duration = this.timeoutHandler.completeRequest(requestId);
       
       // Update API status
-      await this.monitoringService.updateComponentStatus('yueApi', 'ready');
+      await this.monitoringService.updateComponentStatus('mistralApi', 'ready');
       
       // Add AI response to context
       await this.conversationService.addMessage(chatId, 'assistant', aiResponse);
@@ -256,12 +256,12 @@ class WhatsAppBot {
       this.timeoutHandler.completeRequest(requestId);
       
       await this.errorHandler.handleError(error, {
-        component: 'yueApi',
+        component: 'mistralApi',
         operation: 'processMessage',
         chatId,
         messageLength: messageText.length
       });
-      await this.monitoringService.updateComponentStatus('yueApi', 'error', { error: error.message });
+      await this.monitoringService.updateComponentStatus('mistralApi', 'error', { error: error.message });
       return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
     }
   }
@@ -344,8 +344,8 @@ class WhatsAppBot {
       errors: errorStats,
       monitoring: monitoringDashboard,
       config: {
-        modelName: config.yuef.modelName,
-        apiUrl: config.yuef.apiUrl,
+        modelName: config.mistral.modelName,
+        apiUrl: 'Mistral API',
         maxContext: config.bot.maxContextMessages
       }
     };
