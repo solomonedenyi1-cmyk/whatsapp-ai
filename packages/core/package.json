@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@types/qrcode-terminal": "^0.12.2",
+    "@whatsapp-ai/config": "file:../config",
+    "@whatsapp-ai/mistral-sdk": "file:../mistral-sdk",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.34.4",
     "zod": "^3.20.0"
