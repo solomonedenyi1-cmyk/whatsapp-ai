@@ -203,15 +203,137 @@ class MistralApiService {
    * @param {Array} conversationHistory - Previous conversation context
    * @param {Function} warningCallback - Callback to send warning message after 5 minutes
    * @param {boolean} useCache - Whether to use cache (default: true)
+   * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
    * @returns {Promise<string>} - The AI response
    */
-  async sendMessage(userMessage, conversationHistory = [], warningCallback = null, useCache = true) {
+  async sendMessage(userMessage, conversationHistory = [], warningCallback = null, useCache = true, maxRetries = 3) {
     const messages = [
       ...conversationHistory,
       { role: 'user', content: userMessage }
     ];
 
-    return await this.sendChatMessage(messages, warningCallback, useCache);
+    return await this.sendChatMessageWithRetry(messages, warningCallback, useCache, maxRetries);
+  }
+
+  /**
+   * Check if an error is retryable
+   * @param {Error} error - The error to check
+   * @returns {boolean} - True if the error is retryable
+   */
+  isRetryableError(error) {
+    // Network errors
+    if (error.code === 'ECONNABORTED' || 
+        error.code === 'ENOTFOUND' || 
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ECONNRESET') {
+      return true;
+    }
+    
+    // HTTP status codes that might be temporary
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 429 || // Too Many Requests
+          status === 503 || // Service Unavailable
+          status === 500 || // Internal Server Error
+          status === 502 || // Bad Gateway
+          status === 504) {  // Gateway Timeout
+        return true;
+      }
+    }
+    
+    // Timeout errors
+    if (error.message && (
+      error.message.includes('timeout') ||
+      error.message.includes('ETIMEDOUT')
+    )) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Send a chat message to the Mistral API with retry mechanism
+   * @param {Array} messages - Array of message objects with role and content
+   * @param {Function} warningCallback - Callback to send warning message after 5 minutes
+   * @param {boolean} useCache - Whether to use cache (default: true)
+   * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
+   * @returns {Promise<string>} - The AI response content
+   */
+  async sendChatMessageWithRetry(messages, warningCallback = null, useCache = true, maxRetries = 3) {
+    let attempt = 0;
+    let lastError = null;
+    let warningTimer = null;
+    let warningSent = false;
+
+    while (attempt <= maxRetries) {
+      try {
+        // Clear previous warning timer if exists
+        if (warningTimer) {
+          clearTimeout(warningTimer);
+          warningTimer = null;
+        }
+
+        // Try to send the message
+        const result = await this.sendChatMessage(messages, warningCallback, useCache);
+        return result;
+        
+      } catch (error) {
+        lastError = error;
+        attempt++;
+        
+        // Clear warning timer on error
+        if (warningTimer) {
+          clearTimeout(warningTimer);
+          warningTimer = null;
+        }
+
+        // Don't retry if it's the last attempt or error is not retryable
+        if (attempt > maxRetries || !this.isRetryableError(error)) {
+          break;
+        }
+
+        // Calculate exponential backoff delay: 1s, 2s, 4s, etc.
+        const delay = Math.min(Math.pow(2, attempt - 1) * 1000, 30000); // Max 30s
+        
+        if (config.env.debug) {
+          console.log(`⏳ Retry ${attempt}/${maxRetries} in ${delay}ms...`);
+          console.log(`   Error: ${error.message}`);
+          if (error.response) {
+            console.log(`   Status: ${error.response.status}`);
+          }
+        }
+
+        // Set up warning timer for the retry delay
+        if (warningCallback && delay > 1000) {
+          warningTimer = setTimeout(() => {
+            if (!warningSent) {
+              warningSent = true;
+              console.log(`⏰ Retrying attempt ${attempt} after delay`);
+            }
+          }, Math.min(delay - 1000, delay * 0.8));
+        }
+
+        // Wait for the delay before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    // If we get here, all retries failed
+    if (lastError) {
+      console.error(`❌ All ${maxRetries} retry attempts failed`);
+      
+      // Return fallback response for retryable errors
+      if (this.isRetryableError(lastError)) {
+        return this.getFallbackResponse(lastError);
+      }
+      
+      // For non-retryable errors, throw the original error
+      throw lastError;
+    }
+
+    // This should not happen, but just in case
+    throw new Error('Unexpected error in retry mechanism');
   }
 
   /**
