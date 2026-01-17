@@ -1,13 +1,13 @@
-# WhatsApp AI Bot
+# WhatsApp AI Bot with Mistral AI
 
-A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
+A production-ready WhatsApp AI bot integrated with Mistral AI model via Mistral API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
 
 **Important Note**: All configurations provided are examples only. You must configure your own API endpoints, models, business information, and other settings before deployment.
 
 ## Features
 
 ### Core AI Integration
-- **Natural Conversations**: Direct integration with Yue-F AI model through Ollama API
+- **Natural Conversations**: Direct integration with Mistral AI model through Mistral API
 - **Business Context System**: Fully customizable AI persona with comprehensive business knowledge
 - **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
@@ -42,6 +42,7 @@ A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API
 - Chrome/Chromium browser
 - Stable internet connection
 - Access to WhatsApp Web
+- Mistral API key (required for AI functionality)
 
 ## Installation
 
@@ -64,10 +65,9 @@ cp .env.example .env
 
 Edit `.env` file with your configuration:
 ```bash
-# Yue-F API Configuration (REQUIRED)
-YUE_F_API_URL=https://your-ollama-server.com
-YUE_F_MODEL_NAME=your-model-name
-API_TIMEOUT=30000
+# Mistral API Configuration (REQUIRED)
+MISTRAL_API_KEY=your_mistral_api_key_here
+MISTRAL_MODEL_NAME=mistral-medium-latest
 
 # Bot Configuration
 BOT_NAME=Your Bot Name
@@ -82,7 +82,7 @@ NODE_ENV=production
 DEBUG=false
 ```
 
-**Important**: Replace example values with your actual configuration.
+**Important**: Replace example values with your actual configuration. The `MISTRAL_API_KEY` is required for AI functionality.
 
 ### 4. Business Context Setup
 Edit `config.json` in the root directory to customize your AI assistant:
@@ -90,8 +90,8 @@ Edit `config.json` in the root directory to customize your AI assistant:
 ```json
 {
   "ai_identity": {
-    "name": "Your AI Name",
-    "gender": "female",
+    "name": "Mistral",
+    "gender": "neutral",
     "role": "Customer Service Representative",
     "personality": "professional, courteous and helpful",
     "language": "English",
@@ -206,16 +206,18 @@ Users can send regular text messages to interact with the AI assistant. The bot:
 
 ```
 User: Hello! What services do you offer?
-AI: Hello! I'm [AI Name], your assistant for [Company]. We offer:
+AI: Hello! I'm Mistral, your assistant for [Company]. We offer:
 - Website Development: Custom design ($2,500, 2 weeks)
 - Hosting Package: Managed hosting ($29/month)
 ...
 
 User: /status
 AI: 📊 Bot Status
-    Yue-F API: ✅ Connected
+    Mistral API: ✅ Connected
     Active conversations: 3
     Total messages: 127
+    Model: mistral-medium-latest
+    API: Mistral API
     ...
 ```
 
@@ -225,9 +227,8 @@ AI: 📊 Bot Status
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `YUE_F_API_URL` | Yue-F/Ollama API endpoint URL | `http://localhost:11434` | Yes |
-| `YUE_F_MODEL_NAME` | AI model name to use | `yue-f` | Yes |
-| `API_TIMEOUT` | API request timeout in milliseconds | `30000` | No |
+| `MISTRAL_API_KEY` | Mistral API key for authentication | None | Yes |
+| `MISTRAL_MODEL_NAME` | Mistral AI model name to use | `mistral-medium-latest` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
@@ -243,8 +244,8 @@ The `config.json` file supports comprehensive business configuration:
 ```json
 {
   "ai_identity": {
-    "name": "Assistant Name",
-    "gender": "female",
+    "name": "Mistral",
+    "gender": "neutral",
     "role": "Customer Service Representative",
     "personality": "professional, courteous and helpful",
     "language": "English",
@@ -383,7 +384,8 @@ whatsapp-ai/
 │   │   ├── config.js               # System configuration loader
 │   │   └── context.js              # Business context and AI prompt generation
 │   ├── services/
-│   │   ├── yueApiService.js        # Yue-F/Ollama API client
+│   │   ├── mistralApiService.js    # Mistral API client (NEW)
+│   │   ├── yueApiService.js        # Yue-F/Ollama API client (legacy)
 │   │   ├── conversationService.js  # Conversation context management
 │   │   ├── messageService.js       # Message processing and formatting
 │   │   ├── adminService.js         # Admin access control and security
@@ -425,7 +427,6 @@ whatsapp-ai/
 - **Backup Ready**: Simple file-based storage for easy backup and migration
 - **Scalable Design**: Handles thousands of conversations efficiently
 
-
 ## Development
 
 ### Available Scripts
@@ -459,6 +460,9 @@ npm test       # Run tests (placeholder)
 # In .env file
 DEBUG=true
 NODE_ENV=development
+
+# Then start the bot
+npm start
 ```
 
 #### Common Debug Commands
@@ -466,7 +470,6 @@ NODE_ENV=development
 - `/errors` - Recent error logs
 - `/performance` - Performance metrics
 - `/admin status` - Admin configuration status
-
 
 ## Security & Privacy
 
@@ -509,8 +512,8 @@ NODE_ENV=development
 
 **Bot doesn't respond to messages**
 - Check API connectivity with `/status` command
-- Verify `YUE_F_API_URL` in `.env` is correct
-- Ensure Ollama server is running and accessible
+- Verify `MISTRAL_API_KEY` in `.env` is correct
+- Ensure Mistral API service is accessible
 - Check internet connection stability
 
 **Authentication failures**
@@ -542,7 +545,7 @@ NODE_ENV=development
 #### Performance Issues
 
 **Slow response times**
-- Check API server performance
+- Check Mistral API service performance
 - Monitor system resources with `/performance`
 - Review error logs with `/errors` command
 - Consider enabling SQLite for better performance
@@ -586,7 +589,7 @@ npm start
 ### Technical Support
 
 - **GitHub Issues**: Report bugs and technical problems through GitHub issues
-- **API Documentation**: Consult Ollama/Yue-F API documentation for API-related issues
+- **API Documentation**: Consult Mistral API documentation for API-related issues
 - **JSON Validation**: Use online JSON validators to verify configuration syntax
 - **Community**: Check existing issues and discussions for similar problems
 
@@ -604,7 +607,7 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + Mistral AI**
 
 ## Use Cases
 
@@ -631,4 +634,79 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Built with Node.js, WhatsApp Web.js, and Ollama API integration**
+**Built with Node.js, WhatsApp Web.js, and Mistral AI integration**
+
+## Migration from Yue-F to Mistral AI
+
+### Migration Guide
+
+If you're upgrading from the previous Yue-F/Ollama integration, follow these steps:
+
+1. **Update Environment Variables**:
+   ```bash
+   # Remove or comment out old Yue-F variables
+   # YUE_F_API_URL=https://your-ollama-server.com
+   # YUE_F_MODEL_NAME=your-model-name
+   
+   # Add new Mistral variables
+   MISTRAL_API_KEY=your_mistral_api_key_here
+   MISTRAL_MODEL_NAME=mistral-medium-latest
+   ```
+
+2. **Update Business Context**:
+   - Change AI name from "Yue" to "Mistral" in `config.json`
+   - Update any references to "Yue-F" or "Ollama" in your business context
+
+3. **Test the Migration**:
+   - Start the bot and verify connectivity with `/status`
+   - Test conversations to ensure proper AI responses
+   - Check monitoring with `/health` and `/monitor`
+
+4. **Rollback Option**:
+   - The old Yue-F service is still available for backward compatibility
+   - You can revert to Yue-F by modifying the service imports if needed
+
+### Benefits of Mistral AI Integration
+
+- **Official SDK**: Uses Mistral's official JavaScript SDK
+- **Better Performance**: Optimized API communication
+- **Latest Models**: Access to Mistral's latest AI models
+- **Official Support**: Direct support from Mistral AI
+- **Future-Proof**: Regular updates and new features from Mistral
+
+### Backward Compatibility
+
+The system maintains backward compatibility:
+- Old Yue-F configuration variables are still recognized
+- Legacy API service is available but not used by default
+- Configuration structure remains the same
+- All existing commands work identically
+
+## Changelog
+
+### Latest Version
+
+**v2.0.0 - Mistral AI Integration**
+- ✅ Replaced Yue-F/Ollama integration with Mistral AI SDK
+- ✅ Added official Mistral JavaScript SDK support
+- ✅ Updated all API communication to use Mistral endpoints
+- ✅ Maintained backward compatibility with Yue-F configuration
+- ✅ Improved error handling and monitoring for Mistral API
+- ✅ Updated documentation and examples for Mistral AI
+- ✅ Added migration guide for existing users
+
+### Previous Versions
+
+**v1.5.0 - Production Enhancements**
+- Advanced monitoring and analytics
+- Performance optimization features
+- Enhanced error recovery mechanisms
+
+**v1.0.0 - Initial Release**
+- Yue-F AI integration via Ollama API
+- Basic WhatsApp bot functionality
+- Conversation persistence system
+
+---
+
+**Powered by Mistral AI - Next Generation AI for Business**
