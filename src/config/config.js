@@ -11,6 +11,7 @@ const config = {
     modelName: process.env.MISTRAL_MODEL_NAME || 'mistral-medium-latest',
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
+    cacheEnabled: process.env.MISTRAL_CACHE_ENABLED !== 'false', // Default: true
   },
 
   // Yue-F API Configuration (kept for backward compatibility)

@@ -30,7 +30,11 @@ const configSchema = Joi.object({
       .min(1000)
       .max(300000)
       .default(300000)
-      .description('Warning timeout in milliseconds before sending user notification')
+      .description('Warning timeout in milliseconds before sending user notification'),
+    
+    cacheEnabled: Joi.boolean()
+      .default(true)
+      .description('Enable API response caching')
   }).required(),
 
   // Yue-F API Configuration (kept for backward compatibility)
@@ -172,6 +176,11 @@ function validateEnvironment(env) {
       .min(3)
       .optional()
       .description('Mistral AI model name'),
+    
+    MISTRAL_CACHE_ENABLED: Joi.string()
+      .valid('true', 'false')
+      .optional()
+      .description('Enable API response caching'),
     
     YUE_F_API_URL: Joi.string()
       .uri()

@@ -18,7 +18,7 @@ class MistralApiService {
     // Initialize cache
     this.cache = new Map();
     this.cacheTTL = 5 * 60 * 1000; // 5 minutes TTL
-    this.cacheEnabled = true;
+    this.cacheEnabled = config.mistral.cacheEnabled;
     
     // Setup periodic cache cleanup
     this.cacheCleanupInterval = setInterval(() => {
