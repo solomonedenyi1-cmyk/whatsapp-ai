@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Monorepo for WhatsApp AI Bot with Mistral integration",
   "private": true,
+  "packageManager": "npm@10.2.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
+    "build": "echo 'Building all packages...' && npm run build:packages",
+    "build:packages": "cd packages/core && npm run build && cd ../../packages/config && npm run build && cd ../../packages/mistral-sdk && npm run build && cd ../../apps/whatsapp-bot && npm run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean"
