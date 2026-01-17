@@ -241,8 +241,7 @@ AI: 📊 Bot Status
 | `MISTRAL_API_KEY` | Mistral API key for authentication | None | Yes |
 | `MISTRAL_MODEL_NAME` | Mistral AI model name to use | `mistral-medium-latest` | No |
 | `MISTRAL_CACHE_ENABLED` | Enable API response caching for better performance | `true` | No |
-| `MISTRAL_AGENT_NAME` | Name for the Mistral Agent | `whatsapp-ai-agent` | No |
-| `MISTRAL_AGENT_DESCRIPTION` | Description for the Mistral Agent | `WhatsApp AI Assistant Agent` | No |
+| `MISTRAL_AGENT_ID` | Mistral Agent ID from console (format: ag_xxxxx...) | `null` | No |
 | `MISTRAL_USE_AGENT` | Enable Mistral Agent mode (true/false) | `true` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
@@ -283,14 +282,15 @@ The bot now supports Mistral's Agent API, which provides a more advanced and sca
 
 #### Agent Configuration
 
-The agent is automatically created and managed by the system. You can customize the agent name and description:
+The agent must be created manually in the Mistral console. After creating your agent, set the Agent ID:
 
 ```bash
 # In .env file
-MISTRAL_AGENT_NAME=my-custom-agent
-MISTRAL_AGENT_DESCRIPTION=My custom WhatsApp AI assistant
+MISTRAL_AGENT_ID=ag_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 MISTRAL_USE_AGENT=true
 ```
+
+**Important:** Create your agent in the Mistral console first, then copy the Agent ID to your .env file.
 
 #### Agent Lifecycle
 
@@ -792,14 +792,17 @@ LGPL-2.1 License - see LICENSE file for details.
 
 If you're upgrading from the direct API mode to the new Mistral Agent mode, follow these steps:
 
-1. **Update Environment Variables**:
+1. **Create Agent in Mistral Console**:
+   - Go to Mistral console (https://console.mistral.ai)
+   - Create a new agent with your desired configuration
+   - Set the model, temperature, and instructions
+   - Copy the Agent ID (format: ag_xxxxx...)
+
+2. **Update Environment Variables**:
    ```bash
-   # Enable agent mode
+   # Enable agent mode and set your agent ID
+   MISTRAL_AGENT_ID=ag_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    MISTRAL_USE_AGENT=true
-   
-   # Optional: Customize agent name and description
-   MISTRAL_AGENT_NAME=my-whatsapp-agent
-   MISTRAL_AGENT_DESCRIPTION=My WhatsApp AI Assistant
    ```
 
 2. **Restart the Bot**:

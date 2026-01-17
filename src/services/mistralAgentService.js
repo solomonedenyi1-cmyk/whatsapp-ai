@@ -1,11 +1,9 @@
 const { Mistral } = require('@mistralai/mistralai');
 const config = require('../config/config');
-const { generateSystemPrompt } = require('../config/context');
 
 class MistralAgentService {
   constructor() {
     this.apiKey = config.mistral.apiKey;
-    this.modelName = config.mistral.modelName;
     this.timeout = config.mistral.timeout;
     this.warningTimeout = config.mistral.warningTimeout;
 
@@ -16,57 +14,18 @@ class MistralAgentService {
     // Initialize Mistral client
     this.client = new Mistral({ apiKey: this.apiKey });
     
-    // Agent configuration
-    this.agentId = null;
-    this.agentName = config.mistral.agentName || 'whatsapp-ai-agent';
-    this.agentDescription = config.mistral.agentDescription || 'WhatsApp AI Assistant Agent';
+    // Agent configuration - now using ID from config
+    this.agentId = config.mistral.agentId;
+    
+    if (!this.agentId) {
+      console.warn('⚠️  MISTRAL_AGENT_ID is not configured. Agent mode will not work.');
+      console.warn('⚠️  Please create an agent in Mistral console and set MISTRAL_AGENT_ID in .env');
+    } else {
+      console.log(`🤖 Mistral Agent configured with ID: ${this.agentId}`);
+    }
     
     // Conversation cache
     this.conversationCache = new Map(); // chatId -> conversationId
-    
-    // Initialize agent
-    this.initializeAgent();
-  }
-
-  /**
-   * Initialize or retrieve the agent
-   */
-  async initializeAgent() {
-    try {
-      // Try to retrieve existing agent
-      const agents = await this.client.beta.agents.list();
-      const existingAgent = agents.find(agent => agent.name === this.agentName);
-      
-      if (existingAgent) {
-        this.agentId = existingAgent.id;
-        console.log(`🤖 Using existing agent: ${existingAgent.name} (ID: ${existingAgent.id})`);
-        return;
-      }
-      
-      // Create new agent if not exists
-      const systemPrompt = generateSystemPrompt();
-      
-      const newAgent = await this.client.beta.agents.create({
-        name: this.agentName,
-        description: this.agentDescription,
-        instructions: systemPrompt,
-        model: this.modelName,
-        metadata: {
-          source: 'whatsapp-ai-bot',
-          version: '1.0.0'
-        }
-      });
-      
-      this.agentId = newAgent.id;
-      console.log(`🤖 Created new agent: ${newAgent.name} (ID: ${newAgent.id})`);
-      
-    } catch (error) {
-      console.error('❌ Error initializing agent:', error.message);
-      if (error.response) {
-        console.error('API Response:', error.response.data);
-      }
-      throw error;
-    }
   }
 
   /**
@@ -118,6 +77,11 @@ class MistralAgentService {
     let warningSent = false;
 
     try {
+      // Check if agent ID is configured
+      if (!this.agentId) {
+        throw new Error('Mistral Agent ID is not configured. Please set MISTRAL_AGENT_ID in .env file.');
+      }
+      
       // Get or create conversation
       const conversationId = await this.getOrCreateConversation(chatId);
       
@@ -243,7 +207,7 @@ class MistralAgentService {
    */
   async getAgentInfo() {
     if (!this.agentId) {
-      await this.initializeAgent();
+      return null;
     }
     
     try {

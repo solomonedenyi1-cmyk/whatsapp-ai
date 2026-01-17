@@ -13,8 +13,7 @@ const config = {
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
     cacheEnabled: process.env.MISTRAL_CACHE_ENABLED !== 'false', // Default: true
     // Agent Configuration
-    agentName: process.env.MISTRAL_AGENT_NAME || 'whatsapp-ai-agent',
-    agentDescription: process.env.MISTRAL_AGENT_DESCRIPTION || 'WhatsApp AI Assistant Agent',
+    agentId: process.env.MISTRAL_AGENT_ID || null,
     useAgent: process.env.MISTRAL_USE_AGENT !== 'false', // Default: true
   },
 

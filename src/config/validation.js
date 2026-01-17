@@ -37,17 +37,11 @@ const configSchema = Joi.object({
       .description('Enable API response caching'),
     
     // Agent Configuration
-    agentName: Joi.string()
-      .default('whatsapp-ai-agent')
-      .min(3)
-      .max(50)
-      .description('Name for the Mistral Agent'),
-    
-    agentDescription: Joi.string()
-      .default('WhatsApp AI Assistant Agent')
-      .min(3)
-      .max(100)
-      .description('Description for the Mistral Agent'),
+    agentId: Joi.string()
+      .pattern(/^ag_[a-zA-Z0-9]{32}$/)
+      .allow(null)
+      .default(null)
+      .description('Mistral Agent ID from console (format: ag_xxxxx...)'),
     
     useAgent: Joi.boolean()
       .default(true)
@@ -199,17 +193,10 @@ function validateEnvironment(env) {
       .optional()
       .description('Enable API response caching'),
     
-    MISTRAL_AGENT_NAME: Joi.string()
-      .min(3)
-      .max(50)
+    MISTRAL_AGENT_ID: Joi.string()
+      .pattern(/^ag_[a-zA-Z0-9]{32}$/)
       .optional()
-      .description('Mistral Agent name'),
-    
-    MISTRAL_AGENT_DESCRIPTION: Joi.string()
-      .min(3)
-      .max(100)
-      .optional()
-      .description('Mistral Agent description'),
+      .description('Mistral Agent ID (format: ag_xxxxx...)'),
     
     MISTRAL_USE_AGENT: Joi.string()
       .valid('true', 'false')
