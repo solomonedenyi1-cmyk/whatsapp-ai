@@ -1,4 +1,8 @@
 require('dotenv').config();
+const { validateConfig, validateEnvironment } = require('./validation');
+
+// Validate environment variables
+validateEnvironment(process.env);
 
 const config = {
   // Mistral API Configuration
@@ -54,4 +58,11 @@ const config = {
   }
 };
 
-module.exports = config;
+// Validate the configuration before exporting
+try {
+  const validatedConfig = validateConfig(config);
+  module.exports = validatedConfig;
+} catch (error) {
+  console.error('❌ Configuration validation failed. Cannot start application.');
+  process.exit(1);
+}
