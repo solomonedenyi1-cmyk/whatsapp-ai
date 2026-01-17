@@ -12,6 +12,15 @@ A production-ready WhatsApp AI bot integrated with Mistral AI model via Mistral 
 - **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
 - **Context Management**: Intelligent conversation context with configurable message limits
+- **Mistral Agent Integration**: Advanced agent-based architecture with persistent context in Mistral cloud
+
+### Mistral Agent Features (NEW)
+- **Persistent Agents**: Create and manage AI agents with persistent instructions and tools
+- **Cloud Context Management**: Conversation context stored in Mistral's cloud, eliminating local management
+- **Agent-Based Architecture**: More reliable and scalable conversation handling
+- **Automatic Agent Creation**: System automatically creates and manages agents
+- **Seamless Mode Switching**: Toggle between direct API and agent-based modes via configuration
+- **Enhanced Context Continuity**: Better conversation continuity across sessions
 
 ### Enterprise Security
 - **Admin Access Control**: Role-based command access with WhatsApp number authentication
@@ -232,12 +241,69 @@ AI: 📊 Bot Status
 | `MISTRAL_API_KEY` | Mistral API key for authentication | None | Yes |
 | `MISTRAL_MODEL_NAME` | Mistral AI model name to use | `mistral-medium-latest` | No |
 | `MISTRAL_CACHE_ENABLED` | Enable API response caching for better performance | `true` | No |
+| `MISTRAL_AGENT_NAME` | Name for the Mistral Agent | `whatsapp-ai-agent` | No |
+| `MISTRAL_AGENT_DESCRIPTION` | Description for the Mistral Agent | `WhatsApp AI Assistant Agent` | No |
+| `MISTRAL_USE_AGENT` | Enable Mistral Agent mode (true/false) | `true` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: 5511999999999@c.us) | None | Yes |
 | `NODE_ENV` | Environment mode | `development` | No |
 | `DEBUG` | Enable debug logging | `false` | No |
+
+### Mistral Agent Integration (NEW)
+
+The bot now supports Mistral's Agent API, which provides a more advanced and scalable architecture for conversation management.
+
+#### Agent vs Direct API Comparison
+
+| Feature | Agent Mode | Direct API Mode |
+|---------|------------|-----------------|
+| **Context Management** | Cloud-based (Mistral) | Local (bot storage) |
+| **Persistence** | Automatic conversation persistence | Manual context management |
+| **Scalability** | Better for high-volume conversations | Good for moderate usage |
+| **Reliability** | More resilient to restarts | Depends on local storage |
+| **Complexity** | Simpler architecture | More control |
+| **Performance** | Optimized by Mistral | Optimized locally |
+
+#### When to Use Agent Mode
+
+**Enable Agent Mode (Recommended for most users):**
+- ✅ Production environments
+- ✅ High-volume conversations
+- ✅ Better conversation continuity
+- ✅ Reduced local resource usage
+- ✅ Automatic context management
+
+**Use Direct API Mode:**
+- ❌ Development and testing
+- ❌ Debugging conversation issues
+- ❌ Custom context management needs
+- ❌ Compliance requirements for local storage
+
+#### Agent Configuration
+
+The agent is automatically created and managed by the system. You can customize the agent name and description:
+
+```bash
+# In .env file
+MISTRAL_AGENT_NAME=my-custom-agent
+MISTRAL_AGENT_DESCRIPTION=My custom WhatsApp AI assistant
+MISTRAL_USE_AGENT=true
+```
+
+#### Agent Lifecycle
+
+1. **Initialization**: Agent is created automatically on first run
+2. **Conversation Management**: Each chat gets its own conversation ID
+3. **Context Persistence**: Context is stored in Mistral's cloud
+4. **Automatic Recovery**: Conversations persist across bot restarts
+
+#### Agent Commands
+
+- `/status` - Shows agent connection status and information
+- `/reset` - Clears local cache and creates new conversation
+- `/context` - Shows current operation mode
 
 ### API Response Caching
 
@@ -720,6 +786,52 @@ LGPL-2.1 License - see LICENSE file for details.
 
 **Built with Node.js, WhatsApp Web.js, and Mistral AI integration**
 
+## Migration from Direct API to Mistral Agent
+
+### Migration Guide
+
+If you're upgrading from the direct API mode to the new Mistral Agent mode, follow these steps:
+
+1. **Update Environment Variables**:
+   ```bash
+   # Enable agent mode
+   MISTRAL_USE_AGENT=true
+   
+   # Optional: Customize agent name and description
+   MISTRAL_AGENT_NAME=my-whatsapp-agent
+   MISTRAL_AGENT_DESCRIPTION=My WhatsApp AI Assistant
+   ```
+
+2. **Restart the Bot**:
+   - The agent will be automatically created on first run
+   - Existing conversations will continue to work
+   - New conversations will use the agent-based architecture
+
+3. **Test the Migration**:
+   - Start the bot and verify connectivity with `/status`
+   - Test conversations to ensure proper AI responses
+   - Check monitoring with `/health` and `/monitor`
+
+4. **Rollback Option**:
+   - Set `MISTRAL_USE_AGENT=false` to return to direct API mode
+   - The agent will remain available for future use
+
+### Benefits of Agent Migration
+
+- **Automatic Context Management**: No need to manage conversation context locally
+- **Better Scalability**: Handles high-volume conversations more efficiently
+- **Improved Reliability**: Conversations persist across bot restarts
+- **Reduced Resource Usage**: Less memory and storage usage on your server
+- **Future-Proof**: Aligns with Mistral's recommended architecture
+
+### Backward Compatibility
+
+The system maintains full backward compatibility:
+- Old direct API configuration still works
+- You can switch between modes without data loss
+- All existing commands work identically
+- Configuration structure remains the same
+
 ## Migration from Yue-F to Mistral AI
 
 ### Migration Guide
@@ -769,6 +881,16 @@ The system maintains backward compatibility:
 ## Changelog
 
 ### Latest Version
+
+**v2.1.0 - Mistral Agent Integration**
+- ✅ Added Mistral Agent support for cloud-based context management
+- ✅ Implemented automatic agent creation and conversation management
+- ✅ Added seamless switching between direct API and agent modes
+- ✅ Enhanced status monitoring with agent information
+- ✅ Updated all commands to support agent mode
+- ✅ Maintained full backward compatibility with direct API mode
+- ✅ Added comprehensive documentation for agent features
+- ✅ Improved error handling for agent operations
 
 **v2.0.0 - Mistral AI Integration**
 - ✅ Replaced Yue-F/Ollama integration with Mistral AI SDK

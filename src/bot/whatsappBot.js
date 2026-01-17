@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const config = require('../config/config');
 const MistralApiService = require('../services/mistralApiService');
+const MistralAgentService = require('../services/mistralAgentService');
 const ConversationService = require('../services/conversationService');
 const MessageService = require('../services/messageService');
 const CommandHandler = require('../commands/commandHandler');
@@ -28,10 +29,12 @@ class WhatsAppBot {
     
     // Initialize existing services with error handling
     this.mistralApiService = new MistralApiService();
+    this.mistralAgentService = new MistralAgentService();
     this.conversationService = new ConversationService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
       this.mistralApiService, 
+      this.mistralAgentService,
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
@@ -235,7 +238,9 @@ class WhatsAppBot {
         }
       };
       
-      const aiResponse = await this.mistralApiService.sendMessage(messageText, context, warningCallback);
+      const aiResponse = config.mistral.useAgent 
+        ? await this.mistralAgentService.sendAgentMessage(messageText, warningCallback)
+        : await this.mistralApiService.sendMessage(messageText, context, warningCallback);
       responseReceived = true; // Mark that response was received
       
       // Complete the timeout request
@@ -346,7 +351,9 @@ class WhatsAppBot {
       config: {
         modelName: config.mistral.modelName,
         apiUrl: 'Mistral API',
-        maxContext: config.bot.maxContextMessages
+        maxContext: config.bot.maxContextMessages,
+        useAgent: config.mistral.useAgent,
+        agentName: config.mistral.agentName
       }
     };
   }
@@ -365,6 +372,11 @@ class WhatsAppBot {
       await this.monitoringService.shutdown();
       await this.performanceOptimizer.shutdown();
       await this.errorHandler.shutdown();
+      
+      // Shutdown Mistral Agent service
+      if (this.mistralAgentService) {
+        this.mistralAgentService.cleanup();
+      }
       
       // Shutdown Phase 3.5 services
       await this.timeoutHandler.shutdown();

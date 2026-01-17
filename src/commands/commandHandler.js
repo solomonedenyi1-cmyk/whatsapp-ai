@@ -1,8 +1,9 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(mistralApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
+  constructor(mistralApiService, mistralAgentService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
     this.mistralApiService = mistralApiService;
+    this.mistralAgentService = mistralAgentService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
@@ -125,6 +126,12 @@ class CommandHandler {
   async handleReset(chatId) {
     if (chatId) {
       await this.conversationService.clearContext(chatId);
+      
+      // Clear agent conversation cache if using agent
+      if (config.mistral.useAgent && this.mistralAgentService) {
+        this.mistralAgentService.clearConversationCache(chatId);
+      }
+      
       return '🔄 *Conversation reset!*\n\nYour chat history has been cleared from both memory and storage. We can start fresh! 😊';
     }
     return '❌ Unable to reset conversation context.';
@@ -141,15 +148,34 @@ class CommandHandler {
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
       
+      // Test Agent API connection if enabled
+      let agentStatusText = 'Disabled';
+      let agentStatusEmoji = '🔄';
+      let agentInfo = '';
+      
+      if (config.mistral.useAgent && this.mistralAgentService) {
+        const agentTestResponse = await this.mistralAgentService.checkAgentApiStatus();
+        agentStatusText = agentTestResponse ? 'Connected' : 'Disconnected';
+        agentStatusEmoji = agentTestResponse ? '✅' : '❌';
+        
+        const agent = await this.mistralAgentService.getAgentInfo();
+        if (agent) {
+          agentInfo = `
+*Agent:* ${agent.name} (v${agent.version})`;
+        }
+      }
+      
       const stats = await this.conversationService.getStats();
       
       return `📊 *Bot Status*
 
 *Mistral API:* ${statusEmoji} ${apiStatusText}
+*Agent API:* ${agentStatusEmoji} ${agentStatusText}${agentInfo}
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
 *Model:* ${config.mistral.modelName}
 *API URL:* Mistral API
+*Mode:* ${config.mistral.useAgent ? 'Agent-based' : 'Direct API'}
 
 *Persistence:*
 • Stored conversations: ${stats.persistent.conversations || 0}
@@ -178,6 +204,8 @@ class CommandHandler {
    * @returns {string} - About message
    */
   handleAbout() {
+    const mode = config.mistral.useAgent ? 'Agent-based (context in Mistral cloud)' : 'Direct API (local context)';
+    
     return `🤖 *${config.bot.name}*
 
 *About this bot:*
@@ -189,14 +217,15 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
 • Fast and intelligent responses
 • Familiar WhatsApp interface
 • Customizable AI persona and knowledge base
+• ${mode}
 
 *Technology:*
 • Model: Mistral (via Mistral API)
-• API: Mistral API
+• API: Mistral ${config.mistral.useAgent ? 'Agents' : 'Chat'} API
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025
-*Version:* 1.1.0 (Phase 1 + Context System)
+*Version:* 2.0.0 (Agent Integration)`;
 
 For more information, use /help`;
   }
@@ -207,6 +236,8 @@ For more information, use /help`;
    */
   handleContext() {
     const { businessContext } = require('../config/context');
+    const mode = config.mistral.useAgent ? 'Agent-based (context managed by Mistral)' : 'Direct API (local context management)';
+    
     return `🎭 *Current AI Context*
 
 *Identity:*
@@ -222,6 +253,9 @@ For more information, use /help`;
 
 *Owner:*
 • ${businessContext.owner.name}, ${businessContext.owner.title}
+
+*Operation Mode:*
+• ${mode}
 
 *Note:* Edit config.json in the root directory to customize the AI's knowledge and personality.`;
   }
