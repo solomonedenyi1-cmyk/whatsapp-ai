@@ -226,8 +226,6 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
 
 *Developed:* September 2025
 *Version:* 2.0.0 (Agent Integration)`;
-
-For more information, use /help`;
   }
 
   /**

@@ -34,7 +34,24 @@ const configSchema = Joi.object({
     
     cacheEnabled: Joi.boolean()
       .default(true)
-      .description('Enable API response caching')
+      .description('Enable API response caching'),
+    
+    // Agent Configuration
+    agentName: Joi.string()
+      .default('whatsapp-ai-agent')
+      .min(3)
+      .max(50)
+      .description('Name for the Mistral Agent'),
+    
+    agentDescription: Joi.string()
+      .default('WhatsApp AI Assistant Agent')
+      .min(3)
+      .max(100)
+      .description('Description for the Mistral Agent'),
+    
+    useAgent: Joi.boolean()
+      .default(true)
+      .description('Enable Mistral Agent mode')
   }).required(),
 
   // Yue-F API Configuration (kept for backward compatibility)
@@ -181,6 +198,23 @@ function validateEnvironment(env) {
       .valid('true', 'false')
       .optional()
       .description('Enable API response caching'),
+    
+    MISTRAL_AGENT_NAME: Joi.string()
+      .min(3)
+      .max(50)
+      .optional()
+      .description('Mistral Agent name'),
+    
+    MISTRAL_AGENT_DESCRIPTION: Joi.string()
+      .min(3)
+      .max(100)
+      .optional()
+      .description('Mistral Agent description'),
+    
+    MISTRAL_USE_AGENT: Joi.string()
+      .valid('true', 'false')
+      .optional()
+      .description('Enable Mistral Agent mode'),
     
     YUE_F_API_URL: Joi.string()
       .uri()
