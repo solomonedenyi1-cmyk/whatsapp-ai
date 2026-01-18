@@ -42,8 +42,7 @@ const config = {
   whatsapp: {
     sessionPath: './session',
     puppeteerOptions: {
-      headless: true, // Back to traditional headless mode
-      executablePath: '/usr/bin/chromium-browser',
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -55,7 +54,8 @@ const config = {
         '--disable-gpu',
         '--use-gl=egl',
         '--disable-software-rasterizer',
-        '--disable-dev-shm-usage'
+        '--disable-dev-shm-usage',
+        '--user-data-dir=/tmp/whatsapp-session'
       ]
     }
   },
