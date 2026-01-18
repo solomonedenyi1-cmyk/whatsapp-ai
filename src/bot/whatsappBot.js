@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const config = require('../config/config');
 const MistralAgentService = require('../services/mistralAgentService');
+const MistralConversationService = require('../services/mistralConversationService');
 const ConversationService = require('../services/conversationService');
 const MessageService = require('../services/messageService');
 const CommandHandler = require('../commands/commandHandler');
@@ -34,9 +35,13 @@ class WhatsAppBot {
     // Initialize existing services with error handling
     this.mistralAgentService = new MistralAgentService();
     this.conversationService = new ConversationService();
+    this.mistralConversationService = new MistralConversationService({
+      persistenceService: this.conversationService.persistenceService,
+    });
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
       this.mistralAgentService,
+      this.mistralConversationService,
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
@@ -44,8 +49,24 @@ class WhatsAppBot {
       this.adminService
     );
 
+    this.setupTimeoutListeners();
+
     this.isReady = false;
     this.startTime = Date.now();
+  }
+
+  setupTimeoutListeners() {
+    this.timeoutHandler.on('sendTimeoutMessage', async (data) => {
+      try {
+        if (!data?.chatId || !data?.message) {
+          return;
+        }
+
+        await this.sendResponse(data.chatId, data.message, null, null);
+      } catch (error) {
+        console.error('❌ Error sending timeout message:', error);
+      }
+    });
   }
 
   async safeSendSeen(chatId, chat) {
@@ -267,17 +288,7 @@ class WhatsAppBot {
       // Register request for timeout monitoring
       this.timeoutHandler.registerRequest(chatId, requestId, messageText);
 
-      // Set up timeout message handler
-      this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
-        if (data.chatId === chatId) {
-          await this.sendResponse(chatId, data.message, null, chat);
-        }
-      });
-
-      // Get conversation context
-      const context = this.conversationService.getFormattedContext(chatId);
-
-      // Add user message to context
+      // Add user message to local context storage (analytics/persistence)
       await this.conversationService.addMessage(chatId, 'user', messageText);
 
       // Update API status
@@ -312,7 +323,7 @@ class WhatsAppBot {
       });
 
       let aiResponse;
-      if (tools.length > 0) {
+      if (config.mistral.useConversations) {
         const allowedTools = new Set();
         if (enableBookingTool) {
           allowedTools.add('interpretar_data_hora');
@@ -323,17 +334,37 @@ class WhatsAppBot {
         }
 
         const dispatcher = createToolDispatcher({ allowedTools });
-        const result = await this.mistralAgentService.sendMessageWithTools(
+        const instructions = config.mistral.includeLocalSystemPrompt ? this.conversationService.systemPrompt : null;
+        aiResponse = await this.mistralConversationService.sendMessage(
+          chatId,
           messageText,
-          context,
           {
             tools,
             dispatcher,
+            instructions,
             warningCallback,
           }
         );
+      } else if (tools.length > 0) {
+        const allowedTools = new Set();
+        if (enableBookingTool) {
+          allowedTools.add('interpretar_data_hora');
+          allowedTools.add('criar_agendamento');
+        }
+        if (enableEmailTool) {
+          allowedTools.add('enviar_email_confirmacao');
+        }
+
+        const dispatcher = createToolDispatcher({ allowedTools });
+        const context = this.conversationService.getFormattedContext(chatId);
+        const result = await this.mistralAgentService.sendMessageWithTools(messageText, context, {
+          tools,
+          dispatcher,
+          warningCallback,
+        });
         aiResponse = result?.content;
       } else {
+        const context = this.conversationService.getFormattedContext(chatId);
         aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
       }
       responseReceived = true; // Mark that response was received

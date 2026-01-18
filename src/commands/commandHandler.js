@@ -1,8 +1,9 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(mistralAgentService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
+  constructor(mistralAgentService, mistralConversationService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
     this.mistralAgentService = mistralAgentService;
+    this.mistralConversationService = mistralConversationService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
@@ -124,6 +125,9 @@ class CommandHandler {
    */
   async handleReset(chatId) {
     if (chatId) {
+      if (config.mistral.useConversations && this.mistralConversationService) {
+        await this.mistralConversationService.deleteConversation(chatId);
+      }
       await this.conversationService.clearContext(chatId);
       return '🔄 *Conversation reset!*\n\nYour chat history has been cleared from both memory and storage. We can start fresh! 😊';
     }
