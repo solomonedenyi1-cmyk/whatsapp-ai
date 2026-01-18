@@ -1,0 +1,30 @@
+services:
+  whatsapp-ai:
+    image: isyuricunha/whatsapp-ai:latest
+    container_name: whatsapp-ai
+    restart: unless-stopped
+    environment:
+      MISTRAL_API_KEY: your_mistral_api_key
+      MISTRAL_AGENT_ID: ag_your_agent_id
+      MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT: "false"
+
+      BOT_NAME: "WhatsApp AI Bot"
+      MAX_CONTEXT_MESSAGES: "20"
+      MESSAGE_SPLIT_LENGTH: "1500"
+
+      WHATSAPP_SESSION_PATH: /app/session
+      PUPPETEER_HEADLESS: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+
+      NODE_ENV: production
+      DEBUG: "false"
+
+      ADMIN_WHATSAPP_NUMBER: 551234567890@c.us
+
+    volumes:
+      - whatsapp_ai_session:/app/session
+      - whatsapp_ai_data:/app/data
+
+volumes:
+  whatsapp_ai_session:
+  whatsapp_ai_data:
