@@ -8,6 +8,9 @@ const config = {
     apiKey: process.env.MISTRAL_API_KEY,
     agentId: process.env.MISTRAL_AGENT_ID,
     includeLocalSystemPrompt: parseEnvBoolean(process.env.MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT, false),
+    useConversations: parseEnvBoolean(process.env.MISTRAL_USE_CONVERSATIONS, true),
+    conversationStore: parseEnvBoolean(process.env.MISTRAL_CONVERSATION_STORE, true),
+    conversationHandoffExecution: process.env.MISTRAL_CONVERSATION_HANDOFF_EXECUTION?.trim() || 'server',
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
   },

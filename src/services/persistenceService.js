@@ -165,7 +165,10 @@ class PersistenceService {
     try {
       await this.ensureReady();
 
+      const previous = this.conversationsCache.get(chatId);
+
       const conversationData = {
+        ...(previous && typeof previous === 'object' ? previous : {}),
         context: context,
         lastUpdated: new Date().toISOString(),
         messageCount: context.length,
@@ -191,6 +194,61 @@ class PersistenceService {
     } catch (error) {
       console.error('❌ Error loading conversation:', error.message);
       return [];
+    }
+  }
+
+  async loadMistralConversationId(chatId) {
+    try {
+      await this.ensureReady();
+      const data = this.conversationsCache.get(chatId);
+      const candidate = data?.mistralConversationId;
+      return typeof candidate === 'string' && candidate.trim().length > 0 ? candidate : null;
+    } catch (error) {
+      console.error('❌ Error loading mistral conversation id:', error.message);
+      return null;
+    }
+  }
+
+  async saveMistralConversationId(chatId, conversationId) {
+    try {
+      await this.ensureReady();
+
+      const safeConversationId = typeof conversationId === 'string' ? conversationId.trim() : '';
+      if (!safeConversationId) {
+        throw new Error('Missing conversationId');
+      }
+
+      const previous = this.conversationsCache.get(chatId);
+      const conversationData = {
+        ...(previous && typeof previous === 'object' ? previous : {}),
+        context: Array.isArray(previous?.context) ? previous.context : [],
+        lastUpdated: new Date().toISOString(),
+        messageCount: Array.isArray(previous?.context) ? previous.context.length : 0,
+        mistralConversationId: safeConversationId,
+      };
+
+      this.conversationsCache.set(chatId, conversationData);
+      await this.saveConversationsToFile();
+    } catch (error) {
+      console.error('❌ Error saving mistral conversation id:', error.message);
+    }
+  }
+
+  async clearMistralConversationId(chatId) {
+    try {
+      await this.ensureReady();
+      const previous = this.conversationsCache.get(chatId);
+      if (!previous || typeof previous !== 'object') {
+        return;
+      }
+
+      const conversationData = { ...previous };
+      delete conversationData.mistralConversationId;
+      conversationData.lastUpdated = new Date().toISOString();
+      this.conversationsCache.set(chatId, conversationData);
+      await this.saveConversationsToFile();
+    } catch (error) {
+      console.error('❌ Error clearing mistral conversation id:', error.message);
     }
   }
 
