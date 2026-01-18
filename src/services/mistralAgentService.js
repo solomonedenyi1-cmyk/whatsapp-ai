@@ -30,6 +30,126 @@ class MistralAgentService {
         }
     }
 
+    async sendChatMessageWithTools(messages, { tools, dispatcher, warningCallback = null } = {}) {
+        let warningTimer = null;
+        let warningSent = false;
+
+        const toolMessages = [];
+        const maxIterations = 12;
+
+        try {
+            this.validateConfig();
+
+            if (!Array.isArray(tools)) {
+                throw new Error('Tools must be an array');
+            }
+
+            if (!dispatcher || typeof dispatcher.dispatchToolCall !== 'function') {
+                throw new Error('Dispatcher with dispatchToolCall(toolCall) is required');
+            }
+
+            if (warningCallback) {
+                warningTimer = setTimeout(() => {
+                    if (!warningSent) {
+                        warningSent = true;
+                        console.log('⏰ 5-minute warning sent to user');
+                        warningCallback();
+                    }
+                }, this.warningTimeout);
+            }
+
+            const client = await this.getClient();
+
+            let result = await client.agents.complete({
+                agentId: this.agentId,
+                messages,
+                tools,
+                stream: false,
+            });
+
+            let message = result?.choices?.[0]?.message;
+
+            for (let i = 0; i < maxIterations; i += 1) {
+                const toolCalls = message?.tool_calls;
+                if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
+                    break;
+                }
+
+                messages.push(message);
+
+                const toolResults = await Promise.all(
+                    toolCalls.map(async (toolCall) => {
+                        const functionName = toolCall?.function?.name;
+                        try {
+                            const value = await dispatcher.dispatchToolCall(toolCall);
+                            return {
+                                toolCall,
+                                functionName,
+                                content: JSON.stringify(value),
+                            };
+                        } catch (error) {
+                            const safeError = {
+                                success: false,
+                                error: error?.message || String(error),
+                            };
+
+                            return {
+                                toolCall,
+                                functionName,
+                                content: JSON.stringify(safeError),
+                            };
+                        }
+                    })
+                );
+
+                for (const toolResult of toolResults) {
+                    const toolMessage = {
+                        role: 'tool',
+                        name: toolResult.functionName,
+                        content: toolResult.content,
+                        tool_call_id: toolResult.toolCall?.id,
+                    };
+
+                    toolMessages.push(toolMessage);
+                    messages.push(toolMessage);
+                }
+
+                result = await client.agents.complete({
+                    agentId: this.agentId,
+                    messages,
+                    tools,
+                    stream: false,
+                });
+
+                message = result?.choices?.[0]?.message;
+            }
+
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+                warningTimer = null;
+            }
+
+            const content = message?.content;
+            if (typeof content === 'string' && content.trim().length > 0) {
+                return { content, toolMessages };
+            }
+
+            throw new Error('Invalid response format from Mistral Agents API');
+        } catch (error) {
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+                warningTimer = null;
+            }
+
+            console.error('Error calling Mistral Agents API:', error.message);
+            return { content: this.getFallbackResponse(error), toolMessages };
+        } finally {
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+            }
+        }
+    }
+
     async getClient() {
         if (this.client) {
             return this.client;
@@ -101,6 +221,11 @@ class MistralAgentService {
     async sendMessage(userMessage, conversationHistory = [], warningCallback = null) {
         const messages = [...conversationHistory, { role: 'user', content: userMessage }];
         return this.sendChatMessage(messages, warningCallback);
+    }
+
+    async sendMessageWithTools(userMessage, conversationHistory = [], { tools, dispatcher, warningCallback = null } = {}) {
+        const messages = [...conversationHistory, { role: 'user', content: userMessage }];
+        return this.sendChatMessageWithTools(messages, { tools, dispatcher, warningCallback });
     }
 
     getFallbackResponse(error) {

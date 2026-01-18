@@ -1,9 +1,11 @@
 const CalService = require('./calService');
 const EmailService = require('./emailService');
 
-function getAgentTools() {
-    return [
-        {
+function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
+    const tools = [];
+
+    if (enableBooking) {
+        tools.push({
             type: 'function',
             function: {
                 name: 'criar_agendamento',
@@ -20,8 +22,11 @@ function getAgentTools() {
                     required: ['name', 'email', 'date', 'time'],
                 },
             },
-        },
-        {
+        });
+    }
+
+    if (enableEmail) {
+        tools.push({
             type: 'function',
             function: {
                 name: 'enviar_email_confirmacao',
@@ -37,8 +42,10 @@ function getAgentTools() {
                     required: ['to', 'name', 'date', 'time'],
                 },
             },
-        },
-    ];
+        });
+    }
+
+    return tools;
 }
 
 async function criarAgendamento(args, { calService }) {
@@ -70,7 +77,7 @@ async function enviarEmailConfirmacao(args, { emailService }) {
     };
 }
 
-function createToolDispatcher({ calService, emailService } = {}) {
+function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
     const deps = {
         calService: calService || new CalService(),
         emailService: emailService || new EmailService(),
@@ -80,6 +87,8 @@ function createToolDispatcher({ calService, emailService } = {}) {
         criar_agendamento: (args) => criarAgendamento(args, deps),
         enviar_email_confirmacao: (args) => enviarEmailConfirmacao(args, deps),
     };
+
+    const allowed = allowedTools instanceof Set ? allowedTools : new Set(Object.keys(handlers));
 
     async function dispatchToolCall(toolCall) {
         const functionName = toolCall?.function?.name;
@@ -92,6 +101,10 @@ function createToolDispatcher({ calService, emailService } = {}) {
         const handler = handlers[functionName];
         if (!handler) {
             throw new Error(`Tool not found: ${functionName}`);
+        }
+
+        if (!allowed.has(functionName)) {
+            throw new Error(`Tool disabled: ${functionName}`);
         }
 
         let parsedArgs = {};

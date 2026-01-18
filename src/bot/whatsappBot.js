@@ -13,6 +13,7 @@ const MonitoringService = require('../services/monitoringService');
 const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
+const { getAgentTools, createToolDispatcher } = require('../services/agentTools');
 const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
 const { generateRequestId } = require('../utils/requestContext');
 
@@ -295,7 +296,42 @@ class WhatsAppBot {
         }
       };
 
-      const aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
+      const enableBookingTool = Boolean(config.cal?.apiKey && config.cal?.eventTypeId);
+      const enableEmailTool = Boolean(
+        config.resend?.apiKey &&
+        config.resend?.fromEmail &&
+        config.resend?.fromName
+      );
+
+      const tools = getAgentTools({
+        enableBooking: enableBookingTool,
+        enableEmail: enableEmailTool,
+      });
+
+      let aiResponse;
+      if (tools.length > 0) {
+        const allowedTools = new Set();
+        if (enableBookingTool) {
+          allowedTools.add('criar_agendamento');
+        }
+        if (enableEmailTool) {
+          allowedTools.add('enviar_email_confirmacao');
+        }
+
+        const dispatcher = createToolDispatcher({ allowedTools });
+        const result = await this.mistralAgentService.sendMessageWithTools(
+          messageText,
+          context,
+          {
+            tools,
+            dispatcher,
+            warningCallback,
+          }
+        );
+        aiResponse = result?.content;
+      } else {
+        aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
+      }
       responseReceived = true; // Mark that response was received
 
       // Complete the timeout request
