@@ -84,6 +84,13 @@ BOT_NAME=Your Bot Name
 MAX_CONTEXT_MESSAGES=20
 MESSAGE_SPLIT_LENGTH=1500
 
+# WhatsApp / Puppeteer
+# Where WhatsApp Web auth/session cache will be stored
+WHATSAPP_SESSION_PATH=./session
+PUPPETEER_HEADLESS=true
+# Optional. Useful in servers where chromium path is custom.
+PUPPETEER_EXECUTABLE_PATH=
+
 # Admin Configuration (REQUIRED)
 ADMIN_WHATSAPP_NUMBER=5511999999999@c.us
 
@@ -253,6 +260,9 @@ AI: 📊 Bot Status
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
+| `WHATSAPP_SESSION_PATH` | Where WhatsApp Web session/auth cache is stored | `./session` | No |
+| `PUPPETEER_HEADLESS` | Run browser in headless mode | `true` | No |
+| `PUPPETEER_EXECUTABLE_PATH` | Custom Chromium executable path | None | No |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: <5511999999999@c.us>) | None | Yes |
 | `NODE_ENV` | Environment mode | `development` | No |
 | `DEBUG` | Enable debug logging | `false` | No |
@@ -462,8 +472,29 @@ whatsapp-ai/
 ```bash
 npm start      # Start the bot in production mode
 npm run dev    # Start with nodemon for development (auto-reload)
-npm test       # Run tests (placeholder)
+npm test       # Run unit tests
+npm run check:secrets  # Scan staged files for accidental secrets before committing
+npm run hooks:install  # Enable repo git hooks (.githooks) for secret scanning
 ```
+
+### Git Hooks (Secrets Scan)
+
+This repository includes an optional pre-commit hook that runs a lightweight secrets scan
+against staged files.
+
+```bash
+npm run hooks:install
+```
+
+If a secret-like pattern is detected (e.g. `MISTRAL_API_KEY=...`), the commit will be blocked.
+
+### CI
+
+GitHub Actions runs on every Pull Request and on pushes to `main`:
+
+- **Install**: `npm ci`
+- **Test**: `npm test`
+- **Node versions**: 18 and 20
 
 ### Development Workflow
 
