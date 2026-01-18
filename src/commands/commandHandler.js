@@ -312,6 +312,8 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         return '❌ Monitoring service not available.';
       }
 
+      const mistralOk = await this.mistralAgentService.checkApiStatus();
+
       const healthData = await this.monitoringService.performHealthCheck();
 
       const healthEmoji = {
@@ -325,6 +327,8 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       let response = `${emoji} *System Health Check*\n\n`;
       response += `🏥 *Overall Status:* ${healthData.systemHealth.toUpperCase()}\n`;
       response += `⏰ *Last Check:* ${new Date(healthData.timestamp).toLocaleString()}\n\n`;
+
+      response += `🧠 *Mistral Agent API:* ${mistralOk ? '✅ Connected' : '❌ Disconnected'}\n\n`;
 
       if (healthData.checks) {
         response += `📊 *Component Status:*\n`;

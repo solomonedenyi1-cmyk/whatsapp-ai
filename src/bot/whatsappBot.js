@@ -12,6 +12,7 @@ const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
 const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
+const { generateRequestId } = require('../utils/requestContext');
 
 class WhatsAppBot {
   constructor() {
@@ -156,6 +157,7 @@ class WhatsAppBot {
    */
   async handleMessage(message) {
     const startTime = Date.now();
+    const requestId = generateRequestId(message?.from || 'chat');
 
     try {
       // Check if message should be ignored
@@ -169,7 +171,7 @@ class WhatsAppBot {
       const chat = await message.getChat();
 
       if (config.env.debug) {
-        console.log(`📨 Received message from ${chatId}: ${messageText}`);
+        console.log(`[${requestId}] 📨 Received message from ${chatId}: ${messageText}`);
       }
 
       // Record performance metrics
@@ -213,6 +215,7 @@ class WhatsAppBot {
       await this.errorHandler.handleError(error, {
         component: 'whatsappBot',
         operation: 'handleMessage',
+        requestId,
         chatId: message.from,
         messageText: message.body?.substring(0, 100)
       });
@@ -227,11 +230,11 @@ class WhatsAppBot {
    * @returns {Promise<string>} - AI response
    */
   async processAIMessageWithTimeout(messageText, chatId, chat) {
-    const requestId = `${chatId}_${Date.now()}`;
+    const requestId = generateRequestId(chatId);
 
     try {
       // Register request for timeout monitoring
-      this.timeoutHandler.registerRequest(requestId, requestId, messageText);
+      this.timeoutHandler.registerRequest(chatId, requestId, messageText);
 
       // Set up timeout message handler
       this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
@@ -285,6 +288,7 @@ class WhatsAppBot {
       await this.errorHandler.handleError(error, {
         component: 'mistralAgent',
         operation: 'processMessage',
+        requestId,
         chatId,
         messageLength: messageText.length
       });
