@@ -59,7 +59,7 @@ cd whatsapp-ai
 ### 2. Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3. Environment Configuration
@@ -132,7 +132,7 @@ Edit `config.json` in the root directory to customize your AI assistant:
 ### 5. Start the Bot
 
 ```bash
-npm start
+pnpm start
 ```
 
 ### 6. WhatsApp Authentication
@@ -470,11 +470,11 @@ whatsapp-ai/
 ### Available Scripts
 
 ```bash
-npm start      # Start the bot in production mode
-npm run dev    # Start with nodemon for development (auto-reload)
-npm test       # Run unit tests
-npm run check:secrets  # Scan staged files for accidental secrets before committing
-npm run hooks:install  # Enable repo git hooks (.githooks) for secret scanning
+pnpm start      # Start the bot in production mode
+pnpm dev        # Start with nodemon for development (auto-reload)
+pnpm test       # Run unit tests
+pnpm run check:secrets  # Scan staged files for accidental secrets before committing
+pnpm run hooks:install  # Enable repo git hooks (.githooks) for secret scanning
 ```
 
 ### Git Hooks (Secrets Scan)
@@ -483,7 +483,7 @@ This repository includes an optional pre-commit hook that runs a lightweight sec
 against staged files.
 
 ```bash
-npm run hooks:install
+pnpm run hooks:install
 ```
 
 If a secret-like pattern is detected (e.g. `MISTRAL_API_KEY=...`), the commit will be blocked.
@@ -492,8 +492,8 @@ If a secret-like pattern is detected (e.g. `MISTRAL_API_KEY=...`), the commit wi
 
 GitHub Actions runs on every Pull Request and on pushes to `main`:
 
-- **Install**: `npm ci`
-- **Test**: `npm test`
+- **Install**: `pnpm install --frozen-lockfile`
+- **Test**: `pnpm test`
 - **Node versions**: 18 and 20
 
 ### Development Workflow
@@ -566,7 +566,7 @@ NODE_ENV=development
 
 - Ensure Chrome/Chromium is installed
 - Check if port 3000 is available
-- Run with debug mode: `DEBUG=true npm start`
+- Run with debug mode: `DEBUG=true pnpm start`
 - Verify Node.js version is 18+
 
 **Bot doesn't respond to messages**
@@ -631,7 +631,7 @@ DEBUG=true
 NODE_ENV=development
 
 # Then start the bot
-npm start
+pnpm start
 ```
 
 ### Getting Help

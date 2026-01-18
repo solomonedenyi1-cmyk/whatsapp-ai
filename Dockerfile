@@ -28,9 +28,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libasound2 \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 
-RUN npm ci --omit=dev
+COPY .npmrc package.json pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile --prod
 
 
 FROM base AS runner

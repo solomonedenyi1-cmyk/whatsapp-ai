@@ -37,6 +37,9 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 
+# pnpm store (project-local)
+.pnpm-store/
+
 # Optional eslint cache
 .eslintcache
 

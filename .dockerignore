@@ -5,6 +5,8 @@ npm-debug.log*
 Dockerfile
 .dockerignore
 
+.pnpm-store
+
 session
 .wwebjs_auth
 .wwebjs_cache
