@@ -1,19 +1,21 @@
 # WhatsApp AI Bot
 
-A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
+A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
 
 **Important Note**: All configurations provided are examples only. You must configure your own API endpoints, models, business information, and other settings before deployment.
 
 ## Features
 
 ### Core AI Integration
-- **Natural Conversations**: Direct integration with Yue-F AI model through Ollama API
+
+- **Natural Conversations**: Direct integration with a Mistral Agent (Agent ID)
 - **Business Context System**: Fully customizable AI persona with comprehensive business knowledge
 - **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
 - **Context Management**: Intelligent conversation context with configurable message limits
 
 ### Enterprise Security
+
 - **Admin Access Control**: Role-based command access with WhatsApp number authentication
 - **Secure Logging**: Sanitized logs preventing API data exposure and sensitive information leaks
 - **Command Protection**: All administrative commands restricted to authorized users only
@@ -21,6 +23,7 @@ A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API
 - **Data Privacy**: Local storage with no external data transmission
 
 ### Performance & Monitoring
+
 - **Real-time Monitoring**: System health checks, component status tracking, and performance metrics
 - **Advanced Analytics**: Comprehensive usage analytics, command tracking, and user engagement reports
 - **Performance Optimization**: Intelligent caching, memory management, and response time optimization
@@ -29,6 +32,7 @@ A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API
 - **Resource Management**: Automatic cleanup, garbage collection, and memory optimization
 
 ### Production Features
+
 - **Error Recovery**: Automatic error detection, categorization, and recovery mechanisms
 - **Health Monitoring**: Continuous system health monitoring with automated alerts
 - **Performance Metrics**: Real-time performance tracking with optimization recommendations
@@ -46,28 +50,34 @@ A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API
 ## Installation
 
 ### 1. Clone Repository
+
 ```bash
 git clone <repository-url>
 cd whatsapp-ai
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 3. Environment Configuration
+
 Copy the example environment file and configure your settings:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` file with your configuration:
+
 ```bash
-# Yue-F API Configuration (REQUIRED)
-YUE_F_API_URL=https://your-ollama-server.com
-YUE_F_MODEL_NAME=your-model-name
-API_TIMEOUT=30000
+# Mistral Agents Configuration (REQUIRED)
+MISTRAL_API_KEY=your_mistral_api_key
+MISTRAL_AGENT_ID=ag_your_agent_id
+# Set to true only if you want to prepend src/config/context.js system prompt to every request
+MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT=false
 
 # Bot Configuration
 BOT_NAME=Your Bot Name
@@ -85,6 +95,7 @@ DEBUG=false
 **Important**: Replace example values with your actual configuration.
 
 ### 4. Business Context Setup
+
 Edit `config.json` in the root directory to customize your AI assistant:
 
 ```json
@@ -112,11 +123,13 @@ Edit `config.json` in the root directory to customize your AI assistant:
 **No coding required** - just edit the JSON configuration file.
 
 ### 5. Start the Bot
+
 ```bash
 npm start
 ```
 
 ### 6. WhatsApp Authentication
+
 1. A QR code will appear in the terminal
 2. Open WhatsApp on your phone
 3. Go to Settings > Linked Devices > Link a Device
@@ -130,26 +143,31 @@ npm start
 **Note**: All commands are admin-only for security. Only the configured admin WhatsApp number can use these commands.
 
 #### Basic Commands
+
 - `/help` - Display available commands and usage instructions
 - `/status` - Check bot status, API connectivity, and system overview
 - `/about` - Information about the bot and its capabilities
 - `/reset` - Clear conversation history for the current chat
 
 #### Context Management
+
 - `/context` - View current AI configuration and business context
 - `/reload` - Reload AI context from config.json without restarting
 
 #### Analytics & Reporting
+
 - `/analytics` - Detailed conversation analytics and usage reports (7-day period)
 - `/cleanup` - Clean up old conversation data (30+ days) to optimize storage
 
 #### System Monitoring
+
 - `/health` - System health check and component status
 - `/monitor` - Comprehensive monitoring dashboard with real-time metrics
 - `/performance` - Performance metrics, memory usage, and optimization status
 - `/errors` - Error logs, diagnostics, and system issues
 
 #### Advanced Administration
+
 - `/admin` - Admin command statistics and access control information
 - `/sqlite` - SQLite performance comparison and database management
 - `/optimize` - Advanced performance optimization controls and cache management
@@ -159,6 +177,7 @@ npm start
 The bot features a comprehensive business context system for creating professional AI assistants:
 
 #### Configuration Structure
+
 1. **AI Identity**: Name, gender, role, personality, language, and communication tone
 2. **Business Information**: Company details, services, products, contact information
 3. **Owner Details**: Your information, expertise, and specialties
@@ -167,12 +186,14 @@ The bot features a comprehensive business context system for creating profession
 6. **Standard Responses**: Predefined responses for common scenarios
 
 #### Configuration Management
+
 - **Edit `config.json`** in the root directory to customize all aspects
 - **Use `/reload`** command to apply changes without restarting the bot
 - **Use `/context`** to verify current configuration and settings
 - **No coding required** - all configuration is done through JSON
 
 #### Example Business Configuration
+
 ```json
 {
   "services": [
@@ -197,6 +218,7 @@ The bot features a comprehensive business context system for creating profession
 ### Normal Conversations
 
 Users can send regular text messages to interact with the AI assistant. The bot:
+
 - Maintains conversation context across messages
 - Responds with business-specific knowledge
 - Uses the configured personality and tone
@@ -204,7 +226,7 @@ Users can send regular text messages to interact with the AI assistant. The bot:
 
 ### Usage Examples
 
-```
+```text
 User: Hello! What services do you offer?
 AI: Hello! I'm [AI Name], your assistant for [Company]. We offer:
 - Website Development: Custom design ($2,500, 2 weeks)
@@ -213,7 +235,7 @@ AI: Hello! I'm [AI Name], your assistant for [Company]. We offer:
 
 User: /status
 AI: 📊 Bot Status
-    Yue-F API: ✅ Connected
+    Mistral Agent API: ✅ Connected
     Active conversations: 3
     Total messages: 127
     ...
@@ -224,14 +246,14 @@ AI: 📊 Bot Status
 ### Environment Variables
 
 | Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `YUE_F_API_URL` | Yue-F/Ollama API endpoint URL | `http://localhost:11434` | Yes |
-| `YUE_F_MODEL_NAME` | AI model name to use | `yue-f` | Yes |
-| `API_TIMEOUT` | API request timeout in milliseconds | `30000` | No |
+| ---------- | ------------- | ------- | -------- |
+| `MISTRAL_API_KEY` | Mistral API key | None | Yes |
+| `MISTRAL_AGENT_ID` | Mistral Agent ID (format: ag_...) | None | Yes |
+| `MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT` | Prepend local system prompt to every request | `false` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
-| `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: 5511999999999@c.us) | None | Yes |
+| `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: <5511999999999@c.us>) | None | Yes |
 | `NODE_ENV` | Environment mode | `development` | No |
 | `DEBUG` | Enable debug logging | `false` | No |
 
@@ -240,6 +262,7 @@ AI: 📊 Bot Status
 The `config.json` file supports comprehensive business configuration:
 
 #### AI Identity Configuration
+
 ```json
 {
   "ai_identity": {
@@ -256,6 +279,7 @@ The `config.json` file supports comprehensive business configuration:
 **Gender Pronoun Support**: Automatically uses appropriate pronouns (she/her, he/him, they/them, neutral) based on gender setting.
 
 #### Business Information
+
 ```json
 {
   "business": {
@@ -271,6 +295,7 @@ The `config.json` file supports comprehensive business configuration:
 ```
 
 #### Services and Products
+
 ```json
 {
   "services": [
@@ -293,6 +318,7 @@ The `config.json` file supports comprehensive business configuration:
 ```
 
 #### FAQ and Owner Information
+
 ```json
 {
   "faq": [
@@ -350,6 +376,7 @@ The `system_prompt` section provides complete control over AI behavior:
 #### Template Variables
 
 Supported template variables for dynamic content:
+
 - `{name}` - AI identity name
 - `{working_hours}` - Business working hours
 - `{phone}` - Business phone number
@@ -372,7 +399,7 @@ Supported template variables for dynamic content:
 
 ### Project Structure
 
-```
+```text
 whatsapp-ai/
 ├── src/
 │   ├── bot/
@@ -383,7 +410,7 @@ whatsapp-ai/
 │   │   ├── config.js               # System configuration loader
 │   │   └── context.js              # Business context and AI prompt generation
 │   ├── services/
-│   │   ├── yueApiService.js        # Yue-F/Ollama API client
+│   │   ├── mistralAgentService.js  # Mistral Agents API client
 │   │   ├── conversationService.js  # Conversation context management
 │   │   ├── messageService.js       # Message processing and formatting
 │   │   ├── adminService.js         # Admin access control and security
@@ -405,6 +432,7 @@ whatsapp-ai/
 ### Data Persistence & Analytics
 
 #### Storage System
+
 - **Conversation Persistence**: Automatic backup of all conversations to JSON files
 - **Cross-Session Continuity**: Conversations persist across bot restarts
 - **On-Demand Loading**: Conversations loaded as needed to optimize memory
@@ -412,6 +440,7 @@ whatsapp-ai/
 - **Data Integrity**: Robust error handling and validation
 
 #### Analytics Features
+
 - **Message Tracking**: Complete message history with timestamps and metadata
 - **User Analytics**: Engagement tracking, activity patterns, and usage statistics
 - **Command Monitoring**: Popular command tracking and usage analysis
@@ -420,11 +449,11 @@ whatsapp-ai/
 - **Error Monitoring**: Automatic error categorization and tracking
 
 #### Data Management
+
 - **Automatic Cleanup**: Built-in maintenance for storage optimization
 - **Privacy Focused**: All data stored locally, no external transmission
 - **Backup Ready**: Simple file-based storage for easy backup and migration
 - **Scalable Design**: Handles thousands of conversations efficiently
-
 
 ## Development
 
@@ -455,6 +484,7 @@ npm test       # Run tests (placeholder)
 ### Debugging
 
 #### Enable Debug Mode
+
 ```bash
 # In .env file
 DEBUG=true
@@ -462,11 +492,11 @@ NODE_ENV=development
 ```
 
 #### Common Debug Commands
+
 - `/health` - System component status
 - `/errors` - Recent error logs
 - `/performance` - Performance metrics
 - `/admin status` - Admin configuration status
-
 
 ## Security & Privacy
 
@@ -502,18 +532,20 @@ NODE_ENV=development
 #### Installation & Setup
 
 **QR Code doesn't appear**
+
 - Ensure Chrome/Chromium is installed
 - Check if port 3000 is available
 - Run with debug mode: `DEBUG=true npm start`
 - Verify Node.js version is 18+
 
 **Bot doesn't respond to messages**
+
 - Check API connectivity with `/status` command
-- Verify `YUE_F_API_URL` in `.env` is correct
-- Ensure Ollama server is running and accessible
+- Verify `MISTRAL_API_KEY` and `MISTRAL_AGENT_ID` in `.env` are correct
 - Check internet connection stability
 
 **Authentication failures**
+
 - Delete `session/` folder and re-scan QR code
 - Ensure WhatsApp Web is not open in other browsers
 - Check if WhatsApp account supports linked devices
@@ -522,18 +554,21 @@ NODE_ENV=development
 #### Configuration Issues
 
 **AI responses seem generic**
+
 - Edit `config.json` with your business information
 - Use `/reload` command to apply changes
 - Verify configuration with `/context` command
 - Check JSON syntax with online validator
 
 **Commands not working**
+
 - Verify admin WhatsApp number format: `5511999999999@c.us`
 - Check if number matches exactly in `.env` file
 - Ensure commands start with `/` (forward slash)
 - Use `/help` to see available commands
 
 **Configuration file errors**
+
 - Validate JSON syntax using online JSON validator
 - Check for missing commas, brackets, or quotes
 - Bot uses default configuration if `config.json` has errors
@@ -542,12 +577,14 @@ NODE_ENV=development
 #### Performance Issues
 
 **Slow response times**
+
 - Check API server performance
 - Monitor system resources with `/performance`
 - Review error logs with `/errors` command
 - Consider enabling SQLite for better performance
 
 **Memory usage high**
+
 - Use `/cleanup` to remove old conversation data
 - Check `/monitor` for memory usage statistics
 - Restart bot if memory usage is excessive
@@ -586,7 +623,7 @@ npm start
 ### Technical Support
 
 - **GitHub Issues**: Report bugs and technical problems through GitHub issues
-- **API Documentation**: Consult Ollama/Yue-F API documentation for API-related issues
+- **API Documentation**: Consult Mistral API documentation for API-related issues
 - **JSON Validation**: Use online JSON validators to verify configuration syntax
 - **Community**: Check existing issues and discussions for similar problems
 
@@ -604,11 +641,12 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + Mistral Agents API**
 
 ## Use Cases
 
 ### Business Applications
+
 - **Customer Service**: 24/7 automated customer support with business-specific knowledge
 - **Sales Assistant**: Product information, pricing, and service details
 - **Technical Support**: AI assistant with your product and service expertise
@@ -616,6 +654,7 @@ LGPL-2.1 License - see LICENSE file for details.
 - **FAQ Automation**: Automated responses to frequently asked questions
 
 ### Features for Different Users
+
 - **Business Owners**: Complete business context integration with no coding required
 - **Developers**: Comprehensive API integration with monitoring and analytics
 - **System Administrators**: Advanced monitoring, performance optimization, and security controls
@@ -623,6 +662,7 @@ LGPL-2.1 License - see LICENSE file for details.
 - **Enterprise Users**: Production-ready features with security and compliance
 
 ### Technical Capabilities
+
 - **Multi-Language Support**: Configurable language and communication tone
 - **Gender-Inclusive AI**: Proper pronoun usage for all gender identities
 - **Scalable Architecture**: Handles high-volume conversations efficiently
@@ -631,4 +671,4 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Built with Node.js, WhatsApp Web.js, and Ollama API integration**
+**Built with Node.js, WhatsApp Web.js, and Mistral Agents API integration**
