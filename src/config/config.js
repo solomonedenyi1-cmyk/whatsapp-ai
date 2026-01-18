@@ -1,11 +1,13 @@
 require('dotenv').config();
 
+const { parseEnvBoolean } = require('../utils/env');
+
 const config = {
   // Mistral Agents Configuration
   mistral: {
     apiKey: process.env.MISTRAL_API_KEY,
     agentId: process.env.MISTRAL_AGENT_ID,
-    includeLocalSystemPrompt: process.env.MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT === 'true',
+    includeLocalSystemPrompt: parseEnvBoolean(process.env.MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT, false),
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
   },
@@ -20,14 +22,15 @@ const config = {
   // Environment
   env: {
     nodeEnv: process.env.NODE_ENV || 'development',
-    debug: process.env.DEBUG === 'true',
+    debug: parseEnvBoolean(process.env.DEBUG, false),
   },
 
   // WhatsApp Configuration
   whatsapp: {
-    sessionPath: './session',
+    sessionPath: process.env.WHATSAPP_SESSION_PATH || './session',
     puppeteerOptions: {
-      headless: true,
+      headless: parseEnvBoolean(process.env.PUPPETEER_HEADLESS, true),
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

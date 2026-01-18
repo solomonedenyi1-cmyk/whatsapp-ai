@@ -1,14 +1,15 @@
 const WhatsAppBot = require('./bot/whatsappBot');
 const config = require('./config/config');
+const { redactError, redactSecrets } = require('./utils/redact');
 
 // Global error handlers
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+  console.error('❌ Uncaught Exception:', redactError(error));
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', redactSecrets(String(reason)));
   process.exit(1);
 });
 
@@ -24,6 +25,10 @@ class Application {
       console.log(`📊 Environment: ${config.env.nodeEnv}`);
       console.log(`🤖 Bot Name: ${config.bot.name}`);
       console.log(`🧠 Mistral Agent ID: ${config.mistral.agentId}`);
+
+      if (!config.whatsapp.sessionPath) {
+        throw new Error('Missing WHATSAPP_SESSION_PATH configuration.');
+      }
 
       if (!config.mistral.apiKey) {
         throw new Error('Missing MISTRAL_API_KEY in environment.');
@@ -42,7 +47,7 @@ class Application {
       console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
 
     } catch (error) {
-      console.error('❌ Failed to start application:', error);
+      console.error('❌ Failed to start application:', redactError(error));
       process.exit(1);
     }
   }

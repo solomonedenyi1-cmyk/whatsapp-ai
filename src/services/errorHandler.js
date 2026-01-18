@@ -7,6 +7,7 @@
 
 const fs = require('fs').promises;
 const path = require('path');
+const { redactSecrets } = require('../utils/redact');
 
 class ErrorHandler {
   constructor() {
@@ -74,8 +75,8 @@ class ErrorHandler {
     try {
       const errorInfo = {
         timestamp: new Date().toISOString(),
-        message: error.message,
-        stack: error.stack,
+        message: redactSecrets(error.message),
+        stack: redactSecrets(error.stack),
         type: error.constructor.name,
         component: context.component || 'unknown',
         operation: context.operation || 'unknown',
@@ -164,9 +165,16 @@ class ErrorHandler {
    * Log error to file
    */
   async logError(errorInfo) {
+    const safeContext = JSON.parse(JSON.stringify(errorInfo, (key, value) => {
+      if (typeof value === 'string') {
+        return redactSecrets(value);
+      }
+      return value;
+    }));
+
     const logEntry = `[${errorInfo.timestamp}] [${errorInfo.severity}] [${errorInfo.component}] ${errorInfo.message}\n` +
       `Stack: ${errorInfo.stack}\n` +
-      `Context: ${JSON.stringify(errorInfo, null, 2)}\n` +
+      `Context: ${JSON.stringify(safeContext, null, 2)}\n` +
       '---\n';
 
     await fs.appendFile(this.errorLogFile, logEntry);
