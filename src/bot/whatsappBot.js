@@ -65,28 +65,59 @@ class WhatsAppBot {
   }
 
   async safeSendMessage(chatId, text, message = null, chat = null) {
-    const methods = [];
+    let lastError = null;
 
     if (message && typeof message.reply === 'function') {
-      methods.push(async () => message.reply(text));
-    }
-
-    if (chat && typeof chat.sendMessage === 'function') {
-      methods.push(async () => chat.sendMessage(text));
-    }
-
-    if (this.client && typeof this.client.sendMessage === 'function') {
-      methods.push(async () => this.client.sendMessage(chatId, text));
-    }
-
-    let lastError = null;
-    for (const fn of methods) {
       try {
-        await fn();
+        await message.reply(text);
         return;
       } catch (error) {
         lastError = error;
       }
+    }
+
+    if (chat && typeof chat.sendMessage === 'function') {
+      try {
+        await chat.sendMessage(text);
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!this.client || typeof this.client.sendMessage !== 'function') {
+      throw lastError || new Error('No available method to send message');
+    }
+
+    let targetId = chatId;
+    if (targetId && typeof targetId === 'string' && targetId.endsWith('@lid')) {
+      targetId = null;
+
+      try {
+        if (message && typeof message.getContact === 'function') {
+          const contact = await message.getContact();
+          const serialized = contact?.id?._serialized;
+          if (typeof serialized === 'string' && !serialized.endsWith('@lid')) {
+            targetId = serialized;
+          }
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!targetId) {
+      if (config.env.debug) {
+        console.warn(`⚠️ Could not resolve send target for ${chatId}`);
+      }
+      throw lastError || new Error('Could not resolve send target');
+    }
+
+    try {
+      await this.client.sendMessage(targetId, text);
+      return;
+    } catch (error) {
+      lastError = error;
     }
 
     throw lastError || new Error('No available method to send message');
