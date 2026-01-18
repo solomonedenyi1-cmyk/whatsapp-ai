@@ -49,6 +49,15 @@ function normalizeMistralContent(content) {
     return '';
 }
 
+function getMistralToolCalls(message) {
+    const toolCalls = message?.tool_calls || message?.toolCalls;
+    return Array.isArray(toolCalls) ? toolCalls : [];
+}
+
+function getMistralToolCallId(toolCall) {
+    return toolCall?.id || toolCall?.tool_call_id || toolCall?.toolCallId;
+}
+
 class MistralAgentService {
     constructor({ mistralClient } = {}) {
         this.apiKey = config.mistral.apiKey;
@@ -109,8 +118,8 @@ class MistralAgentService {
             let message = result?.choices?.[0]?.message;
 
             for (let i = 0; i < maxIterations; i += 1) {
-                const toolCalls = message?.tool_calls;
-                if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
+                const toolCalls = getMistralToolCalls(message);
+                if (toolCalls.length === 0) {
                     break;
                 }
 
@@ -146,7 +155,7 @@ class MistralAgentService {
                         role: 'tool',
                         name: toolResult.functionName,
                         content: toolResult.content,
-                        tool_call_id: toolResult.toolCall?.id,
+                        tool_call_id: getMistralToolCallId(toolResult.toolCall),
                     };
 
                     toolMessages.push(toolMessage);
