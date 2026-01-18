@@ -88,10 +88,13 @@ class WhatsAppBot {
         await this.cleanupClient();
       }
 
+      const sessionPathAbs = path.resolve(process.cwd(), config.whatsapp.sessionPath);
+      fs.mkdirSync(sessionPathAbs, { recursive: true });
+
       // Create WhatsApp client
       this.client = new Client({
         authStrategy: new LocalAuth({
-          dataPath: config.whatsapp.sessionPath
+          dataPath: sessionPathAbs
         }),
         puppeteer: config.whatsapp.puppeteerOptions
       });
@@ -235,10 +238,6 @@ class WhatsAppBot {
     this.client.on('disconnected', async (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
-      const upperReason = String(reason || '').toUpperCase();
-      if (upperReason === 'LOGOUT' && config.whatsapp.autoClearSessionOnAuthFailure) {
-        await this.clearSessionData();
-      }
 
       await this.cleanupClient();
       this.scheduleReconnect('disconnected');
