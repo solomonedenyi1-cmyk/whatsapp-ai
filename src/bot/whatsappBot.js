@@ -67,11 +67,22 @@ class WhatsAppBot {
       // Set up event listeners
       this.setupEventListeners();
 
-      // Initialize the client
-      await this.client.initialize();
+      // Initialize the client with timeout
+      console.log('📱 Initializing WhatsApp client...');
+      
+      // Add timeout for client initialization (30 seconds)
+      const initializationPromise = this.client.initialize();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('WhatsApp client initialization timed out after 30 seconds'));
+        }, 30000);
+      });
+      
+      await Promise.race([initializationPromise, timeoutPromise]);
       
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
+      console.log('✅ WhatsApp client initialized successfully');
       
     } catch (error) {
       console.error('❌ Failed to initialize WhatsApp bot:', error);
@@ -91,7 +102,13 @@ class WhatsAppBot {
     // QR Code for authentication
     this.client.on('qr', (qr) => {
       console.log('📱 Scan this QR code with your WhatsApp:');
+      console.log('💡 Open WhatsApp on your phone -> Settings -> Linked Devices -> Link a Device');
       qrcode.generate(qr, { small: true });
+    });
+    
+    // Loading screen event
+    this.client.on('loading_screen', (percent, message) => {
+      console.log(`📱 Loading: ${percent}% - ${message}`);
     });
 
     // Client ready
@@ -123,7 +140,16 @@ class WhatsAppBot {
 
     // Error handling
     this.client.on('error', (error) => {
-      console.error('❌ WhatsApp client error:', error);
+      console.error('❌ WhatsApp client error:', error.message);
+      if (error.stack) {
+        console.error('Error stack:', error.stack);
+      }
+    });
+    
+    // Disconnected event
+    this.client.on('disconnected', (reason) => {
+      console.log('📱 WhatsApp client disconnected:', reason);
+      this.isReady = false;
     });
   }
 
