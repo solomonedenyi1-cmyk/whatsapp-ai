@@ -15,9 +15,9 @@ const config = {
   cal: {
     apiKey: process.env.CAL_API_KEY,
     eventTypeId: process.env.CAL_EVENT_TYPE_ID ? Number(process.env.CAL_EVENT_TYPE_ID) : null,
-    apiUrl: process.env.CAL_API_URL || 'https://api.cal.com',
-    apiVersion: process.env.CAL_API_VERSION || '2024-08-13',
-    defaultTimeZone: process.env.CAL_DEFAULT_TIME_ZONE || 'America/Sao_Paulo',
+    apiUrl: process.env.CAL_API_URL?.trim() || 'https://api.cal.com',
+    apiVersion: process.env.CAL_API_VERSION?.trim() || '2024-08-13',
+    defaultTimeZone: process.env.CAL_DEFAULT_TIME_ZONE?.trim() || 'America/Sao_Paulo',
   },
 
   resend: {

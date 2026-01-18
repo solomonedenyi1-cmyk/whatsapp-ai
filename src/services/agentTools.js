@@ -1,6 +1,7 @@
 const CalService = require('./calService');
 const EmailService = require('./emailService');
 const { parseDateTimePtBr } = require('../utils/dateTimeParser');
+const { DateTime } = require('luxon');
 
 function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
     const tools = [];
@@ -103,20 +104,55 @@ async function criarAgendamento(args, { calService }) {
         throw new Error('Missing date/time. Provide "when" (ex: "amanhã 14h") or date+time.');
     }
 
-    const result = await calService.createBooking({
-        name,
-        email,
-        date,
-        time,
-        timeZone,
-    });
+    try {
+        const result = await calService.createBooking({
+            name,
+            email,
+            date,
+            time,
+            timeZone,
+        });
 
-    return {
-        success: true,
-        booking: result?.data || result,
-        date,
-        time,
-    };
+        return {
+            success: true,
+            booking: result?.data || result,
+            date,
+            time,
+        };
+    } catch (error) {
+        const msg = error?.message || '';
+        if (msg.includes("can't be booked") && msg.includes('GET /v2/slots')) {
+            const tz = timeZone || 'America/Sao_Paulo';
+            const desiredLocal = DateTime.fromISO(`${date}T${time}`, { zone: tz });
+
+            const starts = await calService.getAvailableSlots({
+                startDate: desiredLocal.toISODate(),
+                endDate: desiredLocal.plus({ days: 7 }).toISODate(),
+                timeZone: tz,
+            });
+
+            const options = (Array.isArray(starts) ? starts : [])
+                .map((s) => DateTime.fromISO(s).setZone(tz))
+                .filter((dt) => dt.isValid)
+                .slice(0, 6)
+                .map((dt) => ({
+                    date: dt.toISODate(),
+                    time: dt.toFormat('HH:mm'),
+                    label: `${dt.toFormat('dd/LL')} ${dt.toFormat('HH:mm')}`,
+                    timeZone: tz,
+                }));
+
+            return {
+                success: false,
+                error: 'slot_unavailable',
+                message: 'Horário indisponível. Escolha um dos horários disponíveis.',
+                desired: { date, time, timeZone: tz },
+                options,
+            };
+        }
+
+        throw error;
+    }
 }
 
 async function enviarEmailConfirmacao(args, { emailService }) {
@@ -143,6 +179,9 @@ function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
         interpretar_data_hora: (args) => interpretarDataHora(args),
         criar_agendamento: async (args) => {
             const bookingResult = await criarAgendamento(args, deps);
+            if (!bookingResult || bookingResult.success !== true) {
+                return bookingResult;
+            }
             const emailResult = await deps.emailService.sendBookingConfirmation({
                 to: args.email,
                 name: args.name,
