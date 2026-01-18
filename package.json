@@ -8,6 +8,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
     "check:secrets": "node scripts/check-secrets.js --staged",
     "hooks:install": "git config core.hooksPath .githooks"
   },
@@ -22,17 +24,17 @@
   "license": "MIT",
   "dependencies": {
     "@mistralai/mistralai": "^1.11.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.2.3",
     "qrcode-terminal": "^0.12.0",
-    "sqlite3": "^5.1.7",
     "whatsapp-web.js": "^1.25.0"
   },
   "devDependencies": {
     "@semantic-release/commit-analyzer": "^13.0.0",
-    "@semantic-release/github": "^11.0.0",
+    "@semantic-release/github": "^12.0.2",
     "@semantic-release/release-notes-generator": "^14.0.0",
-    "nodemon": "^3.1.4",
-    "semantic-release": "^24.0.0"
+    "knip": "^5.81.0",
+    "nodemon": "^3.1.11",
+    "semantic-release": "^25.0.2"
   },
   "nodemonConfig": {
     "watch": [
@@ -48,6 +50,21 @@
   },
   "overrides": {
     "tar": "7.5.3"
+  },
+  "knip": {
+    "entry": [
+      "src/index.js"
+    ],
+    "project": [
+      "src/**/*.js",
+      "test/**/*.js",
+      "scripts/**/*.js"
+    ],
+    "ignoreDependencies": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/github",
+      "@semantic-release/release-notes-generator"
+    ]
   },
   "engines": {
     "node": ">=18.0.0"
