@@ -10,6 +10,45 @@ async function loadMistralModule() {
     return mistralModulePromise;
 }
 
+function normalizeMistralContent(content) {
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    if (Array.isArray(content)) {
+        const parts = content
+            .map((item) => {
+                if (typeof item === 'string') {
+                    return item;
+                }
+
+                const text = item?.text;
+                if (typeof text === 'string') {
+                    return text;
+                }
+
+                const value = item?.content;
+                if (typeof value === 'string') {
+                    return value;
+                }
+
+                return null;
+            })
+            .filter((v) => typeof v === 'string' && v.trim().length > 0);
+
+        return parts.join('\n');
+    }
+
+    if (content && typeof content === 'object') {
+        const text = content?.text;
+        if (typeof text === 'string') {
+            return text;
+        }
+    }
+
+    return '';
+}
+
 class MistralAgentService {
     constructor({ mistralClient } = {}) {
         this.apiKey = config.mistral.apiKey;
@@ -129,9 +168,17 @@ class MistralAgentService {
                 warningTimer = null;
             }
 
-            const content = message?.content;
-            if (typeof content === 'string' && content.trim().length > 0) {
-                return { content, toolMessages };
+            const normalized = normalizeMistralContent(message?.content);
+            if (typeof normalized === 'string' && normalized.trim().length > 0) {
+                return { content: normalized, toolMessages };
+            }
+
+            if (config.env?.debug) {
+                console.log('mistral.invalid_content', {
+                    contentType: typeof message?.content,
+                    isArray: Array.isArray(message?.content),
+                    contentPreview: JSON.stringify(message?.content)?.slice(0, 400),
+                });
             }
 
             throw new Error('Invalid response format from Mistral Agents API');
@@ -197,9 +244,18 @@ class MistralAgentService {
                 warningTimer = null;
             }
 
-            const content = result?.choices?.[0]?.message?.content;
-            if (typeof content === 'string' && content.trim().length > 0) {
-                return content;
+            const normalized = normalizeMistralContent(result?.choices?.[0]?.message?.content);
+            if (typeof normalized === 'string' && normalized.trim().length > 0) {
+                return normalized;
+            }
+
+            if (config.env?.debug) {
+                const raw = result?.choices?.[0]?.message?.content;
+                console.log('mistral.invalid_content', {
+                    contentType: typeof raw,
+                    isArray: Array.isArray(raw),
+                    contentPreview: JSON.stringify(raw)?.slice(0, 400),
+                });
             }
 
             throw new Error('Invalid response format from Mistral Agents API');
