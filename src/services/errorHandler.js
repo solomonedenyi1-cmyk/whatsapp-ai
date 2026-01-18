@@ -14,7 +14,7 @@ class ErrorHandler {
     this.errorLogFile = path.join(this.logDir, 'errors.log');
     this.systemLogFile = path.join(this.logDir, 'system.log');
     this.performanceLogFile = path.join(this.logDir, 'performance.log');
-    
+
     // Error statistics
     this.errorStats = {
       total: 0,
@@ -22,14 +22,14 @@ class ErrorHandler {
       byComponent: {},
       recent: []
     };
-    
+
     // Performance metrics
     this.performanceMetrics = {
       apiResponseTimes: [],
       memoryUsage: [],
       messageProcessingTimes: []
     };
-    
+
     this.initializeLogging();
   }
 
@@ -40,15 +40,15 @@ class ErrorHandler {
     try {
       // Create logs directory if it doesn't exist
       await fs.mkdir(this.logDir, { recursive: true });
-      
+
       // Initialize log files
       await this.ensureLogFile(this.errorLogFile);
       await this.ensureLogFile(this.systemLogFile);
       await this.ensureLogFile(this.performanceLogFile);
-      
+
       // Log system startup
       await this.logSystem('INFO', 'Error handling system initialized');
-      
+
       console.log('✅ Error handling system initialized');
     } catch (error) {
       console.error('❌ Failed to initialize error handling:', error.message);
@@ -95,7 +95,7 @@ class ErrorHandler {
 
       // Attempt recovery if possible
       const recoveryAction = await this.attemptRecovery(errorInfo);
-      
+
       return {
         handled: true,
         severity: errorInfo.severity,
@@ -117,19 +117,19 @@ class ErrorHandler {
     if (error.message.includes('ENOENT') && context.component === 'persistence') {
       return 'CRITICAL';
     }
-    
-    if (error.message.includes('API') && context.component === 'yueApi') {
+
+    if (error.message.includes('API') && context.component === 'mistralAgent') {
       return 'HIGH';
     }
-    
+
     if (error.message.includes('timeout') || error.message.includes('network')) {
       return 'MEDIUM';
     }
-    
+
     if (error.message.includes('validation') || error.message.includes('format')) {
       return 'LOW';
     }
-    
+
     return 'MEDIUM';
   }
 
@@ -138,15 +138,15 @@ class ErrorHandler {
    */
   updateErrorStats(errorInfo) {
     this.errorStats.total++;
-    
+
     // By type
-    this.errorStats.byType[errorInfo.type] = 
+    this.errorStats.byType[errorInfo.type] =
       (this.errorStats.byType[errorInfo.type] || 0) + 1;
-    
+
     // By component
-    this.errorStats.byComponent[errorInfo.component] = 
+    this.errorStats.byComponent[errorInfo.component] =
       (this.errorStats.byComponent[errorInfo.component] || 0) + 1;
-    
+
     // Recent errors (keep last 50)
     this.errorStats.recent.push({
       timestamp: errorInfo.timestamp,
@@ -154,7 +154,7 @@ class ErrorHandler {
       component: errorInfo.component,
       severity: errorInfo.severity
     });
-    
+
     if (this.errorStats.recent.length > 50) {
       this.errorStats.recent = this.errorStats.recent.slice(-50);
     }
@@ -165,10 +165,10 @@ class ErrorHandler {
    */
   async logError(errorInfo) {
     const logEntry = `[${errorInfo.timestamp}] [${errorInfo.severity}] [${errorInfo.component}] ${errorInfo.message}\n` +
-                    `Stack: ${errorInfo.stack}\n` +
-                    `Context: ${JSON.stringify(errorInfo, null, 2)}\n` +
-                    '---\n';
-    
+      `Stack: ${errorInfo.stack}\n` +
+      `Context: ${JSON.stringify(errorInfo, null, 2)}\n` +
+      '---\n';
+
     await fs.appendFile(this.errorLogFile, logEntry);
   }
 
@@ -184,7 +184,7 @@ class ErrorHandler {
     };
 
     const message = `${emoji[errorInfo.severity]} [${errorInfo.component}] ${errorInfo.message}`;
-    
+
     switch (errorInfo.severity) {
       case 'CRITICAL':
       case 'HIGH':
@@ -211,20 +211,20 @@ class ErrorHandler {
             return 'recreated_missing_files';
           }
           break;
-          
-        case 'yueApi':
+
+        case 'mistralAgent':
           if (errorInfo.message.includes('timeout')) {
             return 'retry_recommended';
           }
           break;
-          
+
         case 'whatsapp':
           if (errorInfo.message.includes('session')) {
             return 'session_restart_required';
           }
           break;
       }
-      
+
       return 'no_recovery_available';
     } catch (recoveryError) {
       await this.logSystem('ERROR', `Recovery failed: ${recoveryError.message}`);
@@ -238,13 +238,13 @@ class ErrorHandler {
   async recoverPersistenceFiles() {
     const dataDir = path.join(__dirname, '../../data');
     await fs.mkdir(dataDir, { recursive: true });
-    
+
     const files = [
       'conversations.json',
       'analytics.json',
       'user_preferences.json'
     ];
-    
+
     for (const file of files) {
       const filePath = path.join(dataDir, file);
       try {
@@ -313,23 +313,23 @@ class ErrorHandler {
       case 'api_response_time':
         this.performanceMetrics.apiResponseTimes.push(perfEntry);
         if (this.performanceMetrics.apiResponseTimes.length > 1000) {
-          this.performanceMetrics.apiResponseTimes = 
+          this.performanceMetrics.apiResponseTimes =
             this.performanceMetrics.apiResponseTimes.slice(-1000);
         }
         break;
-        
+
       case 'memory_usage':
         this.performanceMetrics.memoryUsage.push(perfEntry);
         if (this.performanceMetrics.memoryUsage.length > 100) {
-          this.performanceMetrics.memoryUsage = 
+          this.performanceMetrics.memoryUsage =
             this.performanceMetrics.memoryUsage.slice(-100);
         }
         break;
-        
+
       case 'message_processing_time':
         this.performanceMetrics.messageProcessingTimes.push(perfEntry);
         if (this.performanceMetrics.messageProcessingTimes.length > 1000) {
-          this.performanceMetrics.messageProcessingTimes = 
+          this.performanceMetrics.messageProcessingTimes =
             this.performanceMetrics.messageProcessingTimes.slice(-1000);
         }
         break;
@@ -356,7 +356,7 @@ class ErrorHandler {
   getPerformanceStats() {
     const calculateStats = (values) => {
       if (values.length === 0) return { avg: 0, min: 0, max: 0, count: 0 };
-      
+
       const nums = values.map(v => v.value);
       return {
         avg: nums.reduce((a, b) => a + b, 0) / nums.length,
@@ -395,7 +395,7 @@ class ErrorHandler {
       const recentErrors = this.errorStats.recent.filter(
         e => Date.now() - new Date(e.timestamp).getTime() < 5 * 60 * 1000 // Last 5 minutes
       );
-      
+
       if (recentErrors.length > 10) {
         await this.logSystem('WARN', `High error rate: ${recentErrors.length} errors in last 5 minutes`);
       }
@@ -412,11 +412,11 @@ class ErrorHandler {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-      
+
       // For now, we'll just log the cleanup action
       // In a production system, you'd implement log rotation
       await this.logSystem('INFO', `Log cleanup initiated for logs older than ${daysToKeep} days`);
-      
+
       return { cleaned: true, message: 'Log cleanup completed' };
     } catch (error) {
       await this.logSystem('ERROR', `Log cleanup failed: ${error.message}`);
@@ -430,7 +430,7 @@ class ErrorHandler {
   async getHealthReport() {
     const stats = this.getErrorStats();
     const memUsage = process.memoryUsage();
-    
+
     return {
       timestamp: new Date().toISOString(),
       systemHealth: {

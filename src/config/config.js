@@ -1,10 +1,11 @@
 require('dotenv').config();
 
 const config = {
-  // Yue-F API Configuration
-  yuef: {
-    apiUrl: process.env.YUE_F_API_URL || 'http://localhost:11434',
-    modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
+  // Mistral Agents Configuration
+  mistral: {
+    apiKey: process.env.MISTRAL_API_KEY,
+    agentId: process.env.MISTRAL_AGENT_ID,
+    includeLocalSystemPrompt: process.env.MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT === 'true',
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
   },

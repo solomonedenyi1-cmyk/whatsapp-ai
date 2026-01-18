@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const config = require('../config/config');
-const YueApiService = require('../services/yueApiService');
+const MistralAgentService = require('../services/mistralAgentService');
 const ConversationService = require('../services/conversationService');
 const MessageService = require('../services/messageService');
 const CommandHandler = require('../commands/commandHandler');
@@ -15,30 +15,30 @@ const PerformanceOptimizations = require('../services/performanceOptimizations')
 class WhatsAppBot {
   constructor() {
     this.client = null;
-    
+
     // Initialize Phase 3 services
     this.errorHandler = new ErrorHandler();
     this.performanceOptimizer = new PerformanceOptimizer();
     this.monitoringService = new MonitoringService(this.errorHandler, this.performanceOptimizer);
-    
+
     // Initialize Phase 3.5 services
     this.timeoutHandler = new TimeoutHandler();
     this.adminService = new AdminService();
     this.performanceOptimizations = new PerformanceOptimizations();
-    
+
     // Initialize existing services with error handling
-    this.yueApiService = new YueApiService();
+    this.mistralAgentService = new MistralAgentService();
     this.conversationService = new ConversationService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
-      this.yueApiService, 
+      this.mistralAgentService,
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
       this.monitoringService,
       this.adminService
     );
-    
+
     this.isReady = false;
     this.startTime = Date.now();
   }
@@ -49,10 +49,10 @@ class WhatsAppBot {
   async initialize() {
     try {
       console.log('🤖 Initializing WhatsApp AI Bot...');
-      
+
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
-      
+
       // Create WhatsApp client
       this.client = new Client({
         authStrategy: new LocalAuth({
@@ -66,10 +66,10 @@ class WhatsAppBot {
 
       // Initialize the client
       await this.client.initialize();
-      
+
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
-      
+
     } catch (error) {
       console.error('❌ Failed to initialize WhatsApp bot:', error);
       await this.errorHandler.handleError(error, {
@@ -130,7 +130,7 @@ class WhatsAppBot {
    */
   async handleMessage(message) {
     const startTime = Date.now();
-    
+
     try {
       // Check if message should be ignored
       if (this.messageService.shouldIgnoreMessage(message)) {
@@ -156,7 +156,7 @@ class WhatsAppBot {
       // Check if it's a command
       if (this.messageService.isCommand(messageText)) {
         const { command, args } = this.messageService.parseCommand(messageText);
-        
+
         // Check admin access for commands
         const accessCheck = this.adminService.validateAdminAccess(chatId, command);
         if (!accessCheck.allowed) {
@@ -167,8 +167,8 @@ class WhatsAppBot {
       } else {
         // Regular message - send to AI with timeout handling and performance optimizations
         response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId, 
-          messageText, 
+          chatId,
+          messageText,
           (msg) => this.processAIMessageWithTimeout(msg, chatId)
         );
       }
@@ -200,27 +200,27 @@ class WhatsAppBot {
    */
   async processAIMessageWithTimeout(messageText, chatId) {
     const requestId = `${chatId}_${Date.now()}`;
-    
+
     try {
       // Register request for timeout monitoring
       this.timeoutHandler.registerRequest(requestId, requestId, messageText);
-      
+
       // Set up timeout message handler
       this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
         if (data.chatId === chatId) {
           await this.sendResponse(chatId, data.message);
         }
       });
-      
+
       // Get conversation context
       const context = this.conversationService.getFormattedContext(chatId);
-      
+
       // Add user message to context
       await this.conversationService.addMessage(chatId, 'user', messageText);
-      
+
       // Update API status
-      await this.monitoringService.updateComponentStatus('yueApi', 'processing');
-      
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'processing');
+
       // Send to AI (this may take a long time)
       let responseReceived = false;
       const warningCallback = async () => {
@@ -234,34 +234,34 @@ class WhatsAppBot {
           console.error('❌ Error sending warning message:', error);
         }
       };
-      
-      const aiResponse = await this.yueApiService.sendMessage(messageText, context, warningCallback);
+
+      const aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
       responseReceived = true; // Mark that response was received
-      
+
       // Complete the timeout request
       const duration = this.timeoutHandler.completeRequest(requestId);
-      
+
       // Update API status
-      await this.monitoringService.updateComponentStatus('yueApi', 'ready');
-      
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'ready');
+
       // Add AI response to context
       await this.conversationService.addMessage(chatId, 'assistant', aiResponse);
-      
+
       return this.messageService.formatResponse(aiResponse);
-      
+
     } catch (error) {
       console.error('❌ Error processing AI message:', error);
-      
+
       // Complete the timeout request on error
       this.timeoutHandler.completeRequest(requestId);
-      
+
       await this.errorHandler.handleError(error, {
-        component: 'yueApi',
+        component: 'mistralAgent',
         operation: 'processMessage',
         chatId,
         messageLength: messageText.length
       });
-      await this.monitoringService.updateComponentStatus('yueApi', 'error', { error: error.message });
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'error', { error: error.message });
       return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
     }
   }
@@ -285,20 +285,20 @@ class WhatsAppBot {
     try {
       // Split long messages
       const messageParts = this.messageService.splitMessage(response);
-      
+
       for (const part of messageParts) {
         await this.client.sendMessage(chatId, part);
-        
+
         // Small delay between parts to avoid rate limiting
         if (messageParts.length > 1) {
           await this.delay(1000);
         }
       }
-      
+
       if (config.env.debug) {
         console.log(`📤 Sent response to ${chatId}: ${response.substring(0, 100)}...`);
       }
-      
+
     } catch (error) {
       console.error('❌ Error sending response:', error);
       throw error;
@@ -335,7 +335,7 @@ class WhatsAppBot {
     const performanceStats = this.performanceOptimizer.getPerformanceStats();
     const errorStats = this.errorHandler.getErrorStats();
     const monitoringDashboard = await this.monitoringService.getMonitoringDashboard();
-    
+
     return {
       isReady: this.isReady,
       uptime: Math.round((Date.now() - this.startTime) / 1000),
@@ -344,8 +344,8 @@ class WhatsAppBot {
       errors: errorStats,
       monitoring: monitoringDashboard,
       config: {
-        modelName: config.yuef.modelName,
-        apiUrl: config.yuef.apiUrl,
+        agentId: config.mistral.agentId,
+        includeLocalSystemPrompt: config.mistral.includeLocalSystemPrompt,
         maxContext: config.bot.maxContextMessages
       }
     };
@@ -357,24 +357,24 @@ class WhatsAppBot {
   async shutdown() {
     try {
       console.log('🛑 Shutting down WhatsApp bot...');
-      
+
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'shutting_down');
-      
+
       // Shutdown Phase 3 services
       await this.monitoringService.shutdown();
       await this.performanceOptimizer.shutdown();
       await this.errorHandler.shutdown();
-      
+
       // Shutdown Phase 3.5 services
       await this.timeoutHandler.shutdown();
       await this.performanceOptimizations.shutdown();
-      
+
       // Shutdown WhatsApp client
       if (this.client) {
         await this.client.destroy();
       }
-      
+
       console.log('✅ WhatsApp bot shutdown complete');
     } catch (error) {
       console.error('❌ Error during shutdown:', error);

@@ -3,13 +3,13 @@ const { generateSystemPrompt } = require('../config/context');
 const PersistenceService = require('./persistenceService');
 
 class ConversationService {
-  constructor() {
+  constructor({ persistenceService } = {}) {
     // Enhanced with persistent storage (Phase 2)
     this.conversations = new Map();
     this.maxContextMessages = config.bot.maxContextMessages;
     this.systemPrompt = generateSystemPrompt();
-    this.persistenceService = new PersistenceService();
-    
+    this.persistenceService = persistenceService || new PersistenceService();
+
     // Load existing conversations from persistent storage
     this.loadPersistedConversations();
   }
@@ -33,7 +33,7 @@ class ConversationService {
   async addMessage(chatId, role, content, metadata = {}) {
     const startTime = Date.now();
     let context = this.conversations.get(chatId) || [];
-    
+
     // Add new message with timestamp
     const message = {
       role,
@@ -41,23 +41,23 @@ class ConversationService {
       timestamp: new Date().toISOString(),
       ...metadata
     };
-    
+
     context.push(message);
-    
+
     // Limit context size to prevent performance issues
     if (context.length > this.maxContextMessages * 2) {
       // Keep only the most recent messages
       context = context.slice(-this.maxContextMessages * 2);
     }
-    
+
     this.conversations.set(chatId, context);
-    
+
     // Save to persistent storage
     await this.persistenceService.saveConversation(chatId, context, {
       participantCount: 1,
       lastActivity: new Date().toISOString()
     });
-    
+
     // Record analytics
     await this.persistenceService.recordAnalytics('message', {
       userId: chatId,
@@ -83,14 +83,24 @@ class ConversationService {
    */
   getFormattedContext(chatId) {
     const context = this.getContext(chatId);
-    
-    // Always include the business context system prompt
+
+    const sanitized = context
+      .filter((message) => message && typeof message.role === 'string' && typeof message.content === 'string')
+      .map((message) => ({
+        role: message.role,
+        content: message.content
+      }));
+
+    if (!config.mistral?.includeLocalSystemPrompt) {
+      return sanitized;
+    }
+
     return [
       {
         role: 'system',
         content: this.systemPrompt
       },
-      ...context
+      ...sanitized
     ];
   }
 
@@ -121,10 +131,10 @@ class ConversationService {
       totalMessages: Array.from(this.conversations.values())
         .reduce((total, context) => total + context.length, 0)
     };
-    
+
     const persistentStats = await this.persistenceService.getStorageStats();
     const analyticsReport = await this.persistenceService.getAnalyticsReport(7);
-    
+
     return {
       ...memoryStats,
       persistent: persistentStats,
@@ -144,7 +154,7 @@ class ConversationService {
       console.error('❌ Error loading persisted conversations:', error.message);
     }
   }
-  
+
   /**
    * Get conversation context (enhanced with persistence)
    * @param {string} chatId - WhatsApp chat ID
@@ -153,7 +163,7 @@ class ConversationService {
   async getContextEnhanced(chatId) {
     // Check memory first
     let context = this.conversations.get(chatId);
-    
+
     if (!context) {
       // Load from persistent storage
       context = await this.persistenceService.loadConversation(chatId);
@@ -162,10 +172,10 @@ class ConversationService {
         console.log(`📂 Loaded ${context.length} messages from storage for chat ${chatId}`);
       }
     }
-    
+
     return context || [];
   }
-  
+
   /**
    * Get formatted context for API request (enhanced)
    * @param {string} chatId - WhatsApp chat ID
@@ -173,20 +183,27 @@ class ConversationService {
    */
   async getFormattedContextEnhanced(chatId) {
     const context = await this.getContextEnhanced(chatId);
-    
-    // Always include the business context system prompt
+
+    const sanitized = (context || [])
+      .filter((message) => message && typeof message.role === 'string' && typeof message.content === 'string')
+      .map((message) => ({
+        role: message.role,
+        content: message.content
+      }));
+
+    if (!config.mistral?.includeLocalSystemPrompt) {
+      return sanitized;
+    }
+
     return [
       {
         role: 'system',
         content: this.systemPrompt
       },
-      ...context.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }))
+      ...sanitized
     ];
   }
-  
+
   /**
    * Record command usage for analytics
    */
@@ -196,7 +213,7 @@ class ConversationService {
       userId: chatId
     });
   }
-  
+
   /**
    * Record conversation start
    */
@@ -205,7 +222,7 @@ class ConversationService {
       userId: chatId
     });
   }
-  
+
   /**
    * Record error for analytics
    */
@@ -216,14 +233,14 @@ class ConversationService {
       ...errorDetails
     });
   }
-  
+
   /**
    * Get analytics report
    */
   async getAnalyticsReport(days = 7) {
     return await this.persistenceService.getAnalyticsReport(days);
   }
-  
+
   /**
    * Cleanup old conversations
    */

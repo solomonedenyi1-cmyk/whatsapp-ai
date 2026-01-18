@@ -12,14 +12,14 @@ const EventEmitter = require('events');
 class MonitoringService extends EventEmitter {
   constructor(errorHandler, performanceOptimizer) {
     super();
-    
+
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
-    
+
     this.logDir = path.join(__dirname, '../../logs');
     this.monitoringLogFile = path.join(this.logDir, 'monitoring.log');
     this.healthLogFile = path.join(this.logDir, 'health.log');
-    
+
     // Monitoring configuration
     this.config = {
       healthCheckInterval: 60000, // 1 minute
@@ -31,7 +31,7 @@ class MonitoringService extends EventEmitter {
       },
       retentionDays: 30
     };
-    
+
     // System metrics
     this.metrics = {
       systemHealth: 'healthy',
@@ -40,16 +40,16 @@ class MonitoringService extends EventEmitter {
       uptime: process.uptime(),
       startTime: new Date()
     };
-    
+
     // Component status tracking
     this.componentStatus = {
       whatsappBot: 'unknown',
-      yueApi: 'unknown',
+      mistralAgent: 'unknown',
       persistence: 'unknown',
       errorHandler: 'unknown',
       performanceOptimizer: 'unknown'
     };
-    
+
     this.initializeMonitoring();
   }
 
@@ -60,26 +60,26 @@ class MonitoringService extends EventEmitter {
     try {
       // Create logs directory
       await fs.mkdir(this.logDir, { recursive: true });
-      
+
       // Initialize log files
       await this.ensureLogFile(this.monitoringLogFile);
       await this.ensureLogFile(this.healthLogFile);
-      
+
       // Start health checks
       this.startHealthChecks();
-      
+
       // Set up performance optimizer listeners
       this.setupPerformanceListeners();
-      
+
       // Log startup
       await this.logEvent('SYSTEM_START', 'Monitoring service initialized', {
         pid: process.pid,
         nodeVersion: process.version,
         platform: process.platform
       });
-      
+
       console.log('📊 Monitoring service initialized');
-      
+
     } catch (error) {
       console.error('❌ Failed to initialize monitoring:', error.message);
     }
@@ -103,7 +103,7 @@ class MonitoringService extends EventEmitter {
     this.healthCheckInterval = setInterval(async () => {
       await this.performHealthCheck();
     }, this.config.healthCheckInterval);
-    
+
     console.log('💓 Health checks started');
   }
 
@@ -125,11 +125,11 @@ class MonitoringService extends EventEmitter {
       this.performanceOptimizer.on('memoryThresholdExceeded', async (data) => {
         await this.handleAlert('MEMORY_HIGH', `Memory usage exceeded threshold: ${data.usage}MB`, data);
       });
-      
+
       this.performanceOptimizer.on('responseTimeThresholdExceeded', async (data) => {
         await this.handleAlert('RESPONSE_TIME_HIGH', `Response time exceeded threshold: ${data.responseTime}ms`, data);
       });
-      
+
       this.performanceOptimizer.on('messageQueueThresholdExceeded', async (data) => {
         await this.handleAlert('QUEUE_SIZE_HIGH', `Message queue size exceeded threshold: ${data.size}`, data);
       });
@@ -145,7 +145,7 @@ class MonitoringService extends EventEmitter {
         timestamp: new Date().toISOString(),
         checks: {}
       };
-      
+
       // Memory check
       const memUsage = process.memoryUsage();
       const memoryMB = memUsage.heapUsed / 1024 / 1024;
@@ -154,7 +154,7 @@ class MonitoringService extends EventEmitter {
         usage: Math.round(memoryMB),
         threshold: this.config.alertThresholds.memoryUsage
       };
-      
+
       // Performance check
       if (this.performanceOptimizer) {
         const perfStats = this.performanceOptimizer.getPerformanceStats();
@@ -165,7 +165,7 @@ class MonitoringService extends EventEmitter {
           queueSize: perfStats.messageQueue.size
         };
       }
-      
+
       // Error rate check
       if (this.errorHandler) {
         const errorStats = this.errorHandler.getErrorStats();
@@ -173,7 +173,7 @@ class MonitoringService extends EventEmitter {
           e => Date.now() - new Date(e.timestamp).getTime() < 5 * 60 * 1000
         );
         const errorRate = recentErrors.length / 100; // Assuming 100 operations in 5 minutes
-        
+
         healthData.checks.errors = {
           status: errorRate < this.config.alertThresholds.errorRate ? 'healthy' : 'warning',
           recentErrors: recentErrors.length,
@@ -181,15 +181,15 @@ class MonitoringService extends EventEmitter {
           errorRate: Math.round(errorRate * 100) / 100
         };
       }
-      
+
       // Component status check
       healthData.checks.components = this.componentStatus;
-      
+
       // Overall health determination
       const allChecks = Object.values(healthData.checks).filter(check => check.status);
       const hasWarnings = allChecks.some(check => check.status === 'warning');
       const hasErrors = allChecks.some(check => check.status === 'error');
-      
+
       if (hasErrors) {
         this.metrics.systemHealth = 'unhealthy';
       } else if (hasWarnings) {
@@ -197,23 +197,23 @@ class MonitoringService extends EventEmitter {
       } else {
         this.metrics.systemHealth = 'healthy';
       }
-      
+
       this.metrics.lastHealthCheck = healthData.timestamp;
-      
+
       // Log health check
       await this.logHealthCheck(healthData);
-      
+
       // Emit health check event
       this.emit('healthCheck', healthData);
-      
+
       return healthData;
-      
+
     } catch (error) {
       await this.errorHandler?.handleError(error, {
         component: 'monitoring',
         operation: 'healthCheck'
       });
-      
+
       this.metrics.systemHealth = 'unhealthy';
       return { error: error.message };
     }
@@ -224,10 +224,10 @@ class MonitoringService extends EventEmitter {
    */
   async logHealthCheck(healthData) {
     const logEntry = `[${healthData.timestamp}] Health Check - Status: ${this.metrics.systemHealth}\n` +
-                    `Memory: ${healthData.checks.memory?.usage || 'N/A'}MB, ` +
-                    `Performance: ${healthData.checks.performance?.avgResponseTime || 'N/A'}ms avg, ` +
-                    `Errors: ${healthData.checks.errors?.recentErrors || 'N/A'} recent\n`;
-    
+      `Memory: ${healthData.checks.memory?.usage || 'N/A'}MB, ` +
+      `Performance: ${healthData.checks.performance?.avgResponseTime || 'N/A'}ms avg, ` +
+      `Errors: ${healthData.checks.errors?.recentErrors || 'N/A'} recent\n`;
+
     await fs.appendFile(this.healthLogFile, logEntry);
   }
 
@@ -244,25 +244,25 @@ class MonitoringService extends EventEmitter {
       data,
       acknowledged: false
     };
-    
+
     // Add to alerts array
     this.metrics.alerts.push(alert);
-    
+
     // Keep only last 100 alerts
     if (this.metrics.alerts.length > 100) {
       this.metrics.alerts = this.metrics.alerts.slice(-100);
     }
-    
+
     // Log alert
     await this.logEvent('ALERT', message, { alertType: type, severity: alert.severity, ...data });
-    
+
     // Emit alert event
     this.emit('alert', alert);
-    
+
     // Console notification
     const emoji = { low: '💡', medium: '⚠️', high: '🚨', critical: '🔥' };
     console.log(`${emoji[alert.severity]} [${type}] ${message}`);
-    
+
     return alert;
   }
 
@@ -279,7 +279,7 @@ class MonitoringService extends EventEmitter {
       'DISK_SPACE_LOW': 'high',
       'API_CONNECTION_FAILED': 'high'
     };
-    
+
     return severityMap[type] || 'medium';
   }
 
@@ -300,7 +300,7 @@ class MonitoringService extends EventEmitter {
       message,
       ...data
     };
-    
+
     const logLine = `[${logEntry.timestamp}] [${type}] ${message}\n`;
     await fs.appendFile(this.monitoringLogFile, logLine);
   }
@@ -311,14 +311,14 @@ class MonitoringService extends EventEmitter {
   async updateComponentStatus(component, status, details = {}) {
     const previousStatus = this.componentStatus[component];
     this.componentStatus[component] = status;
-    
+
     // Log status change
     if (previousStatus !== status) {
-      await this.logEvent('COMPONENT_STATUS_CHANGE', 
-        `${component} status changed from ${previousStatus} to ${status}`, 
+      await this.logEvent('COMPONENT_STATUS_CHANGE',
+        `${component} status changed from ${previousStatus} to ${status}`,
         { component, previousStatus, newStatus: status, ...details }
       );
-      
+
       // Generate alert for component failures
       if (status === 'error' || status === 'down') {
         await this.handleAlert('COMPONENT_DOWN', `Component ${component} is ${status}`, {
@@ -328,7 +328,7 @@ class MonitoringService extends EventEmitter {
         });
       }
     }
-    
+
     this.emit('componentStatusChange', { component, status, previousStatus, details });
   }
 
@@ -339,36 +339,36 @@ class MonitoringService extends EventEmitter {
     const healthCheck = await this.performHealthCheck();
     const performanceStats = this.performanceOptimizer?.getPerformanceStats() || {};
     const errorStats = this.errorHandler?.getErrorStats() || {};
-    
+
     return {
       timestamp: new Date().toISOString(),
       systemHealth: this.metrics.systemHealth,
       lastHealthCheck: this.metrics.lastHealthCheck,
       uptime: Math.round(process.uptime()),
       startTime: this.metrics.startTime,
-      
+
       healthChecks: healthCheck.checks || {},
-      
+
       performance: {
         memory: performanceStats.memory || {},
         responseTime: performanceStats.responseTime || {},
         cache: performanceStats.cache || {},
         messageQueue: performanceStats.messageQueue || {}
       },
-      
+
       errors: {
         total: errorStats.total || 0,
         recent: errorStats.recent?.length || 0,
         byComponent: errorStats.byComponent || {},
         byType: errorStats.byType || {}
       },
-      
+
       alerts: {
         total: this.metrics.alerts.length,
         unacknowledged: this.metrics.alerts.filter(a => !a.acknowledged).length,
         recent: this.metrics.alerts.slice(-10)
       },
-      
+
       components: this.componentStatus
     };
   }
@@ -394,7 +394,7 @@ class MonitoringService extends EventEmitter {
       const logFile = type === 'health' ? this.healthLogFile : this.monitoringLogFile;
       const content = await fs.readFile(logFile, 'utf8');
       const logLines = content.split('\n').filter(line => line.trim());
-      
+
       return {
         type,
         lines: logLines.slice(-lines),
@@ -413,16 +413,16 @@ class MonitoringService extends EventEmitter {
       // Clean old alerts
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
-      
+
       const initialAlertCount = this.metrics.alerts.length;
       this.metrics.alerts = this.metrics.alerts.filter(
         alert => new Date(alert.timestamp) > cutoffDate
       );
-      
+
       const cleanedAlerts = initialAlertCount - this.metrics.alerts.length;
-      
+
       await this.logEvent('CLEANUP', `Cleaned up ${cleanedAlerts} old alerts`);
-      
+
       return { cleanedAlerts };
     } catch (error) {
       await this.errorHandler?.handleError(error, {
@@ -439,21 +439,21 @@ class MonitoringService extends EventEmitter {
   async exportMonitoringData(format = 'json') {
     try {
       const data = await this.getMonitoringDashboard();
-      
+
       if (format === 'json') {
         return JSON.stringify(data, null, 2);
       }
-      
+
       // CSV format for basic metrics
       if (format === 'csv') {
         const csv = [
           'timestamp,systemHealth,uptime,memoryUsage,avgResponseTime,totalErrors,activeAlerts',
           `${data.timestamp},${data.systemHealth},${data.uptime},${data.performance.memory.current || 0},${data.performance.responseTime.average || 0},${data.errors.total},${data.alerts.unacknowledged}`
         ].join('\n');
-        
+
         return csv;
       }
-      
+
       return data;
     } catch (error) {
       return { error: error.message };
@@ -466,12 +466,12 @@ class MonitoringService extends EventEmitter {
   async shutdown() {
     try {
       this.stopHealthChecks();
-      
+
       await this.logEvent('SYSTEM_SHUTDOWN', 'Monitoring service shutting down', {
         uptime: process.uptime(),
         totalAlerts: this.metrics.alerts.length
       });
-      
+
       console.log('📊 Monitoring service shutdown complete');
     } catch (error) {
       console.error('❌ Error during monitoring shutdown:', error.message);

@@ -1,8 +1,8 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
-    this.yueApiService = yueApiService;
+  constructor(mistralAgentService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
+    this.mistralAgentService = mistralAgentService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
@@ -21,37 +21,37 @@ class CommandHandler {
     switch (command) {
       case 'help':
         return this.handleHelp();
-      
+
       case 'reset':
         return this.handleReset(chatId);
-      
+
       case 'status':
         return await this.handleStatus();
-      
+
       case 'about':
         return this.handleAbout();
-      
+
       case 'context':
         return this.handleContext();
-      
+
       case 'reload':
         return this.handleReload();
-      
+
       case 'analytics':
         return await this.handleAnalytics();
-      
+
       case 'cleanup':
         return await this.handleCleanup();
-      
+
       case 'health':
         return await this.handleHealth();
-      
+
       case 'monitor':
         return await this.handleMonitor();
-      
+
       case 'performance':
         return await this.handlePerformance();
-      
+
       case 'errors':
         return await this.handleErrorsCommand(args, chatId);
 
@@ -66,18 +66,18 @@ class CommandHandler {
 
       default:
         return `❓ Comando desconhecido: ${command}\n\n` +
-               `📋 Comandos disponíveis:\n` +
-               `• /help - Mostra esta mensagem de ajuda\n` +
-               `• /status - Verifica o status do bot\n` +
-               `• /clear - Limpa o histórico da conversa\n` +
-               `• /context - Mostra o contexto atual da conversa\n` +
-               `• /health - Status de saúde do sistema\n` +
-               `• /monitor - Informações de monitoramento\n` +
-               `• /performance - Métricas de performance\n` +
-               `• /errors - Relatório de erros\n` +
-               `• /admin - Comandos administrativos\n` +
-               `• /sqlite - Gerenciamento SQLite\n` +
-               `• /optimize - Otimizações de performance`;
+          `📋 Comandos disponíveis:\n` +
+          `• /help - Mostra esta mensagem de ajuda\n` +
+          `• /status - Verifica o status do bot\n` +
+          `• /clear - Limpa o histórico da conversa\n` +
+          `• /context - Mostra o contexto atual da conversa\n` +
+          `• /health - Status de saúde do sistema\n` +
+          `• /monitor - Informações de monitoramento\n` +
+          `• /performance - Métricas de performance\n` +
+          `• /errors - Relatório de erros\n` +
+          `• /admin - Comandos administrativos\n` +
+          `• /sqlite - Gerenciamento SQLite\n` +
+          `• /optimize - Otimizações de performance`;
     }
   }
 
@@ -137,19 +137,18 @@ class CommandHandler {
   async handleStatus() {
     try {
       // Test API connection
-      const testResponse = await this.yueApiService.checkApiStatus();
+      const testResponse = await this.mistralAgentService.checkApiStatus();
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
-      
+
       const stats = await this.conversationService.getStats();
-      
+
       return `📊 *Bot Status*
 
-*Yue-F API:* ${statusEmoji} ${apiStatusText}
+*Mistral Agent API:* ${statusEmoji} ${apiStatusText}
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
-*Model:* ${config.yuef.modelName}
-*API URL:* ${config.yuef.apiUrl}
+*Agent ID:* ${config.mistral.agentId}
 
 *Persistence:*
 • Stored conversations: ${stats.persistent.conversations || 0}
@@ -162,11 +161,11 @@ class CommandHandler {
 • Popular commands: ${Object.keys(stats.analytics.popularCommands || {}).slice(0, 3).join(', ') || 'None'}
 
 *System:* Running with enhanced features 🚀`;
-      
+
     } catch (error) {
       return `📊 *Bot Status*
 
-*Yue-F API:* ❌ Error
+*Mistral Agent API:* ❌ Error
 *Error:* ${error.message}
 
 *System:* Operational with API issues ⚠️`;
@@ -181,7 +180,7 @@ class CommandHandler {
     return `🤖 *${config.bot.name}*
 
 *About this bot:*
-This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
+This is an AI assistant integrated with WhatsApp, powered by Mistral Agents.
 
 *Features:*
 • Natural conversations with business context
@@ -191,8 +190,7 @@ This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 • Customizable AI persona and knowledge base
 
 *Technology:*
-• Model: Yue-F (via Ollama)
-• API: ${config.yuef.apiUrl}
+• Mistral Agent ID: ${config.mistral.agentId}
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025
@@ -242,17 +240,17 @@ For more information, use /help`;
   async handleAnalytics() {
     try {
       const report = await this.conversationService.getAnalyticsReport(7);
-      
+
       const dailyStatsText = Object.entries(report.dailyStats || {})
         .slice(-3)
         .map(([date, stats]) => `• ${date}: ${stats.messages} msgs, ${stats.conversations} convs`)
         .join('\n') || 'No data available';
-      
+
       const commandsText = Object.entries(report.popularCommands || {})
         .slice(0, 5)
         .map(([cmd, count]) => `• /${cmd}: ${count}x`)
         .join('\n') || 'No commands recorded';
-      
+
       return `📈 *Analytics Report (7 days)*
 
 *Summary:*
@@ -268,10 +266,10 @@ ${dailyStatsText}
 ${commandsText}
 
 *Errors:*
-${Object.keys(report.errorStats || {}).length > 0 ? 
-  Object.entries(report.errorStats).map(([type, count]) => `• ${type}: ${count}x`).join('\n') : 
-  '• No errors recorded ✅'}`;
-  
+${Object.keys(report.errorStats || {}).length > 0 ?
+          Object.entries(report.errorStats).map(([type, count]) => `• ${type}: ${count}x`).join('\n') :
+          '• No errors recorded ✅'}`;
+
     } catch (error) {
       return `❌ *Analytics Error*\n\nUnable to generate report: ${error.message}`;
     }
@@ -284,20 +282,20 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
   async handleCleanup() {
     try {
       const result = await this.conversationService.persistenceService.cleanupOldData();
-      
+
       return `🧹 *Data Cleanup Complete*
 
 ` +
-             `📊 *Cleanup Results:*
+        `📊 *Cleanup Results:*
 ` +
-             `• Conversations cleaned: ${result.cleanedConversations || 0}
+        `• Conversations cleaned: ${result.cleanedConversations || 0}
 ` +
-             `• Analytics entries cleaned: ${result.cleanedAnalytics || 0}
+        `• Analytics entries cleaned: ${result.cleanedAnalytics || 0}
 ` +
-             `• Total space freed: ${result.spaceSaved || 'Unknown'}
+        `• Total space freed: ${result.spaceSaved || 'Unknown'}
 
 ` +
-             `✅ Old data (30+ days) has been removed to optimize storage.`;
+        `✅ Old data (30+ days) has been removed to optimize storage.`;
     } catch (error) {
       console.error('❌ Error during cleanup:', error);
       return '❌ Error occurred during data cleanup. Please try again later.';
@@ -315,37 +313,37 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       }
 
       const healthData = await this.monitoringService.performHealthCheck();
-      
+
       const healthEmoji = {
         'healthy': '✅',
         'degraded': '⚠️',
         'unhealthy': '🚨'
       };
-      
+
       const emoji = healthEmoji[healthData.systemHealth] || '❓';
-      
+
       let response = `${emoji} *System Health Check*\n\n`;
       response += `🏥 *Overall Status:* ${healthData.systemHealth.toUpperCase()}\n`;
       response += `⏰ *Last Check:* ${new Date(healthData.timestamp).toLocaleString()}\n\n`;
-      
+
       if (healthData.checks) {
         response += `📊 *Component Status:*\n`;
-        
+
         if (healthData.checks.memory) {
           const memStatus = healthData.checks.memory.status === 'healthy' ? '✅' : '⚠️';
           response += `${memStatus} Memory: ${healthData.checks.memory.usage}MB\n`;
         }
-        
+
         if (healthData.checks.performance) {
           const perfStatus = healthData.checks.performance.status === 'healthy' ? '✅' : '⚠️';
           response += `${perfStatus} Performance: ${healthData.checks.performance.avgResponseTime}ms avg\n`;
         }
-        
+
         if (healthData.checks.errors) {
           const errorStatus = healthData.checks.errors.status === 'healthy' ? '✅' : '⚠️';
           response += `${errorStatus} Errors: ${healthData.checks.errors.recentErrors} recent\n`;
         }
-        
+
         if (healthData.checks.components) {
           response += `\n🔧 *Components:*\n`;
           Object.entries(healthData.checks.components).forEach(([name, status]) => {
@@ -354,7 +352,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
           });
         }
       }
-      
+
       return response;
     } catch (error) {
       console.error('❌ Error getting health status:', error);
@@ -373,12 +371,12 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       }
 
       const dashboard = await this.monitoringService.getMonitoringDashboard();
-      
+
       let response = `📊 *Monitoring Dashboard*\n\n`;
       response += `🏥 *System Health:* ${dashboard.systemHealth.toUpperCase()}\n`;
       response += `⏱️ *Uptime:* ${Math.floor(dashboard.uptime / 3600)}h ${Math.floor((dashboard.uptime % 3600) / 60)}m\n`;
       response += `📅 *Started:* ${new Date(dashboard.startTime).toLocaleString()}\n\n`;
-      
+
       // Performance metrics
       if (dashboard.performance) {
         response += `⚡ *Performance:*\n`;
@@ -393,20 +391,20 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         }
         response += `\n`;
       }
-      
+
       // Error summary
       if (dashboard.errors) {
         response += `🚨 *Errors:*\n`;
         response += `• Total: ${dashboard.errors.total}\n`;
         response += `• Recent: ${dashboard.errors.recent}\n\n`;
       }
-      
+
       // Alerts
       if (dashboard.alerts) {
         response += `🔔 *Alerts:*\n`;
         response += `• Total: ${dashboard.alerts.total}\n`;
         response += `• Unacknowledged: ${dashboard.alerts.unacknowledged}\n`;
-        
+
         if (dashboard.alerts.recent && dashboard.alerts.recent.length > 0) {
           response += `\n📋 *Recent Alerts:*\n`;
           dashboard.alerts.recent.slice(0, 3).forEach(alert => {
@@ -415,7 +413,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
           });
         }
       }
-      
+
       return response;
     } catch (error) {
       console.error('❌ Error getting monitoring dashboard:', error);
@@ -434,9 +432,9 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       }
 
       const stats = this.performanceOptimizer.getPerformanceStats();
-      
+
       let response = `⚡ *Performance Metrics*\n\n`;
-      
+
       // Memory stats
       if (stats.memory) {
         response += `🧠 *Memory Usage:*\n`;
@@ -444,7 +442,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Peak: ${Math.round(stats.memory.peak)}MB\n`;
         response += `• Average: ${Math.round(stats.memory.average)}MB\n\n`;
       }
-      
+
       // Response time stats
       if (stats.responseTime) {
         response += `⏱️ *Response Times:*\n`;
@@ -452,7 +450,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Fastest: ${Math.round(stats.responseTime.min)}ms\n`;
         response += `• Slowest: ${Math.round(stats.responseTime.max)}ms\n\n`;
       }
-      
+
       // Cache performance
       if (stats.cache) {
         response += `💾 *Cache Performance:*\n`;
@@ -460,7 +458,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Entries: ${stats.cache.size}\n`;
         response += `• Memory: ${Math.round(stats.cache.memoryUsage)}MB\n\n`;
       }
-      
+
       // Message queue
       if (stats.messageQueue) {
         response += `📬 *Message Queue:*\n`;
@@ -468,7 +466,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Processed: ${stats.messageQueue.processed}\n`;
         response += `• Average Wait: ${Math.round(stats.messageQueue.averageWaitTime)}ms\n`;
       }
-      
+
       return response;
     } catch (error) {
       console.error('❌ Error getting performance metrics:', error);
@@ -487,12 +485,12 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       }
 
       const errorStats = this.errorHandler.getErrorStats();
-      
+
       let response = `🚨 *Error Diagnostics*\n\n`;
       response += `📊 *Error Summary:*\n`;
       response += `• Total Errors: ${errorStats.total}\n`;
       response += `• Recent (24h): ${errorStats.recent?.length || 0}\n\n`;
-      
+
       // Error by component
       if (errorStats.byComponent && Object.keys(errorStats.byComponent).length > 0) {
         response += `🔧 *Errors by Component:*\n`;
@@ -501,7 +499,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         });
         response += `\n`;
       }
-      
+
       // Error by type
       if (errorStats.byType && Object.keys(errorStats.byType).length > 0) {
         response += `📋 *Errors by Type:*\n`;
@@ -510,7 +508,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         });
         response += `\n`;
       }
-      
+
       // Recent errors
       if (errorStats.recent && errorStats.recent.length > 0) {
         response += `🕐 *Recent Errors:*\n`;
@@ -521,7 +519,7 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       } else {
         response += `✅ No recent errors found!`;
       }
-      
+
       return response;
     } catch (error) {
       console.error('❌ Error getting error diagnostics:', error);
@@ -573,24 +571,24 @@ ${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}`;
         case 'stats':
           const stats = this.adminService.getCommandStats();
           let response = `📈 *Admin Command Statistics*\n\n`;
-          
+
           if (stats.byCommand && Object.keys(stats.byCommand).length > 0) {
             response += `📋 *Usage by Command:*\n`;
             Object.entries(stats.byCommand)
-              .sort(([,a], [,b]) => b - a)
+              .sort(([, a], [, b]) => b - a)
               .slice(0, 10)
               .forEach(([cmd, count]) => {
                 response += `• /${cmd}: ${count} times\n`;
               });
           }
-          
+
           return response;
 
         default:
           return `❓ Unknown admin subcommand: ${subCommand}\n\n` +
-                 `Available subcommands:\n` +
-                 `• /admin status - Show admin status\n` +
-                 `• /admin stats - Show command statistics`;
+            `Available subcommands:\n` +
+            `• /admin status - Show admin status\n` +
+            `• /admin stats - Show command statistics`;
       }
     } catch (error) {
       console.error('❌ Error in admin command:', error);
@@ -676,10 +674,10 @@ To enable SQLite:
 
         default:
           return `❓ Unknown SQLite subcommand: ${subCommand}\n\n` +
-                 `Available subcommands:\n` +
-                 `• /sqlite status - Show SQLite status\n` +
-                 `• /sqlite migrate - Migration information\n` +
-                 `• /sqlite performance - Performance comparison`;
+            `Available subcommands:\n` +
+            `• /sqlite status - Show SQLite status\n` +
+            `• /sqlite migrate - Migration information\n` +
+            `• /sqlite performance - Performance comparison`;
       }
     } catch (error) {
       console.error('❌ Error in SQLite command:', error);
@@ -698,7 +696,7 @@ To enable SQLite:
       // Get performance optimizations service from bot instance
       const bot = require('../bot/whatsappBot');
       const optimizationService = bot.performanceOptimizations;
-      
+
       if (!optimizationService) {
         return '❌ Performance optimizations service not available.';
       }
@@ -785,7 +783,7 @@ To enable SQLite:
         case 'toggle':
           const optimization = args[1];
           const enabled = args[2] === 'true';
-          
+
           if (!optimization) {
             return `❓ Usage: /optimize toggle <optimization> <true/false>
 
@@ -796,7 +794,7 @@ Available optimizations:
 • batchProcessing
 • lazyLoading`;
           }
-          
+
           optimizationService.toggleOptimization(optimization, enabled);
           return `${enabled ? '✅' : '❌'} ${optimization} optimization ${enabled ? 'enabled' : 'disabled'}`;
 

@@ -23,17 +23,24 @@ class Application {
       console.log('🚀 Starting WhatsApp AI Bot Application...');
       console.log(`📊 Environment: ${config.env.nodeEnv}`);
       console.log(`🤖 Bot Name: ${config.bot.name}`);
-      console.log(`🔗 API URL: ${config.yuef.apiUrl}`);
-      console.log(`📱 Model: ${config.yuef.modelName}`);
-      
+      console.log(`🧠 Mistral Agent ID: ${config.mistral.agentId}`);
+
+      if (!config.mistral.apiKey) {
+        throw new Error('Missing MISTRAL_API_KEY in environment.');
+      }
+
+      if (!config.mistral.agentId) {
+        throw new Error('Missing MISTRAL_AGENT_ID in environment.');
+      }
+
       // Initialize bot
       this.bot = new WhatsAppBot();
       await this.bot.initialize();
-      
+
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
       console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
-      
+
     } catch (error) {
       console.error('❌ Failed to start application:', error);
       process.exit(1);
@@ -43,14 +50,14 @@ class Application {
   async stop() {
     try {
       console.log('🛑 Stopping application...');
-      
+
       if (this.bot) {
         await this.bot.shutdown();
       }
-      
+
       console.log('✅ Application stopped successfully');
       process.exit(0);
-      
+
     } catch (error) {
       console.error('❌ Error stopping application:', error);
       process.exit(1);
