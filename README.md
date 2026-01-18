@@ -703,3 +703,7 @@ LGPL-2.1 License - see LICENSE file for details.
 ---
 
 **Built with Node.js, WhatsApp Web.js, and Mistral Agents API integration**
+
+---
+
+Code made without AI.
