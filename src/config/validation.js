@@ -119,6 +119,7 @@ const configSchema = Joi.object({
     
     puppeteerOptions: Joi.object({
       headless: Joi.boolean().default(true),
+      executablePath: Joi.string().optional().description('Path to Chromium/Chrome executable'),
       args: Joi.array().items(Joi.string()).default([
         '--no-sandbox',
         '--disable-setuid-sandbox',
