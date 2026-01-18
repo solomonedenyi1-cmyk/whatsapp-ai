@@ -1,3 +1,7 @@
+process.env.MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || 'test_api_key_1234567890';
+process.env.MISTRAL_CACHE_ENABLED = 'true';
+process.env.DEBUG = 'false';
+
 // Directly require the class and mock dependencies
 const { Mistral } = require('@mistralai/mistralai');
 const MistralApiServiceClass = require('../src/services/mistralApiService');
@@ -10,14 +14,14 @@ describe('MistralApiService', () => {
   beforeEach(() => {
     // Mock the Mistral client
     mockClient = mockMistralClient();
-    
+
     // Create service instance with mocked config
     service = new MistralApiServiceClass();
     service.apiKey = 'test_api_key';
     service.modelName = 'mistral-medium-latest';
     service.timeout = 0;
     service.warningTimeout = 300000;
-    
+
     // Inject mock client
     service.client = mockClient;
   });
@@ -48,11 +52,11 @@ describe('MistralApiService', () => {
   describe('cache management', () => {
     it('should enable and disable cache', () => {
       expect(service.cacheEnabled).toBe(true);
-      
+
       service.setCacheEnabled(false);
       expect(service.cacheEnabled).toBe(false);
       expect(service.cache.size).toBe(0); // Should clear cache when disabled
-      
+
       service.setCacheEnabled(true);
       expect(service.cacheEnabled).toBe(true);
     });
@@ -61,7 +65,7 @@ describe('MistralApiService', () => {
       // Add something to cache
       service.cache.set('test', { response: 'test', timestamp: Date.now() });
       expect(service.cache.size).toBe(1);
-      
+
       service.clearCache();
       expect(service.cache.size).toBe(0);
     });
