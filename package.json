@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
     "check:secrets": "node scripts/check-secrets.js --staged",
     "hooks:install": "git config core.hooksPath .githooks"
   },
