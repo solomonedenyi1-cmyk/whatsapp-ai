@@ -55,7 +55,10 @@ const config = {
         '--use-gl=egl',
         '--disable-software-rasterizer',
         '--disable-dev-shm-usage',
-        '--user-data-dir=/tmp/whatsapp-session'
+        '--user-data-dir=/tmp/whatsapp-session',
+        '--disable-extensions',
+        '--disable-default-apps',
+        '--disable-popup-blocking'
       ]
     }
   },

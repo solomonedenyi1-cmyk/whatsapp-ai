@@ -144,12 +144,48 @@ class WhatsAppBot {
       if (error.stack) {
         console.error('Error stack:', error.stack);
       }
+      this.isReady = false;
     });
     
     // Disconnected event
     this.client.on('disconnected', (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
+      
+      // Try to reconnect after 5 seconds
+      setTimeout(() => {
+        console.log('🔄 Attempting to reconnect...');
+        this.initialize().catch(reconnectError => {
+          console.error('❌ Reconnection failed:', reconnectError.message);
+        });
+      }, 5000);
+    });
+    
+    // Auth failure event
+    this.client.on('auth_failure', (msg) => {
+      console.error('❌ WhatsApp authentication failed:', msg);
+      this.isReady = false;
+      
+      // Clear session and try to reconnect
+      console.log('🔄 Clearing session and attempting to reconnect...');
+      const fs = require('fs');
+      const path = require('path');
+      const sessionPath = path.join(__dirname, '../../session');
+      
+      try {
+        if (fs.existsSync(sessionPath)) {
+          fs.rmSync(sessionPath, { recursive: true, force: true });
+          fs.mkdirSync(sessionPath, { recursive: true });
+        }
+      } catch (clearError) {
+        console.error('❌ Error clearing session:', clearError.message);
+      }
+      
+      setTimeout(() => {
+        this.initialize().catch(reconnectError => {
+          console.error('❌ Reconnection after auth failure:', reconnectError.message);
+        });
+      }, 5000);
     });
   }
 
