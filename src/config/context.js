@@ -18,7 +18,7 @@ function loadConfig() {
     const configPath = path.join(__dirname, '../../config.json');
     const configData = fs.readFileSync(configPath, 'utf8');
     const config = JSON.parse(configData);
-    
+
     // Transform JSON config to internal format
     businessContext = {
       identity: {
@@ -52,14 +52,14 @@ function loadConfig() {
         emergency: config.standard_responses.emergency.replace('{phone}', config.business.phone)
       }
     };
-    
+
     console.log(`✅ Configuration loaded successfully for ${businessContext.identity.name}`);
     return businessContext;
-    
+
   } catch (error) {
     console.error('❌ Error loading config.json:', error.message);
     console.log('📝 Using default configuration. Please check your config.json file.');
-    
+
     // Fallback to default configuration
     businessContext = getDefaultConfig();
     return businessContext;
@@ -73,7 +73,7 @@ function loadConfig() {
 function getDefaultConfig() {
   const defaultConfig = {
     ai_identity: {
-      name: "Yue",
+      name: "Mistral Assistant",
       gender: "female",
       role: "AI Assistant",
       personality: "friendly, professional, and helpful",
@@ -154,13 +154,13 @@ loadConfig();
 function generateSystemPrompt() {
   const context = businessContext;
   const config = getCurrentConfig();
-  
+
   // Gender-specific pronouns from config
   const pronouns = config.system_prompt.pronouns[context.identity.gender?.toLowerCase()] || config.system_prompt.pronouns.neutral;
-  
+
   const sections = config.system_prompt.sections;
   const instructions = config.system_prompt.instructions;
-  
+
   return `You are ${context.identity.name}, a ${context.identity.gender} ${context.identity.role} for ${context.business.name}.
 
 ${sections.identity_header}
@@ -179,19 +179,19 @@ ${sections.business_header}
 - Hours: ${context.business.workingHours}
 
 ${sections.services_header}
-${context.business.services.map(service => 
-  `- ${service.name}: ${service.description} (${service.price}, ${service.duration})`
-).join('\n')}
+${context.business.services.map(service =>
+    `- ${service.name}: ${service.description} (${service.price}, ${service.duration})`
+  ).join('\n')}
 
 ${sections.products_header}
-${context.business.products.map(product => 
-  `- ${product.name}: ${product.description} (${product.price}, ${product.availability})`
-).join('\n')}
+${context.business.products.map(product =>
+    `- ${product.name}: ${product.description} (${product.price}, ${product.availability})`
+  ).join('\n')}
 
 ${sections.faq_header}
-${context.business.faq.map(faq => 
-  `Q: ${faq.question}\nA: ${faq.answer}`
-).join('\n\n')}
+${context.business.faq.map(faq =>
+    `Q: ${faq.question}\nA: ${faq.answer}`
+  ).join('\n\n')}
 
 ${sections.owner_header}
 - ${context.owner.name}, ${context.owner.title}
