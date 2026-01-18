@@ -118,7 +118,10 @@ const configSchema = Joi.object({
       .description('Path to store WhatsApp session data'),
     
     puppeteerOptions: Joi.object({
-      headless: Joi.boolean().default(true),
+      headless: Joi.alternatives().try(
+        Joi.boolean().default(true),
+        Joi.string().valid('new').default(true)
+      ).description('Headless mode (boolean or "new" for new headless mode)'),
       executablePath: Joi.string().optional().description('Path to Chromium/Chrome executable'),
       args: Joi.array().items(Joi.string()).default([
         '--no-sandbox',
