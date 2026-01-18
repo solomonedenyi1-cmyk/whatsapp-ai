@@ -38,6 +38,7 @@ FROM base AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends \
   chromium \
   chromium-driver \
+  gosu \
   ca-certificates \
   fonts-liberation \
   libnss3 \
@@ -56,9 +57,11 @@ COPY src ./src
 COPY scripts ./scripts
 COPY config.json ./config.json
 COPY package.json ./package.json
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
-RUN mkdir -p /app/session && chown -R node:node /app
+RUN chmod +x /app/docker-entrypoint.sh \
+  && mkdir -p /app/session /app/data \
+  && chown -R node:node /app
 
-USER node
-
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "src/index.js"]
