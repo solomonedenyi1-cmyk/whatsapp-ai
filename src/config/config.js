@@ -42,7 +42,7 @@ const config = {
   whatsapp: {
     sessionPath: './session',
     puppeteerOptions: {
-      headless: true,
+      headless: false, // Changed to false for debugging
       executablePath: '/usr/bin/chromium-browser',
       args: [
         '--no-sandbox',
