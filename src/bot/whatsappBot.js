@@ -1,5 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const path = require('path');
+const fs = require('fs').promises;
 const config = require('../config/config');
 const MistralAgentService = require('../services/mistralAgentService');
 const ConversationService = require('../services/conversationService');
@@ -70,12 +72,40 @@ class WhatsAppBot {
     }
   }
 
+  async cleanupChromiumProfileLocks() {
+    try {
+      const dataPath = path.resolve(config.whatsapp.sessionPath);
+      const profileDir = path.join(dataPath, 'session');
+
+      const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
+
+      await Promise.all(
+        lockFiles.map(async (filename) => {
+          const filePath = path.join(profileDir, filename);
+          try {
+            await fs.unlink(filePath);
+          } catch (error) {
+            if (error && error.code !== 'ENOENT') {
+              throw error;
+            }
+          }
+        })
+      );
+    } catch (error) {
+      if (config.env.debug) {
+        console.warn('⚠️ Could not cleanup Chromium profile lock files:', error?.message || error);
+      }
+    }
+  }
+
   /**
    * Initialize the WhatsApp bot
    */
   async initialize() {
     try {
       console.log('🤖 Initializing WhatsApp AI Bot...');
+
+      await this.cleanupChromiumProfileLocks();
 
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
