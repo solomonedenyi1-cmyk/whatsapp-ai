@@ -8,6 +8,16 @@ services:
       MISTRAL_AGENT_ID: ag_your_agent_id
       MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT: "false"
 
+      CAL_API_KEY: your_cal_api_key
+      CAL_EVENT_TYPE_ID: "your_event_type_id"
+      CAL_API_URL: "https://api.cal.com"
+      CAL_API_VERSION: "2024-08-13"
+      CAL_DEFAULT_TIME_ZONE: "America/Sao_Paulo"
+
+      RESEND_API_KEY: your_resend_api_key
+      RESEND_FROM_NAME: "Your Company"
+      RESEND_FROM_EMAIL: "noreply@yourdomain.com"
+
       BOT_NAME: "WhatsApp AI Bot"
       MAX_CONTEXT_MESSAGES: "20"
       MESSAGE_SPLIT_LENGTH: "1500"
