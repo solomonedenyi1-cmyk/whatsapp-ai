@@ -12,6 +12,20 @@ const config = {
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
   },
 
+  cal: {
+    apiKey: process.env.CAL_API_KEY,
+    eventTypeId: process.env.CAL_EVENT_TYPE_ID ? Number(process.env.CAL_EVENT_TYPE_ID) : null,
+    apiUrl: process.env.CAL_API_URL || 'https://api.cal.com',
+    apiVersion: process.env.CAL_API_VERSION || '2024-08-13',
+    defaultTimeZone: process.env.CAL_DEFAULT_TIME_ZONE || 'America/Sao_Paulo',
+  },
+
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
+    fromName: process.env.RESEND_FROM_NAME,
+    fromEmail: process.env.RESEND_FROM_EMAIL,
+  },
+
   // Bot Configuration
   bot: {
     name: process.env.BOT_NAME || 'WhatsApp AI Bot',
