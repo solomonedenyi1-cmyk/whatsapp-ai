@@ -50,12 +50,27 @@ function normalizeMistralContent(content) {
 }
 
 function getMistralToolCalls(message) {
-    const toolCalls = message?.tool_calls || message?.toolCalls;
-    return Array.isArray(toolCalls) ? toolCalls : [];
+    const candidates = [message?.tool_calls, message?.toolCalls];
+    const nonEmpty = candidates.find((value) => Array.isArray(value) && value.length > 0);
+    if (nonEmpty) {
+        return nonEmpty;
+    }
+
+    const anyArray = candidates.find((value) => Array.isArray(value));
+    return anyArray || [];
 }
 
 function getMistralToolCallId(toolCall) {
-    return toolCall?.id || toolCall?.tool_call_id || toolCall?.toolCallId;
+    const candidate = toolCall?.id ?? toolCall?.tool_call_id ?? toolCall?.toolCallId;
+    if (typeof candidate === 'string') {
+        return candidate;
+    }
+
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+        return String(candidate);
+    }
+
+    return null;
 }
 
 class MistralAgentService {
@@ -123,6 +138,15 @@ class MistralAgentService {
                     break;
                 }
 
+                if (config.env?.debug) {
+                    console.log('mistral.tool_calls', toolCalls.map((toolCall) => ({
+                        id: toolCall?.id,
+                        tool_call_id: toolCall?.tool_call_id,
+                        toolCallId: toolCall?.toolCallId,
+                        functionName: toolCall?.function?.name,
+                    })));
+                }
+
                 messages.push(message);
 
                 const toolResults = await Promise.all(
@@ -151,11 +175,24 @@ class MistralAgentService {
                 );
 
                 for (const toolResult of toolResults) {
+                    const toolCallId = getMistralToolCallId(toolResult.toolCall);
+                    if (typeof toolCallId !== 'string' || toolCallId.trim().length === 0) {
+                        const functionName = toolResult?.functionName;
+                        const error = new Error(`Missing tool_call_id for tool result (${functionName || 'unknown'})`);
+                        error.details = {
+                            toolCallKeys: toolResult?.toolCall && typeof toolResult.toolCall === 'object'
+                                ? Object.keys(toolResult.toolCall)
+                                : null,
+                        };
+                        throw error;
+                    }
+
                     const toolMessage = {
                         role: 'tool',
                         name: toolResult.functionName,
                         content: toolResult.content,
-                        tool_call_id: getMistralToolCallId(toolResult.toolCall),
+                        tool_call_id: toolCallId,
+                        toolCallId: toolCallId,
                     };
 
                     toolMessages.push(toolMessage);
