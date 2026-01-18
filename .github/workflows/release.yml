@@ -26,7 +26,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,9 +37,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .pnpm-store
-          key: ${{ runner.os }}-pnpm-store-20-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-24-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-20-
+            ${{ runner.os }}-pnpm-store-24-
             ${{ runner.os }}-pnpm-store-
 
       - name: install
