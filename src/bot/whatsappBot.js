@@ -67,6 +67,17 @@ class WhatsAppBot {
   async safeSendMessage(chatId, text, message = null, chat = null) {
     let lastError = null;
 
+    const isLidChat = chatId && typeof chatId === 'string' && chatId.endsWith('@lid');
+
+    if (isLidChat && this.client && typeof this.client.sendMessage === 'function') {
+      try {
+        await this.client.sendMessage(chatId, text, { sendSeen: false });
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
     if (message && typeof message.reply === 'function') {
       try {
         await message.reply(text);
@@ -114,7 +125,7 @@ class WhatsAppBot {
     }
 
     try {
-      await this.client.sendMessage(targetId, text);
+      await this.client.sendMessage(targetId, text, { sendSeen: false });
       return;
     } catch (error) {
       lastError = error;
