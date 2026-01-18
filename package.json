@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "check:secrets": "node scripts/check-secrets.js --staged",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "keywords": [
     "whatsapp",
