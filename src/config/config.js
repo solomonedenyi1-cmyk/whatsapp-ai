@@ -1,23 +1,7 @@
 require('dotenv').config();
-const { validateConfig, validateEnvironment } = require('./validation');
-
-// Validate environment variables
-validateEnvironment(process.env);
 
 const config = {
-  // Mistral API Configuration
-  mistral: {
-    apiKey: process.env.MISTRAL_API_KEY,
-    modelName: process.env.MISTRAL_MODEL_NAME || 'mistral-medium-latest',
-    timeout: 0, // No timeout - wait indefinitely
-    warningTimeout: 5 * 60 * 1000, // 5 minutes warning
-    cacheEnabled: process.env.MISTRAL_CACHE_ENABLED !== 'false', // Default: true
-    // Agent Configuration
-    agentId: process.env.MISTRAL_AGENT_ID || null,
-    useAgent: process.env.MISTRAL_USE_AGENT !== 'false', // Default: true
-  },
-
-  // Yue-F API Configuration (kept for backward compatibility)
+  // Yue-F API Configuration
   yuef: {
     apiUrl: process.env.YUE_F_API_URL || 'http://localhost:11434',
     modelName: process.env.YUE_F_MODEL_NAME || 'yue-f',
@@ -41,16 +25,16 @@ const config = {
   // WhatsApp Configuration
   whatsapp: {
     sessionPath: './session',
-    initializationTimeoutMs: parseInt(process.env.WHATSAPP_INIT_TIMEOUT_MS) || 120000,
-    qrScanTimeoutMs: parseInt(process.env.WHATSAPP_QR_TIMEOUT_MS) || 0,
-    autoClearSessionOnAuthFailure: process.env.WHATSAPP_AUTO_CLEAR_SESSION === 'true',
     puppeteerOptions: {
-      headless: process.env.WHATSAPP_HEADLESS !== 'false',
-      executablePath: process.env.WHATSAPP_CHROME_EXECUTABLE_PATH || undefined,
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
         '--disable-gpu'
       ]
     }
@@ -62,11 +46,4 @@ const config = {
   }
 };
 
-// Validate the configuration before exporting
-try {
-  const validatedConfig = validateConfig(config);
-  module.exports = validatedConfig;
-} catch (error) {
-  console.error('❌ Configuration validation failed. Cannot start application.');
-  process.exit(1);
-}
+module.exports = config;

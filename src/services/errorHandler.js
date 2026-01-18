@@ -118,7 +118,7 @@ class ErrorHandler {
       return 'CRITICAL';
     }
     
-    if (error.message.includes('API') && context.component === 'mistralApi') {
+    if (error.message.includes('API') && context.component === 'yueApi') {
       return 'HIGH';
     }
     
@@ -212,7 +212,7 @@ class ErrorHandler {
           }
           break;
           
-        case 'mistralApi':
+        case 'yueApi':
           if (errorInfo.message.includes('timeout')) {
             return 'retry_recommended';
           }

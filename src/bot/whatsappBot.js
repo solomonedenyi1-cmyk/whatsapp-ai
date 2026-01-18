@@ -1,10 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const fs = require('fs');
-const path = require('path');
 const qrcode = require('qrcode-terminal');
 const config = require('../config/config');
-const MistralApiService = require('../services/mistralApiService');
-const MistralAgentService = require('../services/mistralAgentService');
+const YueApiService = require('../services/yueApiService');
 const ConversationService = require('../services/conversationService');
 const MessageService = require('../services/messageService');
 const CommandHandler = require('../commands/commandHandler');
@@ -18,83 +15,48 @@ const PerformanceOptimizations = require('../services/performanceOptimizations')
 class WhatsAppBot {
   constructor() {
     this.client = null;
-    this.isInitializing = false;
-    this.reconnectTimeoutId = null;
-
+    
     // Initialize Phase 3 services
     this.errorHandler = new ErrorHandler();
     this.performanceOptimizer = new PerformanceOptimizer();
     this.monitoringService = new MonitoringService(this.errorHandler, this.performanceOptimizer);
-
+    
     // Initialize Phase 3.5 services
     this.timeoutHandler = new TimeoutHandler();
     this.adminService = new AdminService();
     this.performanceOptimizations = new PerformanceOptimizations();
-
+    
     // Initialize existing services with error handling
-    this.mistralApiService = new MistralApiService();
-    this.mistralAgentService = new MistralAgentService();
+    this.yueApiService = new YueApiService();
     this.conversationService = new ConversationService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
-      this.mistralApiService,
-      this.mistralAgentService,
+      this.yueApiService, 
       this.conversationService,
       this.errorHandler,
       this.performanceOptimizer,
       this.monitoringService,
       this.adminService
     );
-
+    
     this.isReady = false;
     this.startTime = Date.now();
-  }
-
-  async cleanupClient() {
-    const client = this.client;
-    if (!client) {
-      return;
-    }
-
-    try {
-      client.removeAllListeners();
-      await client.destroy();
-    } catch (cleanupError) {
-      console.warn('⚠️ [whatsappBot] Error cleaning up client:', cleanupError.message);
-    } finally {
-      this.client = null;
-      this.isReady = false;
-    }
   }
 
   /**
    * Initialize the WhatsApp bot
    */
   async initialize() {
-    if (this.isInitializing) {
-      return;
-    }
-
-    this.isInitializing = true;
-
     try {
       console.log('🤖 Initializing WhatsApp AI Bot...');
-
+      
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
-
-      // Ensure previous client is cleaned up before creating a new one
-      if (this.client) {
-        await this.cleanupClient();
-      }
-
-      const sessionPathAbs = path.resolve(process.cwd(), config.whatsapp.sessionPath);
-      fs.mkdirSync(sessionPathAbs, { recursive: true });
-
+      
       // Create WhatsApp client
       this.client = new Client({
         authStrategy: new LocalAuth({
-          dataPath: sessionPathAbs
+          dataPath: config.whatsapp.sessionPath
         }),
         puppeteer: config.whatsapp.puppeteerOptions
       });
@@ -102,30 +64,12 @@ class WhatsAppBot {
       // Set up event listeners
       this.setupEventListeners();
 
-      // Initialize the client and wait for ready
-      console.log('📱 Initializing WhatsApp client...');
-
-      const initPromise = this.client.initialize();
-      const readyPromise = this.waitForClientReady();
-      const initTimeoutMs = Number(config.whatsapp.initializationTimeoutMs || 0);
-
-      if (initTimeoutMs > 0) {
-        await Promise.race([
-          Promise.all([initPromise, readyPromise]),
-          new Promise((_, reject) => {
-            setTimeout(() => {
-              reject(new Error(`WhatsApp client initialization timed out after ${Math.round(initTimeoutMs / 1000)} seconds`));
-            }, initTimeoutMs);
-          })
-        ]);
-      } else {
-        await Promise.all([initPromise, readyPromise]);
-      }
-
+      // Initialize the client
+      await this.client.initialize();
+      
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
-      console.log('✅ WhatsApp client initialized successfully');
-
+      
     } catch (error) {
       console.error('❌ Failed to initialize WhatsApp bot:', error);
       await this.errorHandler.handleError(error, {
@@ -134,64 +78,7 @@ class WhatsAppBot {
       });
       await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
       throw error;
-    } finally {
-      this.isInitializing = false;
     }
-  }
-
-  waitForClientReady() {
-    return new Promise((resolve, reject) => {
-      const client = this.client;
-      if (!client) {
-        reject(new Error('WhatsApp client is not initialized'));
-        return;
-      }
-
-      let qrTimeoutId = null;
-      const qrTimeoutMs = Number(config.whatsapp.qrScanTimeoutMs || 0);
-
-      const cleanup = () => {
-        client.off('ready', onReady);
-        client.off('auth_failure', onAuthFailure);
-        client.off('error', onError);
-        client.off('qr', onQr);
-        if (qrTimeoutId) {
-          clearTimeout(qrTimeoutId);
-          qrTimeoutId = null;
-        }
-      };
-
-      const onReady = () => {
-        cleanup();
-        resolve();
-      };
-
-      const onAuthFailure = (msg) => {
-        cleanup();
-        reject(new Error(`WhatsApp authentication failed: ${msg}`));
-      };
-
-      const onError = (err) => {
-        cleanup();
-        reject(err instanceof Error ? err : new Error(String(err)));
-      };
-
-      const onQr = () => {
-        if (qrTimeoutMs <= 0 || qrTimeoutId) {
-          return;
-        }
-
-        qrTimeoutId = setTimeout(() => {
-          cleanup();
-          reject(new Error(`WhatsApp QR scan timed out after ${Math.round(qrTimeoutMs / 1000)} seconds`));
-        }, qrTimeoutMs);
-      };
-
-      client.on('qr', onQr);
-      client.once('ready', onReady);
-      client.once('auth_failure', onAuthFailure);
-      client.once('error', onError);
-    });
   }
 
   /**
@@ -201,13 +88,7 @@ class WhatsAppBot {
     // QR Code for authentication
     this.client.on('qr', (qr) => {
       console.log('📱 Scan this QR code with your WhatsApp:');
-      console.log('💡 Open WhatsApp on your phone -> Settings -> Linked Devices -> Link a Device');
       qrcode.generate(qr, { small: true });
-    });
-
-    // Loading screen event
-    this.client.on('loading_screen', (percent, message) => {
-      console.log(`📱 Loading: ${percent}% - ${message}`);
     });
 
     // Client ready
@@ -221,6 +102,17 @@ class WhatsAppBot {
       console.log('🔐 WhatsApp authenticated successfully');
     });
 
+    // Authentication failure
+    this.client.on('auth_failure', (msg) => {
+      console.error('❌ WhatsApp authentication failed:', msg);
+    });
+
+    // Client disconnected
+    this.client.on('disconnected', (reason) => {
+      console.log('📱 WhatsApp client disconnected:', reason);
+      this.isReady = false;
+    });
+
     // Incoming messages
     this.client.on('message', async (message) => {
       await this.handleMessage(message);
@@ -228,61 +120,8 @@ class WhatsAppBot {
 
     // Error handling
     this.client.on('error', (error) => {
-      console.error('❌ WhatsApp client error:', error.message);
-      if (error.stack) {
-        console.error('Error stack:', error.stack);
-      }
-      this.isReady = false;
+      console.error('❌ WhatsApp client error:', error);
     });
-
-    this.client.on('disconnected', async (reason) => {
-      console.log('📱 WhatsApp client disconnected:', reason);
-      this.isReady = false;
-
-      await this.cleanupClient();
-      this.scheduleReconnect('disconnected');
-    });
-
-    this.client.on('auth_failure', async (msg) => {
-      console.error('❌ WhatsApp authentication failed:', msg);
-      this.isReady = false;
-
-      if (config.whatsapp.autoClearSessionOnAuthFailure) {
-        await this.clearSessionData();
-      }
-
-      await this.cleanupClient();
-
-      this.scheduleReconnect('auth_failure');
-    });
-  }
-
-  scheduleReconnect(reason) {
-    if (this.reconnectTimeoutId) {
-      return;
-    }
-
-    this.reconnectTimeoutId = setTimeout(() => {
-      this.reconnectTimeoutId = null;
-      console.log(`🔄 Attempting to reconnect (${reason})...`);
-      this.initialize().catch(reconnectError => {
-        console.error('❌ Reconnection failed:', reconnectError.message);
-      });
-    }, 5000);
-  }
-
-  async clearSessionData() {
-    const sessionPath = path.resolve(process.cwd(), config.whatsapp.sessionPath);
-
-    try {
-      if (fs.existsSync(sessionPath)) {
-        fs.rmSync(sessionPath, { recursive: true, force: true });
-      }
-      fs.mkdirSync(sessionPath, { recursive: true });
-      console.log('🔄 Session data cleared successfully');
-    } catch (clearError) {
-      console.error('❌ Error clearing session:', clearError.message);
-    }
   }
 
   /**
@@ -291,7 +130,7 @@ class WhatsAppBot {
    */
   async handleMessage(message) {
     const startTime = Date.now();
-
+    
     try {
       // Check if message should be ignored
       if (this.messageService.shouldIgnoreMessage(message)) {
@@ -317,7 +156,7 @@ class WhatsAppBot {
       // Check if it's a command
       if (this.messageService.isCommand(messageText)) {
         const { command, args } = this.messageService.parseCommand(messageText);
-
+        
         // Check admin access for commands
         const accessCheck = this.adminService.validateAdminAccess(chatId, command);
         if (!accessCheck.allowed) {
@@ -328,8 +167,8 @@ class WhatsAppBot {
       } else {
         // Regular message - send to AI with timeout handling and performance optimizations
         response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId,
-          messageText,
+          chatId, 
+          messageText, 
           (msg) => this.processAIMessageWithTimeout(msg, chatId)
         );
       }
@@ -361,27 +200,27 @@ class WhatsAppBot {
    */
   async processAIMessageWithTimeout(messageText, chatId) {
     const requestId = `${chatId}_${Date.now()}`;
-
+    
     try {
       // Register request for timeout monitoring
       this.timeoutHandler.registerRequest(requestId, requestId, messageText);
-
+      
       // Set up timeout message handler
       this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
         if (data.chatId === chatId) {
           await this.sendResponse(chatId, data.message);
         }
       });
-
+      
       // Get conversation context
       const context = this.conversationService.getFormattedContext(chatId);
-
+      
       // Add user message to context
       await this.conversationService.addMessage(chatId, 'user', messageText);
-
+      
       // Update API status
-      await this.monitoringService.updateComponentStatus('mistralApi', 'processing');
-
+      await this.monitoringService.updateComponentStatus('yueApi', 'processing');
+      
       // Send to AI (this may take a long time)
       let responseReceived = false;
       const warningCallback = async () => {
@@ -395,36 +234,34 @@ class WhatsAppBot {
           console.error('❌ Error sending warning message:', error);
         }
       };
-
-      const aiResponse = config.mistral.useAgent
-        ? await this.mistralAgentService.sendAgentMessage(messageText, warningCallback)
-        : await this.mistralApiService.sendMessage(messageText, context, warningCallback);
+      
+      const aiResponse = await this.yueApiService.sendMessage(messageText, context, warningCallback);
       responseReceived = true; // Mark that response was received
-
+      
       // Complete the timeout request
       const duration = this.timeoutHandler.completeRequest(requestId);
-
+      
       // Update API status
-      await this.monitoringService.updateComponentStatus('mistralApi', 'ready');
-
+      await this.monitoringService.updateComponentStatus('yueApi', 'ready');
+      
       // Add AI response to context
       await this.conversationService.addMessage(chatId, 'assistant', aiResponse);
-
+      
       return this.messageService.formatResponse(aiResponse);
-
+      
     } catch (error) {
       console.error('❌ Error processing AI message:', error);
-
+      
       // Complete the timeout request on error
       this.timeoutHandler.completeRequest(requestId);
-
+      
       await this.errorHandler.handleError(error, {
-        component: 'mistralApi',
+        component: 'yueApi',
         operation: 'processMessage',
         chatId,
         messageLength: messageText.length
       });
-      await this.monitoringService.updateComponentStatus('mistralApi', 'error', { error: error.message });
+      await this.monitoringService.updateComponentStatus('yueApi', 'error', { error: error.message });
       return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
     }
   }
@@ -448,20 +285,20 @@ class WhatsAppBot {
     try {
       // Split long messages
       const messageParts = this.messageService.splitMessage(response);
-
+      
       for (const part of messageParts) {
         await this.client.sendMessage(chatId, part);
-
+        
         // Small delay between parts to avoid rate limiting
         if (messageParts.length > 1) {
           await this.delay(1000);
         }
       }
-
+      
       if (config.env.debug) {
         console.log(`📤 Sent response to ${chatId}: ${response.substring(0, 100)}...`);
       }
-
+      
     } catch (error) {
       console.error('❌ Error sending response:', error);
       throw error;
@@ -498,7 +335,7 @@ class WhatsAppBot {
     const performanceStats = this.performanceOptimizer.getPerformanceStats();
     const errorStats = this.errorHandler.getErrorStats();
     const monitoringDashboard = await this.monitoringService.getMonitoringDashboard();
-
+    
     return {
       isReady: this.isReady,
       uptime: Math.round((Date.now() - this.startTime) / 1000),
@@ -507,11 +344,9 @@ class WhatsAppBot {
       errors: errorStats,
       monitoring: monitoringDashboard,
       config: {
-        modelName: config.mistral.modelName,
-        apiUrl: 'Mistral API',
-        maxContext: config.bot.maxContextMessages,
-        useAgent: config.mistral.useAgent,
-        agentName: config.mistral.agentName
+        modelName: config.yuef.modelName,
+        apiUrl: config.yuef.apiUrl,
+        maxContext: config.bot.maxContextMessages
       }
     };
   }
@@ -522,29 +357,24 @@ class WhatsAppBot {
   async shutdown() {
     try {
       console.log('🛑 Shutting down WhatsApp bot...');
-
+      
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'shutting_down');
-
+      
       // Shutdown Phase 3 services
       await this.monitoringService.shutdown();
       await this.performanceOptimizer.shutdown();
       await this.errorHandler.shutdown();
-
-      // Shutdown Mistral Agent service
-      if (this.mistralAgentService) {
-        this.mistralAgentService.cleanup();
-      }
-
+      
       // Shutdown Phase 3.5 services
       await this.timeoutHandler.shutdown();
       await this.performanceOptimizations.shutdown();
-
+      
       // Shutdown WhatsApp client
       if (this.client) {
         await this.client.destroy();
       }
-
+      
       console.log('✅ WhatsApp bot shutdown complete');
     } catch (error) {
       console.error('❌ Error during shutdown:', error);

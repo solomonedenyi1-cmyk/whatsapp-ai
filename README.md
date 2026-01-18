@@ -1,26 +1,17 @@
-# WhatsApp AI Bot with Mistral AI
+# WhatsApp AI Bot
 
-A production-ready WhatsApp AI bot integrated with Mistral AI model via Mistral API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
+A production-ready WhatsApp AI bot integrated with Yue-F AI model via Ollama API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
 
 **Important Note**: All configurations provided are examples only. You must configure your own API endpoints, models, business information, and other settings before deployment.
 
 ## Features
 
 ### Core AI Integration
-- **Natural Conversations**: Direct integration with Mistral AI model through Mistral API
+- **Natural Conversations**: Direct integration with Yue-F AI model through Ollama API
 - **Business Context System**: Fully customizable AI persona with comprehensive business knowledge
 - **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
 - **Context Management**: Intelligent conversation context with configurable message limits
-- **Mistral Agent Integration**: Advanced agent-based architecture with persistent context in Mistral cloud
-
-### Mistral Agent Features (NEW)
-- **Persistent Agents**: Create and manage AI agents with persistent instructions and tools
-- **Cloud Context Management**: Conversation context stored in Mistral's cloud, eliminating local management
-- **Agent-Based Architecture**: More reliable and scalable conversation handling
-- **Automatic Agent Creation**: System automatically creates and manages agents
-- **Seamless Mode Switching**: Toggle between direct API and agent-based modes via configuration
-- **Enhanced Context Continuity**: Better conversation continuity across sessions
 
 ### Enterprise Security
 - **Admin Access Control**: Role-based command access with WhatsApp number authentication
@@ -33,7 +24,6 @@ A production-ready WhatsApp AI bot integrated with Mistral AI model via Mistral 
 - **Real-time Monitoring**: System health checks, component status tracking, and performance metrics
 - **Advanced Analytics**: Comprehensive usage analytics, command tracking, and user engagement reports
 - **Performance Optimization**: Intelligent caching, memory management, and response time optimization
-- **API Response Caching**: Optional caching system for 30-50% faster responses on repeated requests
 - **Timeout Management**: Smart timeout handling with user notifications for long-running requests
 - **SQLite Integration**: High-performance database option with 80-90% faster operations than JSON storage
 - **Resource Management**: Automatic cleanup, garbage collection, and memory optimization
@@ -52,7 +42,6 @@ A production-ready WhatsApp AI bot integrated with Mistral AI model via Mistral 
 - Chrome/Chromium browser
 - Stable internet connection
 - Access to WhatsApp Web
-- Mistral API key (required for AI functionality)
 
 ## Installation
 
@@ -75,10 +64,10 @@ cp .env.example .env
 
 Edit `.env` file with your configuration:
 ```bash
-# Mistral API Configuration (REQUIRED)
-MISTRAL_API_KEY=your_mistral_api_key_here
-MISTRAL_MODEL_NAME=mistral-medium-latest
-MISTRAL_CACHE_ENABLED=true  # Set to false to disable API response caching
+# Yue-F API Configuration (REQUIRED)
+YUE_F_API_URL=https://your-ollama-server.com
+YUE_F_MODEL_NAME=your-model-name
+API_TIMEOUT=30000
 
 # Bot Configuration
 BOT_NAME=Your Bot Name
@@ -93,7 +82,7 @@ NODE_ENV=production
 DEBUG=false
 ```
 
-**Important**: Replace example values with your actual configuration. The `MISTRAL_API_KEY` is required for AI functionality.
+**Important**: Replace example values with your actual configuration.
 
 ### 4. Business Context Setup
 Edit `config.json` in the root directory to customize your AI assistant:
@@ -101,8 +90,8 @@ Edit `config.json` in the root directory to customize your AI assistant:
 ```json
 {
   "ai_identity": {
-    "name": "Mistral",
-    "gender": "neutral",
+    "name": "Your AI Name",
+    "gender": "female",
     "role": "Customer Service Representative",
     "personality": "professional, courteous and helpful",
     "language": "English",
@@ -217,18 +206,16 @@ Users can send regular text messages to interact with the AI assistant. The bot:
 
 ```
 User: Hello! What services do you offer?
-AI: Hello! I'm Mistral, your assistant for [Company]. We offer:
+AI: Hello! I'm [AI Name], your assistant for [Company]. We offer:
 - Website Development: Custom design ($2,500, 2 weeks)
 - Hosting Package: Managed hosting ($29/month)
 ...
 
 User: /status
 AI: 📊 Bot Status
-    Mistral API: ✅ Connected
+    Yue-F API: ✅ Connected
     Active conversations: 3
     Total messages: 127
-    Model: mistral-medium-latest
-    API: Mistral API
     ...
 ```
 
@@ -238,153 +225,15 @@ AI: 📊 Bot Status
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `MISTRAL_API_KEY` | Mistral API key for authentication | None | Yes |
-| `MISTRAL_MODEL_NAME` | Mistral AI model name to use | `mistral-medium-latest` | No |
-| `MISTRAL_CACHE_ENABLED` | Enable API response caching for better performance | `true` | No |
-| `MISTRAL_AGENT_ID` | Mistral Agent ID from console (format: ag_xxxxx...) | `null` | No |
-| `MISTRAL_USE_AGENT` | Enable Mistral Agent mode (true/false) | `true` | No |
+| `YUE_F_API_URL` | Yue-F/Ollama API endpoint URL | `http://localhost:11434` | Yes |
+| `YUE_F_MODEL_NAME` | AI model name to use | `yue-f` | Yes |
+| `API_TIMEOUT` | API request timeout in milliseconds | `30000` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: 5511999999999@c.us) | None | Yes |
 | `NODE_ENV` | Environment mode | `development` | No |
 | `DEBUG` | Enable debug logging | `false` | No |
-
-### Mistral Agent Integration (NEW)
-
-The bot now supports Mistral's Agent API, which provides a more advanced and scalable architecture for conversation management.
-
-#### Agent vs Direct API Comparison
-
-| Feature | Agent Mode | Direct API Mode |
-|---------|------------|-----------------|
-| **Context Management** | Cloud-based (Mistral) | Local (bot storage) |
-| **Persistence** | Automatic conversation persistence | Manual context management |
-| **Scalability** | Better for high-volume conversations | Good for moderate usage |
-| **Reliability** | More resilient to restarts | Depends on local storage |
-| **Complexity** | Simpler architecture | More control |
-| **Performance** | Optimized by Mistral | Optimized locally |
-
-#### When to Use Agent Mode
-
-**Enable Agent Mode (Recommended for most users):**
-- ✅ Production environments
-- ✅ High-volume conversations
-- ✅ Better conversation continuity
-- ✅ Reduced local resource usage
-- ✅ Automatic context management
-
-**Use Direct API Mode:**
-- ❌ Development and testing
-- ❌ Debugging conversation issues
-- ❌ Custom context management needs
-- ❌ Compliance requirements for local storage
-
-#### Agent Configuration
-
-The agent must be created manually in the Mistral console. After creating your agent, set the Agent ID:
-
-```bash
-# In .env file
-MISTRAL_AGENT_ID=ag_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-MISTRAL_USE_AGENT=true
-```
-
-**Important:** Create your agent in the Mistral console first, then copy the Agent ID to your .env file.
-
-#### Agent Lifecycle
-
-1. **Initialization**: Agent is created automatically on first run
-2. **Conversation Management**: Each chat gets its own conversation ID
-3. **Context Persistence**: Context is stored in Mistral's cloud
-4. **Automatic Recovery**: Conversations persist across bot restarts
-
-#### Agent Commands
-
-- `/status` - Shows agent connection status and information
-- `/reset` - Clears local cache and creates new conversation
-- `/context` - Shows current operation mode
-
-### API Response Caching
-
-The bot includes an intelligent caching system that can significantly improve performance by caching API responses for repeated requests. This feature is particularly useful for:
-
-- **Frequent Questions**: Common questions that users ask repeatedly
-- **Business Information**: Standard responses about services, products, and policies
-- **FAQ Responses**: Predefined answers to frequently asked questions
-- **Contextual Responses**: Conversations with similar context and content
-
-#### Cache Configuration
-
-The cache is **enabled by default** but can be easily controlled via environment variable:
-
-```bash
-# Enable cache (default - recommended for production)
-MISTRAL_CACHE_ENABLED=true
-
-# Disable cache (for development/testing)
-MISTRAL_CACHE_ENABLED=false
-```
-
-#### Cache Features
-
-- **5-Minute TTL**: Cached responses are valid for 5 minutes
-- **Automatic Cleanup**: Expired entries are removed automatically
-- **Smart Key Generation**: Cache keys based on message content and context
-- **Performance Monitoring**: Track cache hit rate and effectiveness
-- **Dynamic Control**: Enable/disable without restarting the application
-
-#### Cache Statistics
-
-You can monitor cache performance using the service methods:
-
-```javascript
-// Get current cache statistics
-const stats = mistralService.getCacheStats();
-console.log(`
-Cache Status:
-- Entries: ${stats.entries}
-- TTL: ${stats.ttl}ms
-- Enabled: ${stats.enabled}
-`);
-```
-
-#### Cache Management
-
-Manage cache programmatically:
-
-```javascript
-// Enable cache dynamically
-mistralService.setCacheEnabled(true);
-
-// Disable cache dynamically
-mistralService.setCacheEnabled(false);
-
-// Clear all cached responses
-mistralService.clearCache();
-```
-
-#### When to Use Cache
-
-**Enable Cache (Recommended):**
-- ✅ Production environments
-- ✅ High-volume conversations
-- ✅ Cost optimization
-- ✅ Performance improvement
-
-**Disable Cache:**
-- ❌ Development and testing
-- ❌ Debugging API issues
-- ❌ Real-time response requirements
-- ❌ Compliance restrictions
-
-#### Performance Impact
-
-With cache enabled, you can expect:
-- **30-50% fewer API calls** for repeated requests
-- **2-5x faster responses** for cached content
-- **Better user experience** with quicker replies
-- **Reduced API costs** and rate limit issues
 
 ### Complete Configuration Structure
 
@@ -394,8 +243,8 @@ The `config.json` file supports comprehensive business configuration:
 ```json
 {
   "ai_identity": {
-    "name": "Mistral",
-    "gender": "neutral",
+    "name": "Assistant Name",
+    "gender": "female",
     "role": "Customer Service Representative",
     "personality": "professional, courteous and helpful",
     "language": "English",
@@ -534,8 +383,7 @@ whatsapp-ai/
 │   │   ├── config.js               # System configuration loader
 │   │   └── context.js              # Business context and AI prompt generation
 │   ├── services/
-│   │   ├── mistralApiService.js    # Mistral API client (NEW)
-│   │   ├── yueApiService.js        # Yue-F/Ollama API client (legacy)
+│   │   ├── yueApiService.js        # Yue-F/Ollama API client
 │   │   ├── conversationService.js  # Conversation context management
 │   │   ├── messageService.js       # Message processing and formatting
 │   │   ├── adminService.js         # Admin access control and security
@@ -577,6 +425,7 @@ whatsapp-ai/
 - **Backup Ready**: Simple file-based storage for easy backup and migration
 - **Scalable Design**: Handles thousands of conversations efficiently
 
+
 ## Development
 
 ### Available Scripts
@@ -610,9 +459,6 @@ npm test       # Run tests (placeholder)
 # In .env file
 DEBUG=true
 NODE_ENV=development
-
-# Then start the bot
-npm start
 ```
 
 #### Common Debug Commands
@@ -620,6 +466,7 @@ npm start
 - `/errors` - Recent error logs
 - `/performance` - Performance metrics
 - `/admin status` - Admin configuration status
+
 
 ## Security & Privacy
 
@@ -662,8 +509,8 @@ npm start
 
 **Bot doesn't respond to messages**
 - Check API connectivity with `/status` command
-- Verify `MISTRAL_API_KEY` in `.env` is correct
-- Ensure Mistral API service is accessible
+- Verify `YUE_F_API_URL` in `.env` is correct
+- Ensure Ollama server is running and accessible
 - Check internet connection stability
 
 **Authentication failures**
@@ -695,7 +542,7 @@ npm start
 #### Performance Issues
 
 **Slow response times**
-- Check Mistral API service performance
+- Check API server performance
 - Monitor system resources with `/performance`
 - Review error logs with `/errors` command
 - Consider enabling SQLite for better performance
@@ -739,7 +586,7 @@ npm start
 ### Technical Support
 
 - **GitHub Issues**: Report bugs and technical problems through GitHub issues
-- **API Documentation**: Consult Mistral API documentation for API-related issues
+- **API Documentation**: Consult Ollama/Yue-F API documentation for API-related issues
 - **JSON Validation**: Use online JSON validators to verify configuration syntax
 - **Community**: Check existing issues and discussions for similar problems
 
@@ -757,7 +604,7 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + Mistral AI**
+**Developed with ❤️ using Node.js + WhatsApp Web + Yue-F AI**
 
 ## Use Cases
 
@@ -784,138 +631,4 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Built with Node.js, WhatsApp Web.js, and Mistral AI integration**
-
-## Migration from Direct API to Mistral Agent
-
-### Migration Guide
-
-If you're upgrading from the direct API mode to the new Mistral Agent mode, follow these steps:
-
-1. **Create Agent in Mistral Console**:
-   - Go to Mistral console (https://console.mistral.ai)
-   - Create a new agent with your desired configuration
-   - Set the model, temperature, and instructions
-   - Copy the Agent ID (format: ag_xxxxx...)
-
-2. **Update Environment Variables**:
-   ```bash
-   # Enable agent mode and set your agent ID
-   MISTRAL_AGENT_ID=ag_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   MISTRAL_USE_AGENT=true
-   ```
-
-2. **Restart the Bot**:
-   - The agent will be automatically created on first run
-   - Existing conversations will continue to work
-   - New conversations will use the agent-based architecture
-
-3. **Test the Migration**:
-   - Start the bot and verify connectivity with `/status`
-   - Test conversations to ensure proper AI responses
-   - Check monitoring with `/health` and `/monitor`
-
-4. **Rollback Option**:
-   - Set `MISTRAL_USE_AGENT=false` to return to direct API mode
-   - The agent will remain available for future use
-
-### Benefits of Agent Migration
-
-- **Automatic Context Management**: No need to manage conversation context locally
-- **Better Scalability**: Handles high-volume conversations more efficiently
-- **Improved Reliability**: Conversations persist across bot restarts
-- **Reduced Resource Usage**: Less memory and storage usage on your server
-- **Future-Proof**: Aligns with Mistral's recommended architecture
-
-### Backward Compatibility
-
-The system maintains full backward compatibility:
-- Old direct API configuration still works
-- You can switch between modes without data loss
-- All existing commands work identically
-- Configuration structure remains the same
-
-## Migration from Yue-F to Mistral AI
-
-### Migration Guide
-
-If you're upgrading from the previous Yue-F/Ollama integration, follow these steps:
-
-1. **Update Environment Variables**:
-   ```bash
-   # Remove or comment out old Yue-F variables
-   # YUE_F_API_URL=https://your-ollama-server.com
-   # YUE_F_MODEL_NAME=your-model-name
-   
-   # Add new Mistral variables
-   MISTRAL_API_KEY=your_mistral_api_key_here
-   MISTRAL_MODEL_NAME=mistral-medium-latest
-   ```
-
-2. **Update Business Context**:
-   - Change AI name from "Yue" to "Mistral" in `config.json`
-   - Update any references to "Yue-F" or "Ollama" in your business context
-
-3. **Test the Migration**:
-   - Start the bot and verify connectivity with `/status`
-   - Test conversations to ensure proper AI responses
-   - Check monitoring with `/health` and `/monitor`
-
-4. **Rollback Option**:
-   - The old Yue-F service is still available for backward compatibility
-   - You can revert to Yue-F by modifying the service imports if needed
-
-### Benefits of Mistral AI Integration
-
-- **Official SDK**: Uses Mistral's official JavaScript SDK
-- **Better Performance**: Optimized API communication
-- **Latest Models**: Access to Mistral's latest AI models
-- **Official Support**: Direct support from Mistral AI
-- **Future-Proof**: Regular updates and new features from Mistral
-
-### Backward Compatibility
-
-The system maintains backward compatibility:
-- Old Yue-F configuration variables are still recognized
-- Legacy API service is available but not used by default
-- Configuration structure remains the same
-- All existing commands work identically
-
-## Changelog
-
-### Latest Version
-
-**v2.1.0 - Mistral Agent Integration**
-- ✅ Added Mistral Agent support for cloud-based context management
-- ✅ Implemented automatic agent creation and conversation management
-- ✅ Added seamless switching between direct API and agent modes
-- ✅ Enhanced status monitoring with agent information
-- ✅ Updated all commands to support agent mode
-- ✅ Maintained full backward compatibility with direct API mode
-- ✅ Added comprehensive documentation for agent features
-- ✅ Improved error handling for agent operations
-
-**v2.0.0 - Mistral AI Integration**
-- ✅ Replaced Yue-F/Ollama integration with Mistral AI SDK
-- ✅ Added official Mistral JavaScript SDK support
-- ✅ Updated all API communication to use Mistral endpoints
-- ✅ Maintained backward compatibility with Yue-F configuration
-- ✅ Improved error handling and monitoring for Mistral API
-- ✅ Updated documentation and examples for Mistral AI
-- ✅ Added migration guide for existing users
-
-### Previous Versions
-
-**v1.5.0 - Production Enhancements**
-- Advanced monitoring and analytics
-- Performance optimization features
-- Enhanced error recovery mechanisms
-
-**v1.0.0 - Initial Release**
-- Yue-F AI integration via Ollama API
-- Basic WhatsApp bot functionality
-- Conversation persistence system
-
----
-
-**Powered by Mistral AI - Next Generation AI for Business**
+**Built with Node.js, WhatsApp Web.js, and Ollama API integration**

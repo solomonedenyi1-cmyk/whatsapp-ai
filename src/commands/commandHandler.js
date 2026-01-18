@@ -1,9 +1,8 @@
 const config = require('../config/config');
 
 class CommandHandler {
-  constructor(mistralApiService, mistralAgentService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
-    this.mistralApiService = mistralApiService;
-    this.mistralAgentService = mistralAgentService;
+  constructor(yueApiService, conversationService, errorHandler = null, performanceOptimizer = null, monitoringService = null, adminService = null) {
+    this.yueApiService = yueApiService;
     this.conversationService = conversationService;
     this.errorHandler = errorHandler;
     this.performanceOptimizer = performanceOptimizer;
@@ -126,12 +125,6 @@ class CommandHandler {
   async handleReset(chatId) {
     if (chatId) {
       await this.conversationService.clearContext(chatId);
-      
-      // Clear agent conversation cache if using agent
-      if (config.mistral.useAgent && this.mistralAgentService) {
-        this.mistralAgentService.clearConversationCache(chatId);
-      }
-      
       return '🔄 *Conversation reset!*\n\nYour chat history has been cleared from both memory and storage. We can start fresh! 😊';
     }
     return '❌ Unable to reset conversation context.';
@@ -144,38 +137,19 @@ class CommandHandler {
   async handleStatus() {
     try {
       // Test API connection
-      const testResponse = await this.mistralApiService.checkApiStatus();
+      const testResponse = await this.yueApiService.checkApiStatus();
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
-      
-      // Test Agent API connection if enabled
-      let agentStatusText = 'Disabled';
-      let agentStatusEmoji = '🔄';
-      let agentInfo = '';
-      
-      if (config.mistral.useAgent && this.mistralAgentService) {
-        const agentTestResponse = await this.mistralAgentService.checkAgentApiStatus();
-        agentStatusText = agentTestResponse ? 'Connected' : 'Disconnected';
-        agentStatusEmoji = agentTestResponse ? '✅' : '❌';
-        
-        const agent = await this.mistralAgentService.getAgentInfo();
-        if (agent) {
-          agentInfo = `
-*Agent:* ${agent.name} (v${agent.version})`;
-        }
-      }
       
       const stats = await this.conversationService.getStats();
       
       return `📊 *Bot Status*
 
-*Mistral API:* ${statusEmoji} ${apiStatusText}
-*Agent API:* ${agentStatusEmoji} ${agentStatusText}${agentInfo}
+*Yue-F API:* ${statusEmoji} ${apiStatusText}
 *Active conversations:* ${stats.activeConversations}
 *Total messages:* ${stats.totalMessages}
-*Model:* ${config.mistral.modelName}
-*API URL:* Mistral API
-*Mode:* ${config.mistral.useAgent ? 'Agent-based' : 'Direct API'}
+*Model:* ${config.yuef.modelName}
+*API URL:* ${config.yuef.apiUrl}
 
 *Persistence:*
 • Stored conversations: ${stats.persistent.conversations || 0}
@@ -192,7 +166,7 @@ class CommandHandler {
     } catch (error) {
       return `📊 *Bot Status*
 
-*Mistral API:* ❌ Error
+*Yue-F API:* ❌ Error
 *Error:* ${error.message}
 
 *System:* Operational with API issues ⚠️`;
@@ -204,12 +178,10 @@ class CommandHandler {
    * @returns {string} - About message
    */
   handleAbout() {
-    const mode = config.mistral.useAgent ? 'Agent-based (context in Mistral cloud)' : 'Direct API (local context)';
-    
     return `🤖 *${config.bot.name}*
 
 *About this bot:*
-This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
+This is an AI assistant integrated with WhatsApp, powered by Yue-F AI model.
 
 *Features:*
 • Natural conversations with business context
@@ -217,15 +189,16 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
 • Fast and intelligent responses
 • Familiar WhatsApp interface
 • Customizable AI persona and knowledge base
-• ${mode}
 
 *Technology:*
-• Model: Mistral (via Mistral API)
-• API: Mistral ${config.mistral.useAgent ? 'Agents' : 'Chat'} API
+• Model: Yue-F (via Ollama)
+• API: ${config.yuef.apiUrl}
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025
-*Version:* 2.0.0 (Agent Integration)`;
+*Version:* 1.1.0 (Phase 1 + Context System)
+
+For more information, use /help`;
   }
 
   /**
@@ -234,8 +207,6 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
    */
   handleContext() {
     const { businessContext } = require('../config/context');
-    const mode = config.mistral.useAgent ? 'Agent-based (context managed by Mistral)' : 'Direct API (local context management)';
-    
     return `🎭 *Current AI Context*
 
 *Identity:*
@@ -251,9 +222,6 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral AI model.
 
 *Owner:*
 • ${businessContext.owner.name}, ${businessContext.owner.title}
-
-*Operation Mode:*
-• ${mode}
 
 *Note:* Edit config.json in the root directory to customize the AI's knowledge and personality.`;
   }

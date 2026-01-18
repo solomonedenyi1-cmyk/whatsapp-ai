@@ -1,35 +1,30 @@
 {
   "name": "whatsapp-ai-bot",
   "version": "1.0.0",
-  "description": "WhatsApp Bot integrated with Mistral AI model via Mistral API",
+  "description": "WhatsApp Bot integrated with Yue-F AI model via Ollama API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "whatsapp",
     "bot",
     "ai",
-    "mistral",
-    "mistral-ai"
+    "ollama",
+    "yue-f"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@mistralai/mistralai": "^1.11.0",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
-    "joi": "^18.0.2",
     "qrcode-terminal": "^0.12.0",
     "sqlite3": "^5.1.7",
     "whatsapp-web.js": "^1.25.0"
   },
   "devDependencies": {
-    "jest": "^30.2.0",
     "nodemon": "^3.1.4"
   },
   "engines": {
