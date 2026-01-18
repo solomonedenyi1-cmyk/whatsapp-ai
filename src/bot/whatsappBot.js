@@ -45,12 +45,12 @@ class WhatsAppBot {
 
   async safeSendSeen(chatId, chat) {
     try {
-      if (chat && typeof chat.sendSeen === 'function') {
-        await chat.sendSeen();
+      if (chatId && typeof chatId === 'string' && chatId.endsWith('@lid')) {
         return;
       }
 
-      if (chatId && typeof chatId === 'string' && chatId.endsWith('@lid')) {
+      if (chat && typeof chat.sendSeen === 'function') {
+        await chat.sendSeen();
         return;
       }
 
