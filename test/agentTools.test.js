@@ -55,4 +55,5 @@ test('createToolDispatcher executes allowed tool calls', async () => {
 
     assert.equal(result.success, true);
     assert.equal(result.booking.id, 999);
+    assert.equal(result.email.id, 'email_1');
 });

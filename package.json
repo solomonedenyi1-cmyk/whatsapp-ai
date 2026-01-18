@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
+    "smoke:tools": "node scripts/smoke-tools.js",
     "knip": "knip",
     "knip:fix": "knip --fix",
     "check:secrets": "node scripts/check-secrets.js --staged",

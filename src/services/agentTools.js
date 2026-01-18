@@ -1,5 +1,6 @@
 const CalService = require('./calService');
 const EmailService = require('./emailService');
+const { parseDateTimePtBr } = require('../utils/dateTimeParser');
 
 function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
     const tools = [];
@@ -8,18 +9,33 @@ function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
         tools.push({
             type: 'function',
             function: {
+                name: 'interpretar_data_hora',
+                description: 'Converte data/hora em português (ex: "amanhã 14h") para YYYY-MM-DD e HH:MM (America/Sao_Paulo)',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Texto com data/hora (ex: "amanhã 14h", "quinta 09:30", "hoje 16h")' },
+                    },
+                    required: ['text'],
+                },
+            },
+        });
+
+        tools.push({
+            type: 'function',
+            function: {
                 name: 'criar_agendamento',
-                description: 'Cria um agendamento no Cal.com',
+                description: 'Cria um agendamento no Cal.com e envia email de confirmação',
                 parameters: {
                     type: 'object',
                     properties: {
                         name: { type: 'string', description: 'Nome do cliente' },
                         email: { type: 'string', description: 'Email do cliente' },
-                        date: { type: 'string', description: 'Data no formato YYYY-MM-DD' },
-                        time: { type: 'string', description: 'Hora no formato HH:MM' },
-                        timeZone: { type: 'string', description: 'Timezone IANA (ex: America/Sao_Paulo)' },
+                        when: { type: 'string', description: 'Data e hora em português (ex: "amanhã 14h", "quinta-feira 09:30", "hoje 16h")' },
+                        date: { type: 'string', description: 'Opcional. Data no formato YYYY-MM-DD' },
+                        time: { type: 'string', description: 'Opcional. Hora no formato HH:MM' },
                     },
-                    required: ['name', 'email', 'date', 'time'],
+                    required: ['name', 'email'],
                 },
             },
         });
@@ -48,18 +64,58 @@ function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
     return tools;
 }
 
+async function interpretarDataHora(args) {
+    const text = args?.text;
+    if (typeof text !== 'string' || text.trim().length === 0) {
+        throw new Error('Missing text');
+    }
+
+    return {
+        success: true,
+        ...parseDateTimePtBr({ text, zone: 'America/Sao_Paulo' }),
+    };
+}
+
 async function criarAgendamento(args, { calService }) {
+    const name = args?.name;
+    const email = args?.email;
+
+    if (typeof name !== 'string' || name.trim().length === 0) {
+        throw new Error('Missing name');
+    }
+
+    if (typeof email !== 'string' || email.trim().length === 0) {
+        throw new Error('Missing email');
+    }
+
+    let date = args?.date;
+    let time = args?.time;
+    let timeZone = 'America/Sao_Paulo';
+
+    if ((!date || !time) && args?.when) {
+        const parsed = parseDateTimePtBr({ text: args.when, zone: timeZone });
+        date = date || parsed.date;
+        time = time || parsed.time;
+        timeZone = parsed.timeZone || timeZone;
+    }
+
+    if (!date || !time) {
+        throw new Error('Missing date/time. Provide "when" (ex: "amanhã 14h") or date+time.');
+    }
+
     const result = await calService.createBooking({
-        name: args.name,
-        email: args.email,
-        date: args.date,
-        time: args.time,
-        timeZone: args.timeZone,
+        name,
+        email,
+        date,
+        time,
+        timeZone,
     });
 
     return {
         success: true,
         booking: result?.data || result,
+        date,
+        time,
     };
 }
 
@@ -84,7 +140,21 @@ function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
     };
 
     const handlers = {
-        criar_agendamento: (args) => criarAgendamento(args, deps),
+        interpretar_data_hora: (args) => interpretarDataHora(args),
+        criar_agendamento: async (args) => {
+            const bookingResult = await criarAgendamento(args, deps);
+            const emailResult = await deps.emailService.sendBookingConfirmation({
+                to: args.email,
+                name: args.name,
+                date: bookingResult.date,
+                time: bookingResult.time,
+            });
+
+            return {
+                ...bookingResult,
+                email: emailResult,
+            };
+        },
         enviar_email_confirmacao: (args) => enviarEmailConfirmacao(args, deps),
     };
 

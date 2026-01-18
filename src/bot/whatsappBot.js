@@ -296,12 +296,15 @@ class WhatsAppBot {
         }
       };
 
-      const enableBookingTool = Boolean(config.cal?.apiKey && config.cal?.eventTypeId);
+      const hasCal = Boolean(config.cal?.apiKey && config.cal?.eventTypeId);
       const enableEmailTool = Boolean(
         config.resend?.apiKey &&
         config.resend?.fromEmail &&
         config.resend?.fromName
       );
+
+      // Booking tool always sends email confirmation, so it requires both Cal and Resend configured
+      const enableBookingTool = Boolean(hasCal && enableEmailTool);
 
       const tools = getAgentTools({
         enableBooking: enableBookingTool,
@@ -312,6 +315,7 @@ class WhatsAppBot {
       if (tools.length > 0) {
         const allowedTools = new Set();
         if (enableBookingTool) {
+          allowedTools.add('interpretar_data_hora');
           allowedTools.add('criar_agendamento');
         }
         if (enableEmailTool) {
