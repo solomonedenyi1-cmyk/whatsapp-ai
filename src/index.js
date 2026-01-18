@@ -1,6 +1,15 @@
 const WhatsAppBot = require('./bot/whatsappBot');
 const config = require('./config/config');
 
+function isPuppeteerTargetClosedError(reason) {
+  if (!reason || typeof reason !== 'object') {
+    return false;
+  }
+
+  const message = typeof reason.message === 'string' ? reason.message : '';
+  return reason.name === 'ProtocolError' && message.includes('Target closed');
+}
+
 // Global error handlers
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
@@ -12,12 +21,17 @@ process.on('uncaughtException', (error) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-
   if (config.env.nodeEnv !== 'production') {
+    if (isPuppeteerTargetClosedError(reason)) {
+      console.warn('⚠️ Unhandled Rejection (puppeteer target closed):', reason.message);
+      return;
+    }
+
+    console.error('❌ Unhandled Rejection reason:', reason);
     return;
   }
 
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 

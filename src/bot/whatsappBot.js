@@ -50,6 +50,23 @@ class WhatsAppBot {
     this.startTime = Date.now();
   }
 
+  async cleanupClient() {
+    const client = this.client;
+    if (!client) {
+      return;
+    }
+
+    try {
+      client.removeAllListeners();
+      await client.destroy();
+    } catch (cleanupError) {
+      console.warn('⚠️ [whatsappBot] Error cleaning up client:', cleanupError.message);
+    } finally {
+      this.client = null;
+      this.isReady = false;
+    }
+  }
+
   /**
    * Initialize the WhatsApp bot
    */
@@ -68,15 +85,7 @@ class WhatsAppBot {
 
       // Ensure previous client is cleaned up before creating a new one
       if (this.client) {
-        try {
-          this.client.removeAllListeners();
-          await this.client.destroy();
-        } catch (cleanupError) {
-          console.warn('⚠️ [whatsappBot] Error cleaning up previous client:', cleanupError.message);
-        }
-
-        this.client = null;
-        this.isReady = false;
+        await this.cleanupClient();
       }
 
       // Create WhatsApp client
@@ -223,13 +232,15 @@ class WhatsAppBot {
       this.isReady = false;
     });
 
-    this.client.on('disconnected', (reason) => {
+    this.client.on('disconnected', async (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
       const upperReason = String(reason || '').toUpperCase();
       if (upperReason === 'LOGOUT' && config.whatsapp.autoClearSessionOnAuthFailure) {
-        this.clearSessionData();
+        await this.clearSessionData();
       }
+
+      await this.cleanupClient();
       this.scheduleReconnect('disconnected');
     });
 
@@ -240,6 +251,8 @@ class WhatsAppBot {
       if (config.whatsapp.autoClearSessionOnAuthFailure) {
         await this.clearSessionData();
       }
+
+      await this.cleanupClient();
 
       this.scheduleReconnect('auth_failure');
     });
