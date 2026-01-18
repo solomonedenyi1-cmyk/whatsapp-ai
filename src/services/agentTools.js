@@ -55,6 +55,7 @@ function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
                         name: { type: 'string', description: 'Nome do cliente' },
                         date: { type: 'string', description: 'Data no formato YYYY-MM-DD' },
                         time: { type: 'string', description: 'Hora no formato HH:MM' },
+                        timeZone: { type: 'string', description: 'Opcional. Timezone (ex: America/Sao_Paulo)' },
                     },
                     required: ['to', 'name', 'date', 'time'],
                 },
@@ -118,6 +119,7 @@ async function criarAgendamento(args, { calService }) {
             booking: result?.data || result,
             date,
             time,
+            timeZone,
         };
     } catch (error) {
         const msg = error?.message || '';
@@ -161,6 +163,7 @@ async function enviarEmailConfirmacao(args, { emailService }) {
         name: args.name,
         date: args.date,
         time: args.time,
+        timeZone: args.timeZone,
     });
 
     return {
@@ -187,6 +190,7 @@ function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
                 name: args.name,
                 date: bookingResult.date,
                 time: bookingResult.time,
+                timeZone: bookingResult.timeZone,
             });
 
             return {
