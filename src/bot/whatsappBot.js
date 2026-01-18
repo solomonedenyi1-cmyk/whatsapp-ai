@@ -43,6 +43,67 @@ class WhatsAppBot {
     this.startTime = Date.now();
   }
 
+  async safeSendSeen(chatId, chat) {
+    try {
+      if (chat && typeof chat.sendSeen === 'function') {
+        await chat.sendSeen();
+        return;
+      }
+
+      if (chatId && typeof chatId === 'string' && chatId.endsWith('@lid')) {
+        return;
+      }
+
+      if (this.client && typeof this.client.sendSeen === 'function') {
+        await this.client.sendSeen(chatId);
+      }
+    } catch (error) {
+      if (config.env.debug) {
+        console.warn(`⚠️ Could not send seen for ${chatId}:`, error?.message || error);
+      }
+    }
+  }
+
+  async safeSendMessage(chatId, text, message = null, chat = null) {
+    const methods = [];
+
+    if (message && typeof message.reply === 'function') {
+      methods.push(async () => message.reply(text));
+    }
+
+    if (chat && typeof chat.sendMessage === 'function') {
+      methods.push(async () => chat.sendMessage(text));
+    }
+
+    if (this.client && typeof this.client.sendMessage === 'function') {
+      methods.push(async () => this.client.sendMessage(chatId, text));
+    }
+
+    let lastError = null;
+    for (const fn of methods) {
+      try {
+        await fn();
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error('No available method to send message');
+  }
+
+  async safeSendTyping(chat, chatId) {
+    try {
+      if (chat && typeof chat.sendStateTyping === 'function') {
+        await chat.sendStateTyping();
+      }
+    } catch (error) {
+      if (config.env.debug) {
+        console.warn(`⚠️ Could not send typing state for ${chatId}:`, error?.message || error);
+      }
+    }
+  }
+
   /**
    * Initialize the WhatsApp bot
    */
@@ -140,6 +201,8 @@ class WhatsAppBot {
       const chatId = message.from;
       const messageText = this.messageService.cleanMessage(message.body);
 
+      const chat = await message.getChat();
+
       if (config.env.debug) {
         console.log(`📨 Received message from ${chatId}: ${messageText}`);
       }
@@ -148,8 +211,8 @@ class WhatsAppBot {
       this.performanceOptimizer.recordMessageReceived(chatId, messageText.length);
 
       // Show typing indicator
-      await this.client.sendSeen(chatId);
-      await message.getChat().then(chat => chat.sendStateTyping());
+      await this.safeSendSeen(chatId, chat);
+      await this.safeSendTyping(chat, chatId);
 
       let response;
 
@@ -169,12 +232,12 @@ class WhatsAppBot {
         response = await this.performanceOptimizations.optimizeMessageProcessing(
           chatId,
           messageText,
-          (msg) => this.processAIMessageWithTimeout(msg, chatId)
+          (msg) => this.processAIMessageWithTimeout(msg, chatId, chat)
         );
       }
 
       // Send response
-      await this.sendResponse(chatId, response);
+      await this.sendResponse(chatId, response, message, chat);
 
       // Record response time
       const responseTime = Date.now() - startTime;
@@ -188,7 +251,7 @@ class WhatsAppBot {
         chatId: message.from,
         messageText: message.body?.substring(0, 100)
       });
-      await this.sendErrorResponse(message.from);
+      await this.sendErrorResponse(message.from, message);
     }
   }
 
@@ -198,7 +261,7 @@ class WhatsAppBot {
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response
    */
-  async processAIMessageWithTimeout(messageText, chatId) {
+  async processAIMessageWithTimeout(messageText, chatId, chat) {
     const requestId = `${chatId}_${Date.now()}`;
 
     try {
@@ -208,7 +271,7 @@ class WhatsAppBot {
       // Set up timeout message handler
       this.timeoutHandler.once('sendTimeoutMessage', async (data) => {
         if (data.chatId === chatId) {
-          await this.sendResponse(chatId, data.message);
+          await this.sendResponse(chatId, data.message, null, chat);
         }
       });
 
@@ -227,8 +290,7 @@ class WhatsAppBot {
         try {
           // Only send warning if response hasn't been received yet
           if (!responseReceived) {
-            await this.client.sendMessage(chatId, '⏳ Só um momento... Estou processando sua solicitação. O servidor está um pouco lento hoje, mas estou trabalhando nisso!');
-            console.log('⏰ Warning message sent to user');
+            await this.sendResponse(chatId, '⏰ Sua mensagem está demorando mais que o esperado. Estou processando e responderei em breve!', null, chat);
           }
         } catch (error) {
           console.error('❌ Error sending warning message:', error);
@@ -281,13 +343,13 @@ class WhatsAppBot {
    * @param {string} chatId - WhatsApp chat ID
    * @param {string} response - Response text
    */
-  async sendResponse(chatId, response) {
+  async sendResponse(chatId, response, message = null, chat = null) {
     try {
       // Split long messages
       const messageParts = this.messageService.splitMessage(response);
 
       for (const part of messageParts) {
-        await this.client.sendMessage(chatId, part);
+        await this.safeSendMessage(chatId, part, message, chat);
 
         // Small delay between parts to avoid rate limiting
         if (messageParts.length > 1) {
@@ -309,10 +371,11 @@ class WhatsAppBot {
    * Send error response
    * @param {string} chatId - WhatsApp chat ID
    */
-  async sendErrorResponse(chatId) {
+  async sendErrorResponse(chatId, message = null) {
     try {
       const errorMessage = '❌ Ops! Algo deu errado. Tente enviar sua mensagem novamente.';
-      await this.client.sendMessage(chatId, errorMessage);
+
+      await this.safeSendMessage(chatId, errorMessage, message, null);
     } catch (error) {
       console.error('❌ Error sending error response:', error);
     }
