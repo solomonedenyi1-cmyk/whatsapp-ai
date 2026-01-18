@@ -4,6 +4,7 @@ const config = require('../src/config/config');
 const CalService = require('../src/services/calService');
 const EmailService = require('../src/services/emailService');
 const { parseDateTimePtBr } = require('../src/utils/dateTimeParser');
+const { DateTime } = require('luxon');
 
 function parseArgs(argv) {
     const args = {};
@@ -66,12 +67,35 @@ async function main() {
 
     console.log('⚠️ smoke:tools execute mode: creating booking + sending email');
 
+    const desiredLocal = DateTime.fromISO(`${parsed.date}T${parsed.time}`, { zone: parsed.timeZone });
+    const slots = await cal.getAvailableSlots({
+        startDate: desiredLocal.toISODate(),
+        endDate: desiredLocal.plus({ days: 7 }).toISODate(),
+        timeZone: parsed.timeZone,
+    });
+
+    if (!Array.isArray(slots) || slots.length === 0) {
+        throw new Error('No available slots returned by Cal.com');
+    }
+
+    const slotDts = slots
+        .map((s) => ({ raw: s, dt: DateTime.fromISO(s).setZone(parsed.timeZone) }))
+        .filter((x) => x.dt.isValid);
+
+    const nextOrEqual = slotDts.find((x) => x.dt >= desiredLocal);
+    const chosen = nextOrEqual || slotDts[0];
+    const chosenUtc = chosen.dt.toUTC().toISO({ suppressMilliseconds: true });
+
+    console.log('desired:', desiredLocal.toISO());
+    console.log('chosen slot:', chosen.dt.toISO());
+
     const booking = await cal.createBooking({
         name,
         email,
         date: parsed.date,
         time: parsed.time,
         timeZone: parsed.timeZone,
+        startUtc: chosenUtc,
     });
 
     const sent = await mail.sendBookingConfirmation({
@@ -87,5 +111,8 @@ async function main() {
 
 main().catch((err) => {
     console.error('❌ smoke:tools failed:', err?.message || err);
+    if (err && err.details) {
+        console.error('details:', JSON.stringify(err.details, null, 2));
+    }
     process.exitCode = 1;
 });

@@ -57,3 +57,47 @@ test('createToolDispatcher executes allowed tool calls', async () => {
     assert.equal(result.booking.id, 999);
     assert.equal(result.email.id, 'email_1');
 });
+
+test('createToolDispatcher does not send email when slot is unavailable', async () => {
+    let emailCalls = 0;
+
+    const dispatcher = createToolDispatcher({
+        allowedTools: new Set(['criar_agendamento']),
+        calService: {
+            createBooking: async () => {
+                const err = new Error(
+                    'The event type can\'t be booked at the "start" time provided. Try fetching available slots first using the GET /v2/slots endpoint'
+                );
+                err.status = 400;
+                throw err;
+            },
+            getAvailableSlots: async () => [
+                '2026-01-20T14:00:00.000-03:00',
+                '2026-01-20T15:00:00.000-03:00',
+            ],
+        },
+        emailService: {
+            sendBookingConfirmation: async () => {
+                emailCalls += 1;
+                return { id: 'email_should_not_send' };
+            },
+        },
+    });
+
+    const result = await dispatcher.dispatchToolCall(
+        createToolCall({
+            name: 'criar_agendamento',
+            args: {
+                name: 'Jane',
+                email: 'jane@example.com',
+                date: '2026-01-19',
+                time: '14:00',
+            },
+        })
+    );
+
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'slot_unavailable');
+    assert.equal(Array.isArray(result.options), true);
+    assert.equal(emailCalls, 0);
+});
