@@ -41,6 +41,9 @@ const config = {
   // WhatsApp Configuration
   whatsapp: {
     sessionPath: './session',
+    initializationTimeoutMs: parseInt(process.env.WHATSAPP_INIT_TIMEOUT_MS) || 120000,
+    qrScanTimeoutMs: parseInt(process.env.WHATSAPP_QR_TIMEOUT_MS) || 0,
+    autoClearSessionOnAuthFailure: process.env.WHATSAPP_AUTO_CLEAR_SESSION === 'true',
     puppeteerOptions: {
       headless: true,
       args: [
