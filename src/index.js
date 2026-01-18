@@ -4,11 +4,20 @@ const config = require('./config/config');
 // Global error handlers
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
+  if (config.env.nodeEnv !== 'production') {
+    return;
+  }
+
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+
+  if (config.env.nodeEnv !== 'production') {
+    return;
+  }
+
   process.exit(1);
 });
 
@@ -25,15 +34,15 @@ class Application {
       console.log(`🤖 Bot Name: ${config.bot.name}`);
       console.log(`🔗 API: Mistral API`);
       console.log(`📱 Model: ${config.mistral.modelName}`);
-      
+
       // Initialize bot
       this.bot = new WhatsAppBot();
       await this.bot.initialize();
-      
+
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
       console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
-      
+
     } catch (error) {
       console.error('❌ Failed to start application:', error);
       process.exit(1);
@@ -43,14 +52,14 @@ class Application {
   async stop() {
     try {
       console.log('🛑 Stopping application...');
-      
+
       if (this.bot) {
         await this.bot.shutdown();
       }
-      
+
       console.log('✅ Application stopped successfully');
       process.exit(0);
-      
+
     } catch (error) {
       console.error('❌ Error stopping application:', error);
       process.exit(1);

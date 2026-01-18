@@ -275,6 +275,15 @@ function validateEnvironment(env) {
       .optional()
       .description('Auto clear WhatsApp session on auth failure'),
 
+    WHATSAPP_HEADLESS: Joi.string()
+      .valid('true', 'false')
+      .optional()
+      .description('Run WhatsApp Chromium in headless mode'),
+
+    WHATSAPP_CHROME_EXECUTABLE_PATH: Joi.string()
+      .optional()
+      .description('Path to Chrome/Chromium executable for WhatsApp'),
+
     ADMIN_WHATSAPP_NUMBER: Joi.string()
       .pattern(/^\d+@c\.us$/)
       .optional()

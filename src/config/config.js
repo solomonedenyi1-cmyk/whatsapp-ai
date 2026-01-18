@@ -45,23 +45,13 @@ const config = {
     qrScanTimeoutMs: parseInt(process.env.WHATSAPP_QR_TIMEOUT_MS) || 0,
     autoClearSessionOnAuthFailure: process.env.WHATSAPP_AUTO_CLEAR_SESSION === 'true',
     puppeteerOptions: {
-      headless: true,
+      headless: process.env.WHATSAPP_HEADLESS !== 'false',
+      executablePath: process.env.WHATSAPP_CHROME_EXECUTABLE_PATH || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu',
-        '--use-gl=egl',
-        '--disable-software-rasterizer',
-        '--disable-dev-shm-usage',
-        '--user-data-dir=/tmp/whatsapp-session',
-        '--disable-extensions',
-        '--disable-default-apps',
-        '--disable-popup-blocking'
+        '--disable-gpu'
       ]
     }
   },

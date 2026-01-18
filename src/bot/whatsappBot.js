@@ -226,6 +226,10 @@ class WhatsAppBot {
     this.client.on('disconnected', (reason) => {
       console.log('📱 WhatsApp client disconnected:', reason);
       this.isReady = false;
+      const upperReason = String(reason || '').toUpperCase();
+      if (upperReason === 'LOGOUT' && config.whatsapp.autoClearSessionOnAuthFailure) {
+        this.clearSessionData();
+      }
       this.scheduleReconnect('disconnected');
     });
 
