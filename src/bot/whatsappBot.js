@@ -11,6 +11,7 @@ const MonitoringService = require('../services/monitoringService');
 const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
+const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
 
 class WhatsAppBot {
   constructor() {
@@ -44,94 +45,16 @@ class WhatsAppBot {
   }
 
   async safeSendSeen(chatId, chat) {
-    try {
-      if (chatId && typeof chatId === 'string' && chatId.endsWith('@lid')) {
-        return;
-      }
-
-      if (chat && typeof chat.sendSeen === 'function') {
-        await chat.sendSeen();
-        return;
-      }
-
-      if (this.client && typeof this.client.sendSeen === 'function') {
-        await this.client.sendSeen(chatId);
-      }
-    } catch (error) {
-      if (config.env.debug) {
-        console.warn(`⚠️ Could not send seen for ${chatId}:`, error?.message || error);
-      }
-    }
+    await safeSendSeen(chatId, chat, this.client, config.env.debug);
   }
 
   async safeSendMessage(chatId, text, message = null, chat = null) {
-    let lastError = null;
-
-    const isLidChat = chatId && typeof chatId === 'string' && chatId.endsWith('@lid');
-
-    if (isLidChat && this.client && typeof this.client.sendMessage === 'function') {
-      try {
-        await this.client.sendMessage(chatId, text, { sendSeen: false });
-        return;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (message && typeof message.reply === 'function') {
-      try {
-        await message.reply(text);
-        return;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (chat && typeof chat.sendMessage === 'function') {
-      try {
-        await chat.sendMessage(text);
-        return;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (!this.client || typeof this.client.sendMessage !== 'function') {
-      throw lastError || new Error('No available method to send message');
-    }
-
-    let targetId = chatId;
-    if (targetId && typeof targetId === 'string' && targetId.endsWith('@lid')) {
-      targetId = null;
-
-      try {
-        if (message && typeof message.getContact === 'function') {
-          const contact = await message.getContact();
-          const serialized = contact?.id?._serialized;
-          if (typeof serialized === 'string' && !serialized.endsWith('@lid')) {
-            targetId = serialized;
-          }
-        }
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (!targetId) {
-      if (config.env.debug) {
-        console.warn(`⚠️ Could not resolve send target for ${chatId}`);
-      }
-      throw lastError || new Error('Could not resolve send target');
-    }
-
-    try {
-      await this.client.sendMessage(targetId, text, { sendSeen: false });
-      return;
-    } catch (error) {
-      lastError = error;
-    }
-
-    throw lastError || new Error('No available method to send message');
+    await safeSendMessage(chatId, text, {
+      message,
+      chat,
+      client: this.client,
+      debug: config.env.debug,
+    });
   }
 
   async safeSendTyping(chat, chatId) {
