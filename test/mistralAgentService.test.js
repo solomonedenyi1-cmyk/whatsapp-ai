@@ -34,6 +34,67 @@ test('MistralAgentService.sendChatMessage returns first choice content', async (
     config.mistral.agentId = previousAgentId;
 });
 
+test('MistralAgentService.sendMessageWithTools does not send tool results when toolCallId is None', async () => {
+    const previousKey = config.mistral.apiKey;
+    const previousAgentId = config.mistral.agentId;
+
+    config.mistral.apiKey = 'test-key';
+    config.mistral.agentId = 'ag_test';
+
+    let completeCalls = 0;
+    const fakeClient = {
+        agents: {
+            complete: async () => {
+                completeCalls += 1;
+                return {
+                    choices: [
+                        {
+                            message: {
+                                content: '',
+                                toolCalls: [
+                                    {
+                                        toolCallId: 'None',
+                                        function: {
+                                            name: 'criar_agendamento',
+                                            arguments: JSON.stringify({
+                                                name: 'Jane',
+                                                email: '[email protected]',
+                                                date: '2026-01-19',
+                                                time: '14:00',
+                                            }),
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                };
+            },
+        },
+    };
+
+    const dispatcher = {
+        dispatchToolCall: async () => ({ success: true, bookingId: 123 }),
+    };
+
+    const service = new MistralAgentService({ mistralClient: fakeClient });
+    const result = await service.sendMessageWithTools(
+        'hello',
+        [],
+        {
+            tools: [{ type: 'function', function: { name: 'criar_agendamento' } }],
+            dispatcher,
+        }
+    );
+
+    assert.equal(typeof result.content, 'string');
+    assert.notEqual(result.content.trim().length, 0);
+    assert.equal(completeCalls, 1);
+
+    config.mistral.apiKey = previousKey;
+    config.mistral.agentId = previousAgentId;
+});
+
 test('MistralAgentService.sendMessageWithTools supports camelCase toolCalls with empty content', async () => {
     const previousKey = config.mistral.apiKey;
     const previousAgentId = config.mistral.agentId;

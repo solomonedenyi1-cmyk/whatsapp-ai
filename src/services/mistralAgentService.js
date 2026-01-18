@@ -73,6 +73,24 @@ function getMistralToolCallId(toolCall) {
     return null;
 }
 
+function isValidToolCallId(toolCallId) {
+    if (typeof toolCallId !== 'string') {
+        return false;
+    }
+
+    const trimmed = toolCallId.trim();
+    if (trimmed.length === 0) {
+        return false;
+    }
+
+    const lower = trimmed.toLowerCase();
+    if (lower === 'none' || lower === 'null' || lower === 'undefined') {
+        return false;
+    }
+
+    return true;
+}
+
 class MistralAgentService {
     constructor({ mistralClient } = {}) {
         this.apiKey = config.mistral.apiKey;
@@ -176,7 +194,7 @@ class MistralAgentService {
 
                 for (const toolResult of toolResults) {
                     const toolCallId = getMistralToolCallId(toolResult.toolCall);
-                    if (typeof toolCallId !== 'string' || toolCallId.trim().length === 0) {
+                    if (!isValidToolCallId(toolCallId)) {
                         const functionName = toolResult?.functionName;
                         const error = new Error(`Missing tool_call_id for tool result (${functionName || 'unknown'})`);
                         error.details = {
