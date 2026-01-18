@@ -43,6 +43,7 @@ const config = {
     sessionPath: './session',
     puppeteerOptions: {
       headless: true,
+      executablePath: '/usr/bin/chromium-browser',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
