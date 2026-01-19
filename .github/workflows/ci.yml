@@ -13,8 +13,8 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 18
           - 20
+          - 24
 
     steps:
       - name: checkout
