@@ -93,6 +93,7 @@ class CommandHandler {
 • /status - Check bot and API status (with analytics)
 • /about - Information about this bot
 • /reset - Clear conversation history
+• /clear - Alias for /reset
 
 *Context Management:*
 • /context - View current AI configuration
