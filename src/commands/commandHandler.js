@@ -183,11 +183,11 @@ class CommandHandler {
 This is an AI assistant integrated with WhatsApp, powered by Mistral Agents.
 
 *Features:*
-• Natural conversations with business context
+• Natural conversations configured via your Mistral Agent instructions
 • Maintains conversation context
 • Fast and intelligent responses
 • Familiar WhatsApp interface
-• Customizable AI persona and knowledge base
+• Customizable AI persona and domain knowledge (via Mistral Agent instructions)
 
 *Technology:*
 • Mistral Agent ID: ${config.mistral.agentId}

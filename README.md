@@ -1,6 +1,6 @@
 # WhatsApp AI Bot
 
-A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featuring comprehensive business context management, advanced monitoring, and enterprise-grade security.
+A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featuring configurable assistant behavior via Mistral Agent instructions, advanced monitoring, and enterprise-grade security.
 
 **Important Note**: All configurations provided are examples only. You must configure your own API endpoints, models, business information, and other settings before deployment.
 
@@ -9,7 +9,7 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 ### Core AI Integration
 
 - **Natural Conversations**: Direct integration with a Mistral Agent (Agent ID)
-- **Business Context System**: Fully customizable AI persona with comprehensive business knowledge
+- **Agent Instructions**: Configure AI persona, policies and domain knowledge in the Mistral Agent instructions
 - **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
 - **Context Management**: Intelligent conversation context with configurable message limits
@@ -471,10 +471,10 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ### Features for Different Users
 
-- **Business Owners**: Complete business context integration with no coding required
+- **Business Owners**: Configure assistant behavior in Mistral Agent instructions with no code changes
 - **Developers**: Comprehensive API integration with monitoring and analytics
 - **System Administrators**: Advanced monitoring, performance optimization, and security controls
-- **Non-Technical Users**: Simple JSON configuration for complete customization
+- **Non-Technical Users**: Configure assistant behavior in the Mistral Agent instructions
 - **Enterprise Users**: Production-ready features with security and compliance
 
 ### Technical Capabilities
