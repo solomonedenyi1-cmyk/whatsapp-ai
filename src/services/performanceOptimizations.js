@@ -275,40 +275,6 @@ class PerformanceOptimizations extends EventEmitter {
   }
 
   /**
-   * Check if should use batch processing
-   * @param {string} chatId - Chat identifier
-   * @returns {boolean} - Should batch
-   */
-  shouldBatch(chatId) {
-    const queue = this.optimizations.messageQueue.get(chatId) || [];
-    return queue.length >= this.config.batchSize;
-  }
-
-  /**
-   * Process messages in batch
-   * @param {string} chatId - Chat identifier
-   * @param {string} message - Current message
-   * @param {Function} processor - Processing function
-   * @returns {Promise<any>} - Processing result
-   */
-  async processBatch(chatId, message, processor) {
-    const queue = this.optimizations.messageQueue.get(chatId) || [];
-    queue.push({ message, timestamp: Date.now() });
-
-    // Process batch
-    const batch = queue.splice(0, this.config.batchSize);
-    const messages = batch.map(item => item.message);
-
-    // Process all messages together (if processor supports it)
-    if (processor.processBatch) {
-      return await processor.processBatch(messages);
-    }
-
-    // Fallback to individual processing
-    return await processor(message);
-  }
-
-  /**
    * Optimize memory for processing
    */
   optimizeMemoryForProcessing() {
