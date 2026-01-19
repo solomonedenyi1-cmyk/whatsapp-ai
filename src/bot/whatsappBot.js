@@ -479,17 +479,20 @@ class WhatsAppBot {
     const performanceStats = this.performanceOptimizer.getPerformanceStats();
     const errorStats = this.errorHandler.getErrorStats();
     const monitoringDashboard = await this.monitoringService.getMonitoringDashboard();
+    const responseTime = ((Date.now() - this.startTime) / 1000).toFixed(2);
 
     return {
-      isReady: this.isReady,
-      uptime: Math.round((Date.now() - this.startTime) / 1000),
-      conversations: conversationStats,
-      performance: performanceStats,
-      errors: errorStats,
+      status: 'healthy',
+      responseTime: `${responseTime}s`,
+      timestamp: new Date().toISOString(),
+      services: {
+        whatsapp: this.client ? 'connected' : 'disconnected',
+        mistral: await this.mistralAgentService.checkApiStatus() ? 'connected' : 'disconnected',
+        persistence: this.conversationService ? 'active' : 'inactive'
+      },
       monitoring: monitoringDashboard,
       config: {
         agentId: config.mistral.agentId,
-        includeLocalSystemPrompt: config.mistral.includeLocalSystemPrompt,
         maxContext: config.bot.maxContextMessages
       }
     };

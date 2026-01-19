@@ -6,6 +6,7 @@
  */
 
 const EventEmitter = require('events');
+const config = require('../config/config');
 
 class PerformanceOptimizer extends EventEmitter {
   constructor() {
@@ -308,7 +309,9 @@ class PerformanceOptimizer extends EventEmitter {
         global.gc();
       }
 
-      console.log('🧹 Performance cleanup completed');
+      if (config.env?.debug) {
+        console.log('🧹 Performance cleanup completed');
+      }
     } catch (error) {
       console.error('❌ Error during performance cleanup:', error);
     }

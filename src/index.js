@@ -44,7 +44,7 @@ class Application {
 
       console.log('✅ Application started successfully!');
       console.log('📱 Waiting for WhatsApp QR code scan...');
-      console.log('💡 Tip: Edit src/config/context.js to customize your AI assistant!');
+      console.log('💡 Tip: Update the Mistral Agent instructions to customize your assistant behavior.');
 
     } catch (error) {
       console.error('❌ Failed to start application:', redactError(error));
