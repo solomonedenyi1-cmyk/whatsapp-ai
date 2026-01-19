@@ -194,7 +194,7 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral Agents.
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025
-*Version:* 1.1.0 (Phase 1 + Context System)
+*Version:* 1.1.0
 
 For more information, use /help`;
   }
@@ -583,7 +583,9 @@ ${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}`;
           return `💾 *SQLite Service Status*
 
 🔧 *Implementation:*
-SQLite is the default persistence backend for this bot.
+SQLite is the persistence backend for this bot.
+
+Database file: ./data/whatsapp-ai.sqlite
 
 📊 *Features:*
 • Optimized database schema
@@ -592,46 +594,33 @@ SQLite is the default persistence backend for this bot.
 • Analytics and reporting
 
 ⚡ *Performance Benefits:*
-• Faster read/write operations
-• Better concurrent access
-• Reduced memory usage
-• Automatic indexing
+• Durable local storage
+• Better concurrent access via WAL
+• Automatic indexing for common queries
 • ACID compliance
 
 🚀 *Migration:*
-JSON persistence has been removed. No migration is required.`;
+SQLite is already enabled by default. No migration flow is required.`;
 
         case 'migrate':
           return `🔄 *SQLite Migration*
 
 SQLite is already enabled by default.
 
-Legacy JSON persistence has been removed, so there is no migration flow to run.`;
+There is no migration flow to run.`;
 
         case 'performance':
-          return `⚡ *SQLite vs JSON Performance*
+          return `⚡ *SQLite Performance Notes*
 
-📊 *Comparison Results:*
+SQLite is the recommended persistence backend for this bot.
 
-**Read Operations:**
-• SQLite: ~2-5ms average
-• JSON: ~10-50ms average
-• Improvement: 80-90% faster
+✅ *Why SQLite:*
+• Avoids loading an entire JSON file into memory
+• Better concurrent access via WAL
+• Indexes and queryable storage for analytics
 
-**Write Operations:**
-• SQLite: ~1-3ms average  
-• JSON: ~5-20ms average
-• Improvement: 70-85% faster
-
-**Memory Usage:**
-• SQLite: 60-80% less memory
-• JSON: Full file loaded in memory
-• Improvement: Significant reduction
-
-**Concurrent Access:**
-• SQLite: Full support with locking
-• JSON: Limited, risk of corruption
-• Improvement: Production-ready`;
+ℹ *Note:*
+Exact performance depends on hardware, disk, and workload.`;
 
         default:
           return `❓ Unknown SQLite subcommand: ${subCommand}\n\n` +
