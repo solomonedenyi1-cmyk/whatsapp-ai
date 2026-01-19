@@ -5,7 +5,60 @@
     "tagFormat": "v${version}",
     "plugins": [
         "@semantic-release/commit-analyzer",
-        "@semantic-release/release-notes-generator",
+        [
+            "@semantic-release/release-notes-generator",
+            {
+                "preset": "angular",
+                "presetConfig": {
+                    "types": [
+                        {
+                            "type": "feat",
+                            "section": "Features"
+                        },
+                        {
+                            "type": "fix",
+                            "section": "Bug Fixes"
+                        },
+                        {
+                            "type": "perf",
+                            "section": "Performance Improvements"
+                        },
+                        {
+                            "type": "refactor",
+                            "section": "Refactoring"
+                        },
+                        {
+                            "type": "docs",
+                            "section": "Documentation"
+                        },
+                        {
+                            "type": "test",
+                            "section": "Tests"
+                        },
+                        {
+                            "type": "ci",
+                            "section": "Continuous Integration"
+                        },
+                        {
+                            "type": "build",
+                            "section": "Build System"
+                        },
+                        {
+                            "type": "chore",
+                            "section": "Chores"
+                        },
+                        {
+                            "type": "style",
+                            "section": "Styles"
+                        },
+                        {
+                            "type": "revert",
+                            "section": "Reverts"
+                        }
+                    ]
+                }
+            }
+        ],
         [
             "@semantic-release/github",
             {
