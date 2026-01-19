@@ -216,7 +216,7 @@ class ErrorHandler {
         case 'persistence':
           if (errorInfo.message.includes('ENOENT')) {
             await this.recoverPersistenceFiles();
-            return 'recreated_missing_files';
+            return 'ensured_storage_dir';
           }
           break;
 
@@ -246,21 +246,6 @@ class ErrorHandler {
   async recoverPersistenceFiles() {
     const dataDir = path.join(__dirname, '../../data');
     await fs.mkdir(dataDir, { recursive: true });
-
-    const files = [
-      'conversations.json',
-      'analytics.json',
-      'user_preferences.json'
-    ];
-
-    for (const file of files) {
-      const filePath = path.join(dataDir, file);
-      try {
-        await fs.access(filePath);
-      } catch (error) {
-        await fs.writeFile(filePath, '{}');
-      }
-    }
   }
 
   /**
@@ -456,6 +441,17 @@ class ErrorHandler {
         performance: stats.performanceMetrics
       }
     };
+  }
+
+  /**
+   * Shutdown error handler
+   */
+  async shutdown() {
+    try {
+      await this.logSystem('INFO', 'Error handler shutting down');
+    } catch (error) {
+      console.error('❌ Error during error handler shutdown:', error.message);
+    }
   }
 }
 
