@@ -28,7 +28,7 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 - **Advanced Analytics**: Comprehensive usage analytics, command tracking, and user engagement reports
 - **Performance Optimization**: Intelligent caching, memory management, and response time optimization
 - **Timeout Management**: Smart timeout handling with user notifications for long-running requests
-- **SQLite Integration**: High-performance database option with 80-90% faster operations than JSON storage
+- **SQLite Integration**: High-performance database option for durable conversation storage
 - **Resource Management**: Automatic cleanup, garbage collection, and memory optimization
 
 ### Production Features
