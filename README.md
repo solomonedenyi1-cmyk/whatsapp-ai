@@ -76,8 +76,6 @@ Edit `.env` file with your configuration:
 # Mistral Agents Configuration (REQUIRED)
 MISTRAL_API_KEY=your_mistral_api_key
 MISTRAL_AGENT_ID=ag_your_agent_id
-# Set to true only if you want to prepend src/config/context.js system prompt to every request
-MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT=false
 
 # Bot Configuration
 BOT_NAME=Your Bot Name
@@ -160,7 +158,6 @@ pnpm start
 #### Context Management
 
 - `/context` - View current AI configuration and business context
-- `/reload` - Reload AI context from config.json without restarting
 
 #### Analytics & Reporting
 
@@ -195,7 +192,6 @@ The bot features a comprehensive business context system for creating profession
 #### Configuration Management
 
 - **Edit `config.json`** in the root directory to customize all aspects
-- **Use `/reload`** command to apply changes without restarting the bot
 - **Use `/context`** to verify current configuration and settings
 - **No coding required** - all configuration is done through JSON
 
@@ -256,7 +252,6 @@ AI: 📊 Bot Status
 | ---------- | ------------- | ------- | -------- |
 | `MISTRAL_API_KEY` | Mistral API key | None | Yes |
 | `MISTRAL_AGENT_ID` | Mistral Agent ID (format: ag_...) | None | Yes |
-| `MISTRAL_INCLUDE_LOCAL_SYSTEM_PROMPT` | Prepend local system prompt to every request | `false` | No |
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
@@ -343,42 +338,6 @@ The `config.json` file supports comprehensive business configuration:
     "bio": "Brief professional biography",
     "experience": "10+ years in the industry",
     "specialties": ["Specialty 1", "Specialty 2"]
-  }
-}
-```
-
-#### Advanced System Prompt Customization
-
-The `system_prompt` section provides complete control over AI behavior:
-
-```json
-{
-  "system_prompt": {
-    "instructions": [
-      "Always be helpful, professional, and knowledgeable about the business",
-      "Provide accurate information about services, products, and policies",
-      "If you don't know something, admit it and offer to connect them with a human",
-      "Be proactive in offering relevant services based on customer needs"
-    ],
-    "sections": {
-      "identity_header": "IDENTITY & PERSONALITY:",
-      "business_header": "BUSINESS INFORMATION:",
-      "services_header": "SERVICES OFFERED:",
-      "products_header": "PRODUCTS AVAILABLE:",
-      "faq_header": "FREQUENTLY ASKED QUESTIONS:",
-      "owner_header": "OWNER INFORMATION:",
-      "capabilities_header": "YOUR CAPABILITIES:",
-      "limitations_header": "IMPORTANT LIMITATIONS:",
-      "instructions_header": "INSTRUCTIONS:",
-      "responses_header": "STANDARD RESPONSES:",
-      "closing_message": "Remember: You represent {business_name} and {owner_name}!"
-    },
-    "pronouns": {
-      "female": { "subject": "she", "object": "her", "possessive": "her" },
-      "male": { "subject": "he", "object": "him", "possessive": "his" },
-      "non-binary": { "subject": "they", "object": "them", "possessive": "their" },
-      "neutral": { "subject": "they", "object": "them", "possessive": "their" }
-    }
   }
 }
 ```
@@ -499,10 +458,9 @@ GitHub Actions runs on every Pull Request and on pushes to `main`:
 ### Development Workflow
 
 1. **Configuration Changes**: Edit `config.json` for business context modifications
-2. **Apply Changes**: Use `/reload` command to apply changes without restarting
-3. **Verify Configuration**: Use `/context` command to check current settings
-4. **Monitor System**: Use `/health` and `/monitor` commands for system status
-5. **Debug Issues**: Enable `DEBUG=true` in `.env` for detailed logging
+2. **Verify Configuration**: Use `/context` command to check current settings
+3. **Monitor System**: Use `/health` and `/monitor` commands for system status
+4. **Debug Issues**: Enable `DEBUG=true` in `.env` for detailed logging
 
 ### Development Tips
 
@@ -587,7 +545,6 @@ NODE_ENV=development
 ##### AI responses seem generic
 
 - Edit `config.json` with your business information
-- Use `/reload` command to apply changes
 - Verify configuration with `/context` command
 - Check JSON syntax with online validator
 
