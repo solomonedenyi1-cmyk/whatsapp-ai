@@ -15,6 +15,12 @@ services:
       MISTRAL_AUDIO_TRANSCRIPTION_MODEL: "voxtral-mini-latest"
       MISTRAL_AUDIO_TRANSCRIPTION_LANGUAGE: ""
 
+      TTS_ENABLED: "false"
+      TTS_VOICE: "pt-BR-FranciscaNeural"
+      TTS_OUTPUT_FORMAT: "ogg-24khz-16bit-mono-opus"
+      TTS_MIME_TYPE: "audio/ogg; codecs=opus"
+      TTS_MAX_CHARS: "900"
+
       CAL_API_KEY: your_cal_api_key
       CAL_EVENT_TYPE_ID: "your_event_type_id"
       CAL_API_URL: "https://api.cal.com"

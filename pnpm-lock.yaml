@@ -20,6 +20,9 @@ importers:
       luxon:
         specifier: ^3.7.2
         version: 3.7.2
+      node-edge-tts:
+        specifier: ^1.2.8
+        version: 1.2.8
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
@@ -1254,6 +1257,10 @@ packages:
   node-abi@3.86.0:
     resolution: {integrity: sha512-sn9Et4N3ynsetj3spsZR729DVlGH6iBG4RiDMV7HEp3guyOW6W3S0unGpLDxT50mXortGUMax/ykUNQXdqc/Xg==}
     engines: {node: '>=10'}
+
+  node-edge-tts@1.2.8:
+    resolution: {integrity: sha512-Yj290EUQJeO/n/LVoaFF1cxULB+1sROLm6w84o8zkwK7cdYqsMhxmhpac/d88AdbrjHjR+2zxEijvhNTtluGxQ==}
+    hasBin: true
 
   node-emoji@2.2.0:
     resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
@@ -3311,6 +3318,16 @@ snapshots:
   node-abi@3.86.0:
     dependencies:
       semver: 7.7.3
+
+  node-edge-tts@1.2.8:
+    dependencies:
+      https-proxy-agent: 7.0.6
+      ws: 8.19.0
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
 
   node-emoji@2.2.0:
     dependencies:
