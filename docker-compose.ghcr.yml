@@ -11,6 +11,10 @@ services:
       MISTRAL_CONVERSATION_STORE: "true"
       MISTRAL_CONVERSATION_HANDOFF_EXECUTION: "server"
 
+      MISTRAL_AUDIO_TRANSCRIPTION_ENABLED: "true"
+      MISTRAL_AUDIO_TRANSCRIPTION_MODEL: "voxtral-mini-latest"
+      MISTRAL_AUDIO_TRANSCRIPTION_LANGUAGE: ""
+
       CAL_API_KEY: your_cal_api_key
       CAL_EVENT_TYPE_ID: "your_event_type_id"
       CAL_API_URL: "https://api.cal.com"
