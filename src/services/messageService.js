@@ -21,18 +21,27 @@ class MessageService {
       return true;
     }
 
-    // Ignore non-text messages
-    if (message.type !== 'chat') {
+    const type = message?.type;
+
+    // Only process chat and audio-like messages
+    if (type !== 'chat' && type !== 'ptt' && type !== 'audio') {
       return true;
     }
 
-    // Ignore empty messages
-    if (!message.body || message.body.trim() === '') {
-      return true;
+    // Chat message validation
+    if (type === 'chat') {
+      if (!message.body || message.body.trim() === '') {
+        return true;
+      }
+
+      // Ignore emoji-only messages
+      if (this.isEmojiOnly(message.body)) {
+        return true;
+      }
     }
 
-    // Ignore emoji-only messages
-    if (this.isEmojiOnly(message.body)) {
+    // Audio message validation
+    if ((type === 'ptt' || type === 'audio') && !message.hasMedia) {
       return true;
     }
 

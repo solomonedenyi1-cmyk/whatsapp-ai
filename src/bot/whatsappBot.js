@@ -15,6 +15,7 @@ const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
 const { createToolDispatcher } = require('../services/agentTools');
+const MistralAudioService = require('../services/mistralAudioService');
 const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
 const { resolveStableChatId } = require('./chatIdResolver');
 const { generateRequestId } = require('../utils/requestContext');
@@ -37,6 +38,7 @@ class WhatsAppBot {
     this.mistralConversationService = new MistralConversationService({
       persistenceService: this.conversationService.persistenceService,
     });
+    this.mistralAudioService = new MistralAudioService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
       this.mistralAgentService,
@@ -218,7 +220,7 @@ class WhatsAppBot {
       }
 
       const chatId = message.from;
-      const messageText = this.messageService.cleanMessage(message.body);
+      const messageText = this.messageService.cleanMessage(message.body || '');
 
       const chat = await message.getChat();
 
@@ -247,7 +249,7 @@ class WhatsAppBot {
       let response;
 
       // Check if it's a command
-      if (this.messageService.isCommand(messageText)) {
+      if (message.type === 'chat' && this.messageService.isCommand(messageText)) {
         const { command, args } = this.messageService.parseCommand(messageText);
 
         // Check admin access for commands
@@ -259,11 +261,51 @@ class WhatsAppBot {
         }
       } else {
         // Regular message - send to AI with timeout handling and performance optimizations
-        response = await this.performanceOptimizations.optimizeMessageProcessing(
-          contextChatId,
-          messageText,
-          (msg) => this.processAIMessageWithTimeout(msg, chatId, chat, contextChatId)
-        );
+        let inputText = messageText;
+
+        if (message.type === 'ptt' || message.type === 'audio') {
+          try {
+            const media = await message.downloadMedia();
+            const mimeType = media?.mimetype;
+            const data = media?.data;
+
+            if (!mimeType || typeof data !== 'string' || data.trim().length === 0) {
+              throw new Error('Unable to download audio media');
+            }
+
+            const buffer = Buffer.from(data, 'base64');
+
+            const transcription = await this.mistralAudioService.transcribeAudio({
+              buffer,
+              mimeType,
+              fileName: media?.filename,
+              model: 'voxtral-mini-latest',
+              language: 'pt',
+            });
+
+            const transcribedText = transcription?.text;
+            if (typeof transcribedText !== 'string' || transcribedText.trim().length === 0) {
+              throw new Error('Empty transcription');
+            }
+
+            inputText = transcribedText.trim();
+
+            if (config.env.debug) {
+              console.log(`[${requestId}] 🎙️ Transcribed audio: ${inputText.substring(0, 120)}...`);
+            }
+          } catch (error) {
+            console.error('❌ Error transcribing audio message:', error?.message || error);
+            response = 'Desculpe, não consegui transcrever o áudio. Pode tentar novamente ou enviar em texto?';
+          }
+        }
+
+        if (typeof response !== 'string') {
+          response = await this.performanceOptimizations.optimizeMessageProcessing(
+            contextChatId,
+            inputText,
+            (msg) => this.processAIMessageWithTimeout(msg, chatId, chat, contextChatId)
+          );
+        }
       }
 
       // Send response
