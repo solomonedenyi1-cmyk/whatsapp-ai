@@ -25,6 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "@mistralai/mistralai": "^1.11.0",
+    "better-sqlite3": "^12.6.2",
     "dotenv": "^17.2.3",
     "luxon": "^3.7.2",
     "qrcode-terminal": "^0.12.0",
@@ -69,7 +70,12 @@
       "@semantic-release/release-notes-generator"
     ]
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

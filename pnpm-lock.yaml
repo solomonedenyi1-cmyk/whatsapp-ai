@@ -11,6 +11,9 @@ importers:
       '@mistralai/mistralai':
         specifier: ^1.11.0
         version: 1.11.0
+      better-sqlite3:
+        specifier: ^12.6.2
+        version: 12.6.2
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -457,6 +460,10 @@ packages:
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
 
+  better-sqlite3@12.6.2:
+    resolution: {integrity: sha512-8VYKM3MjCa9WcaSAI3hzwhmyHVlH8tiGFwf0RlTsZPWJ1I5MkzjiudCo4KC4DxOaL/53A5B1sI/IbldNFDbsKA==}
+    engines: {node: 20.x || 22.x || 23.x || 24.x || 25.x}
+
   big-integer@1.6.52:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
     engines: {node: '>=0.6'}
@@ -467,6 +474,9 @@ packages:
 
   binary@0.3.0:
     resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
+
+  bindings@1.5.0:
+    resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -527,6 +537,9 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
+
+  chownr@1.1.4:
+    resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
 
   chromium-bidi@12.0.1:
     resolution: {integrity: sha512-fGg+6jr0xjQhzpy5N4ErZxQ4wF7KLEvhGZXD6EgvZKDhu7iOhZXnZhcDxPJDcwTcrD48NPzOCo84RP2lv3Z+Cg==}
@@ -647,6 +660,10 @@ packages:
       supports-color:
         optional: true
 
+  decompress-response@6.0.0:
+    resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
+    engines: {node: '>=10'}
+
   deep-extend@0.6.0:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
     engines: {node: '>=4.0.0'}
@@ -654,6 +671,10 @@ packages:
   degenerator@5.0.1:
     resolution: {integrity: sha512-TllpMR/t0M5sqCXfj85i4XaAzxmS5tVA16dqvdkMwGmzI+dXLXnw3J+3Vdv7VKw+ThlTMboK6i9rnZ6Nntj5CQ==}
     engines: {node: '>= 14'}
+
+  detect-libc@2.1.2:
+    resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
+    engines: {node: '>=8'}
 
   devtools-protocol@0.0.1534754:
     resolution: {integrity: sha512-26T91cV5dbOYnXdJi5qQHoTtUoNEqwkHcAyu/IKtjIAxiEqPMrDiRkDOPWVsGfNZGmlQVHQbZRSjD8sxagWVsQ==}
@@ -744,6 +765,10 @@ packages:
     resolution: {integrity: sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==}
     engines: {node: ^18.19.0 || >=20.5.0}
 
+  expand-template@2.0.3:
+    resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
+    engines: {node: '>=6'}
+
   extract-zip@2.0.1:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
     engines: {node: '>= 10.17.0'}
@@ -787,6 +812,9 @@ packages:
   figures@6.1.0:
     resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
     engines: {node: '>=18'}
+
+  file-uri-to-path@1.0.0:
+    resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -879,6 +907,9 @@ packages:
 
   git-log-parser@1.2.1:
     resolution: {integrity: sha512-PI+sPDvHXNPl5WNOErAK05s3j0lgwUzMN6o8cyQrDaKfT3qd7TmNJKeXX+SknI5I0QhG5fVPAEwSY4tRGDtYoQ==}
+
+  github-from-package@0.0.0:
+    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -1177,6 +1208,10 @@ packages:
     resolution: {integrity: sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw==}
     engines: {node: '>=12'}
 
+  mimic-response@3.1.0:
+    resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
+    engines: {node: '>=10'}
+
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
 
@@ -1190,6 +1225,9 @@ packages:
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
 
+  mkdirp-classic@0.5.3:
+    resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
+
   mkdirp@0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
@@ -1200,6 +1238,9 @@ packages:
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
+  napi-build-utils@2.0.0:
+    resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
+
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
@@ -1209,6 +1250,10 @@ packages:
   netmask@2.0.2:
     resolution: {integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==}
     engines: {node: '>= 0.4.0'}
+
+  node-abi@3.86.0:
+    resolution: {integrity: sha512-sn9Et4N3ynsetj3spsZR729DVlGH6iBG4RiDMV7HEp3guyOW6W3S0unGpLDxT50mXortGUMax/ykUNQXdqc/Xg==}
+    engines: {node: '>=10'}
 
   node-emoji@2.2.0:
     resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
@@ -1460,6 +1505,11 @@ packages:
     resolution: {integrity: sha512-C+VUP+8jis7EsQZIhDYmS5qlNtjv2yP4SNtjXK9AP1ZcTRlnSfuumaTnRfYZnYgUUYVIKqL0fRvmUGDV2fmp6g==}
     engines: {node: '>=4'}
 
+  prebuild-install@7.1.3:
+    resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   pretty-ms@9.3.0:
     resolution: {integrity: sha512-gjVS5hOP+M3wMm5nmNOucbIrqudzs9v/57bWRHQWLYklXqoXKrVfYW2W9+glfGsqtPgpiz5WwyEEB+ksXIx3gQ==}
     engines: {node: '>=18'}
@@ -1621,6 +1671,12 @@ packages:
     resolution: {integrity: sha512-iuh+gPf28RkltuJC7W5MRi6XAjTDCAPC/prJUpQoG4vIP3MJZ+GTydVnodXA7pwvTKb2cA0m9OFZW/cdWy/I/w==}
     engines: {node: '>=6'}
 
+  simple-concat@1.0.1:
+    resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
+
+  simple-get@4.0.1:
+    resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
+
   simple-update-notifier@2.0.0:
     resolution: {integrity: sha512-a2B9Y0KlNXl9u/vsW6sTIu9vGEpfKu2wRV6l1H3XEas/0gUIzGzBoP/IouTcUQbm9JWZLH3COxyn03TYlFax6w==}
     engines: {node: '>=10'}
@@ -1741,6 +1797,9 @@ packages:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
 
+  tar-fs@2.1.4:
+    resolution: {integrity: sha512-mDAjwmZdh7LTT6pNleZ05Yt65HC3E+NiQzl672vQG38jIrehtJk/J3mNwIg+vShQPcLF/LV7CMnDW6vjj6sfYQ==}
+
   tar-fs@3.1.1:
     resolution: {integrity: sha512-LZA0oaPOc2fVo82Txf3gw+AkEd38szODlptMYejQUhndHMLQ9M059uXR+AfS7DNo0NpINvSqDsvyaCrBVkptWg==}
 
@@ -1800,6 +1859,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tunnel-agent@0.6.0:
+    resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
 
   tunnel@0.0.6:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
@@ -2445,12 +2507,16 @@ snapshots:
       bare-path: 3.0.0
     optional: true
 
-  base64-js@1.5.1:
-    optional: true
+  base64-js@1.5.1: {}
 
   basic-ftp@5.1.0: {}
 
   before-after-hook@4.0.0: {}
+
+  better-sqlite3@12.6.2:
+    dependencies:
+      bindings: 1.5.0
+      prebuild-install: 7.1.3
 
   big-integer@1.6.52:
     optional: true
@@ -2463,12 +2529,15 @@ snapshots:
       chainsaw: 0.1.0
     optional: true
 
+  bindings@1.5.0:
+    dependencies:
+      file-uri-to-path: 1.0.0
+
   bl@4.1.0:
     dependencies:
       buffer: 5.7.1
       inherits: 2.0.4
       readable-stream: 3.6.2
-    optional: true
 
   bluebird@3.4.7:
     optional: true
@@ -2498,7 +2567,6 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
-    optional: true
 
   buffers@0.1.1:
     optional: true
@@ -2536,6 +2604,8 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  chownr@1.1.4: {}
 
   chromium-bidi@12.0.1(devtools-protocol@0.0.1534754):
     dependencies:
@@ -2669,6 +2739,10 @@ snapshots:
     optionalDependencies:
       supports-color: 5.5.0
 
+  decompress-response@6.0.0:
+    dependencies:
+      mimic-response: 3.1.0
+
   deep-extend@0.6.0: {}
 
   degenerator@5.0.1:
@@ -2676,6 +2750,8 @@ snapshots:
       ast-types: 0.13.4
       escodegen: 2.1.0
       esprima: 4.0.1
+
+  detect-libc@2.1.2: {}
 
   devtools-protocol@0.0.1534754: {}
 
@@ -2774,6 +2850,8 @@ snapshots:
       strip-final-newline: 4.0.0
       yoctocolors: 2.1.2
 
+  expand-template@2.0.3: {}
+
   extract-zip@2.0.1:
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
@@ -2822,6 +2900,8 @@ snapshots:
     dependencies:
       is-unicode-supported: 2.1.0
 
+  file-uri-to-path@1.0.0: {}
+
   fill-range@7.1.1:
     dependencies:
       to-regex-range: 5.0.1
@@ -2851,8 +2931,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 2.3.8
 
-  fs-constants@1.0.0:
-    optional: true
+  fs-constants@1.0.0: {}
 
   fs-extra@10.1.0:
     dependencies:
@@ -2918,6 +2997,8 @@ snapshots:
       stream-combiner2: 1.1.1
       through2: 2.0.5
       traverse: 0.6.8
+
+  github-from-package@0.0.0: {}
 
   glob-parent@5.1.2:
     dependencies:
@@ -2985,8 +3066,7 @@ snapshots:
       safer-buffer: 2.1.2
     optional: true
 
-  ieee754@1.2.1:
-    optional: true
+  ieee754@1.2.1: {}
 
   ignore-by-default@1.0.1: {}
 
@@ -3190,6 +3270,8 @@ snapshots:
 
   mimic-fn@4.0.0: {}
 
+  mimic-response@3.1.0: {}
+
   minimatch@3.1.2:
     dependencies:
       brace-expansion: 1.1.12
@@ -3202,6 +3284,8 @@ snapshots:
   minimist@1.2.8: {}
 
   mitt@3.0.1: {}
+
+  mkdirp-classic@0.5.3: {}
 
   mkdirp@0.5.6:
     dependencies:
@@ -3216,11 +3300,17 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
+  napi-build-utils@2.0.0: {}
+
   neo-async@2.6.2: {}
 
   nerf-dart@1.0.0: {}
 
   netmask@2.0.2: {}
+
+  node-abi@3.86.0:
+    dependencies:
+      semver: 7.7.3
 
   node-emoji@2.2.0:
     dependencies:
@@ -3414,6 +3504,21 @@ snapshots:
       find-up: 2.1.0
       load-json-file: 4.0.0
 
+  prebuild-install@7.1.3:
+    dependencies:
+      detect-libc: 2.1.2
+      expand-template: 2.0.3
+      github-from-package: 0.0.0
+      minimist: 1.2.8
+      mkdirp-classic: 0.5.3
+      napi-build-utils: 2.0.0
+      node-abi: 3.86.0
+      pump: 3.0.3
+      rc: 1.2.8
+      simple-get: 4.0.1
+      tar-fs: 2.1.4
+      tunnel-agent: 0.6.0
+
   pretty-ms@9.3.0:
     dependencies:
       parse-ms: 4.0.0
@@ -3534,7 +3639,6 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-    optional: true
 
   readdir-glob@1.1.3:
     dependencies:
@@ -3572,8 +3676,7 @@ snapshots:
 
   safe-buffer@5.1.2: {}
 
-  safe-buffer@5.2.1:
-    optional: true
+  safe-buffer@5.2.1: {}
 
   safer-buffer@2.1.2:
     optional: true
@@ -3637,6 +3740,14 @@ snapshots:
       chalk: 2.4.2
       figures: 2.0.0
       pkg-conf: 2.1.0
+
+  simple-concat@1.0.1: {}
+
+  simple-get@4.0.1:
+    dependencies:
+      decompress-response: 6.0.0
+      once: 1.4.0
+      simple-concat: 1.0.1
 
   simple-update-notifier@2.0.0:
     dependencies:
@@ -3723,7 +3834,6 @@ snapshots:
   string_decoder@1.3.0:
     dependencies:
       safe-buffer: 5.2.1
-    optional: true
 
   strip-ansi@6.0.1:
     dependencies:
@@ -3769,6 +3879,13 @@ snapshots:
 
   tagged-tag@1.0.0: {}
 
+  tar-fs@2.1.4:
+    dependencies:
+      chownr: 1.1.4
+      mkdirp-classic: 0.5.3
+      pump: 3.0.3
+      tar-stream: 2.2.0
+
   tar-fs@3.1.1:
     dependencies:
       pump: 3.0.3
@@ -3788,7 +3905,6 @@ snapshots:
       fs-constants: 1.0.0
       inherits: 2.0.4
       readable-stream: 3.6.2
-    optional: true
 
   tar-stream@3.1.7:
     dependencies:
@@ -3850,6 +3966,10 @@ snapshots:
   traverse@0.6.8: {}
 
   tslib@2.8.1: {}
+
+  tunnel-agent@0.6.0:
+    dependencies:
+      safe-buffer: 5.2.1
 
   tunnel@0.0.6: {}
 
