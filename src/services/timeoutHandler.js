@@ -180,64 +180,6 @@ class TimeoutHandler extends EventEmitter {
   }
 
   /**
-   * Get timeout statistics
-   */
-  getTimeoutStats() {
-    const activeCount = this.activeRequests.size;
-    const stats = {
-      activeRequests: activeCount,
-      totalWarnings: 0,
-      totalTimeouts: 0,
-      averageResponseTime: 0
-    };
-
-    // Count warnings and timeouts in active requests
-    for (const request of this.activeRequests.values()) {
-      if (request.warningMessageSent) stats.totalWarnings++;
-      if (request.timeoutMessageSent) stats.totalTimeouts++;
-    }
-
-    return stats;
-  }
-
-  /**
-   * Update timeout configuration
-   */
-  updateConfig(newConfig) {
-    this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Timeout configuration updated:', this.config);
-  }
-
-  /**
-   * Add custom timeout message
-   */
-  addTimeoutMessage(message) {
-    this.timeoutMessages.push(message);
-    console.log('💬 Custom timeout message added');
-  }
-
-  /**
-   * Get active requests info
-   */
-  getActiveRequests() {
-    const requests = [];
-    const now = Date.now();
-
-    for (const [requestId, request] of this.activeRequests.entries()) {
-      requests.push({
-        requestId,
-        chatId: request.chatId,
-        elapsed: now - request.startTime,
-        messagePreview: request.messageText,
-        warningMessageSent: request.warningMessageSent,
-        timeoutMessageSent: request.timeoutMessageSent
-      });
-    }
-
-    return requests.sort((a, b) => b.elapsed - a.elapsed); // Sort by elapsed time desc
-  }
-
-  /**
    * Force complete a request (for emergency cleanup)
    */
   forceCompleteRequest(requestId, reason = 'forced') {
