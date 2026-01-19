@@ -65,7 +65,6 @@ const config = {
     mimeType: process.env.TTS_MIME_TYPE?.trim() || 'audio/ogg; codecs=opus',
     maxChars: Number.parseInt(process.env.TTS_MAX_CHARS, 10) || 900,
     google: {
-      apiKey: process.env.GOOGLE_TTS_API_KEY?.trim() || null,
       languageCode: process.env.GOOGLE_TTS_LANGUAGE_CODE?.trim() || 'pt-BR',
       voiceName: process.env.GOOGLE_TTS_VOICE_NAME?.trim() || 'pt-BR-Standard-A',
       speakingRate: Number.parseFloat(process.env.GOOGLE_TTS_SPEAKING_RATE) || 1.0,

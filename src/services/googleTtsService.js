@@ -5,59 +5,6 @@ class GoogleTtsService {
         this.client = client || null;
     }
 
-    async synthesizeViaRest(text, {
-        apiKey,
-        languageCode,
-        voiceName,
-        speakingRate,
-        pitch,
-    }) {
-        const url = new URL('https://texttospeech.googleapis.com/v1/text:synthesize');
-        url.searchParams.set('key', apiKey);
-
-        const requestBody = {
-            input: { text },
-            voice: {
-                languageCode,
-                name: voiceName,
-            },
-            audioConfig: {
-                audioEncoding: 'OGG_OPUS',
-                speakingRate,
-                pitch,
-            },
-        };
-
-        const res = await fetch(url.toString(), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!res.ok) {
-            const bodyText = await res.text().catch(() => '');
-            throw new Error(`Google TTS REST request failed (${res.status}): ${bodyText || res.statusText}`);
-        }
-
-        const payload = await res.json();
-        const audioContent = payload?.audioContent;
-        if (typeof audioContent !== 'string' || audioContent.trim().length === 0) {
-            throw new Error('Empty TTS audio content');
-        }
-
-        const buffer = Buffer.from(audioContent, 'base64');
-        if (buffer.length === 0) {
-            throw new Error('Empty TTS audio buffer');
-        }
-
-        return {
-            buffer,
-            mimeType: config.tts.mimeType,
-        };
-    }
-
     async getClient() {
         if (this.client) {
             return this.client;
@@ -106,17 +53,6 @@ class GoogleTtsService {
         const selectedMaxChars = Number.isFinite(maxChars) ? maxChars : config.tts.maxChars;
 
         this.validateText(text, selectedMaxChars);
-
-        const apiKey = config.tts.google.apiKey;
-        if (typeof apiKey === 'string' && apiKey.trim().length > 0) {
-            return this.synthesizeViaRest(text, {
-                apiKey: apiKey.trim(),
-                languageCode: selectedLanguageCode,
-                voiceName: selectedVoiceName,
-                speakingRate: selectedSpeakingRate,
-                pitch: selectedPitch,
-            });
-        }
 
         const client = await this.getClient();
 
