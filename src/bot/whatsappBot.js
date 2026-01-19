@@ -335,7 +335,7 @@ class WhatsAppBot {
 
       let aiResponse;
       if (config.mistral.useConversations) {
-        const allowedTools = new Set();
+        const allowedTools = new Set(['obter_data_hora_atual']);
         if (enableBookingTool) {
           allowedTools.add('interpretar_data_hora');
           allowedTools.add('criar_agendamento');
@@ -345,17 +345,35 @@ class WhatsAppBot {
         }
 
         const dispatcher = createToolDispatcher({ allowedTools });
-        aiResponse = await this.mistralConversationService.sendMessage(
-          contextChatId,
-          messageText,
-          {
-            tools,
-            dispatcher,
-            warningCallback,
+        try {
+          aiResponse = await this.mistralConversationService.sendMessage(
+            contextChatId,
+            messageText,
+            {
+              tools,
+              dispatcher,
+              warningCallback,
+            }
+          );
+        } catch (error) {
+          if (config.env?.debug) {
+            console.warn('⚠️ Conversations API failed, falling back to Agents API:', error?.message || error);
           }
-        );
+
+          const context = this.conversationService.getFormattedContext(contextChatId);
+          if (tools.length > 0) {
+            const result = await this.mistralAgentService.sendMessageWithTools(messageText, context, {
+              tools,
+              dispatcher,
+              warningCallback,
+            });
+            aiResponse = result?.content;
+          } else {
+            aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
+          }
+        }
       } else if (tools.length > 0) {
-        const allowedTools = new Set();
+        const allowedTools = new Set(['obter_data_hora_atual']);
         if (enableBookingTool) {
           allowedTools.add('interpretar_data_hora');
           allowedTools.add('criar_agendamento');

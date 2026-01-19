@@ -3,8 +3,24 @@ const EmailService = require('./emailService');
 const { parseDateTimePtBr } = require('../utils/dateTimeParser');
 const { DateTime } = require('luxon');
 
-function getAgentTools({ enableBooking = true, enableEmail = true } = {}) {
+function getAgentTools({ enableBooking = true, enableEmail = true, enableClock = true } = {}) {
     const tools = [];
+
+    if (enableClock) {
+        tools.push({
+            type: 'function',
+            function: {
+                name: 'obter_data_hora_atual',
+                description: 'Retorna a data/hora atual do servidor (com timezone opcional). Útil para responder perguntas como "que dia é hoje?" e "que horas são?".',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        timeZone: { type: 'string', description: 'Opcional. Timezone IANA (ex: America/Sao_Paulo, UTC)' },
+                    },
+                },
+            },
+        });
+    }
 
     if (enableBooking) {
         tools.push({
@@ -75,6 +91,25 @@ async function interpretarDataHora(args) {
     return {
         success: true,
         ...parseDateTimePtBr({ text, zone: 'America/Sao_Paulo' }),
+    };
+}
+
+async function obterDataHoraAtual(args) {
+    const requestedZone = typeof args?.timeZone === 'string' ? args.timeZone.trim() : '';
+    const timeZone = requestedZone || 'America/Sao_Paulo';
+
+    const now = DateTime.now().setZone(timeZone);
+    if (!now.isValid) {
+        throw new Error('Invalid timeZone');
+    }
+
+    return {
+        success: true,
+        timeZone,
+        iso: now.toISO(),
+        date: now.toISODate(),
+        time: now.toFormat('HH:mm'),
+        weekday: now.toFormat('cccc'),
     };
 }
 
@@ -179,6 +214,7 @@ function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
     };
 
     const handlers = {
+        obter_data_hora_atual: (args) => obterDataHoraAtual(args),
         interpretar_data_hora: (args) => interpretarDataHora(args),
         criar_agendamento: async (args) => {
             const bookingResult = await criarAgendamento(args, deps);

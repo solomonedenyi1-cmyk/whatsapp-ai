@@ -101,3 +101,40 @@ test('createToolDispatcher does not send email when slot is unavailable', async 
     assert.equal(Array.isArray(result.options), true);
     assert.equal(emailCalls, 0);
 });
+
+test('createToolDispatcher executes obter_data_hora_atual with default timezone', async () => {
+    const dispatcher = createToolDispatcher({
+        allowedTools: new Set(['obter_data_hora_atual']),
+    });
+
+    const result = await dispatcher.dispatchToolCall(
+        createToolCall({
+            name: 'obter_data_hora_atual',
+            args: {},
+        })
+    );
+
+    assert.equal(result.success, true);
+    assert.equal(typeof result.timeZone, 'string');
+    assert.equal(typeof result.iso, 'string');
+    assert.equal(typeof result.date, 'string');
+    assert.equal(typeof result.time, 'string');
+    assert.equal(typeof result.weekday, 'string');
+    assert.match(result.time, /^\d{2}:\d{2}$/);
+});
+
+test('createToolDispatcher rejects invalid timezone for obter_data_hora_atual', async () => {
+    const dispatcher = createToolDispatcher({
+        allowedTools: new Set(['obter_data_hora_atual']),
+    });
+
+    await assert.rejects(
+        () => dispatcher.dispatchToolCall(
+            createToolCall({
+                name: 'obter_data_hora_atual',
+                args: { timeZone: 'Invalid/Zone' },
+            })
+        ),
+        /Invalid timeZone/
+    );
+});
