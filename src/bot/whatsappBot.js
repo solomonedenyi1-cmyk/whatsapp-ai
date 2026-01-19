@@ -347,14 +347,12 @@ class WhatsAppBot {
         }
 
         const dispatcher = createToolDispatcher({ allowedTools });
-        const instructions = config.mistral.includeLocalSystemPrompt ? this.conversationService.systemPrompt : null;
         aiResponse = await this.mistralConversationService.sendMessage(
           contextChatId,
           messageText,
           {
             tools,
             dispatcher,
-            instructions,
             warningCallback,
           }
         );

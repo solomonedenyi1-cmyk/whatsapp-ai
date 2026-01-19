@@ -38,9 +38,6 @@ class CommandHandler {
       case 'context':
         return this.handleContext();
 
-      case 'reload':
-        return this.handleReload();
-
       case 'analytics':
         return await this.handleAnalytics();
 
@@ -97,7 +94,6 @@ class CommandHandler {
 
 *Context Management:*
 • /context - View current AI configuration
-• /reload - Reload AI context from config.json
 
 *Analytics & Reports:*
 • /analytics - View conversation analytics report
@@ -226,15 +222,6 @@ For more information, use /help`;
 • ${businessContext.owner.name}, ${businessContext.owner.title}
 
 *Note:* Edit config.json in the root directory to customize the AI's knowledge and personality.`;
-  }
-
-  /**
-   * Handle /reload command
-   * @returns {string} - Reload confirmation
-   */
-  handleReload() {
-    this.conversationService.reloadSystemPrompt();
-    return '🔄 *AI context reloaded!*\n\nThe AI has been updated with the latest configuration from config.json';
   }
 
   /**

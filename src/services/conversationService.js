@@ -1,5 +1,4 @@
 const config = require('../config/config');
-const { generateSystemPrompt } = require('../config/context');
 const SqlitePersistenceService = require('./sqlitePersistenceService');
 
 class ConversationService {
@@ -7,7 +6,6 @@ class ConversationService {
     // Enhanced with persistent storage (Phase 2)
     this.conversations = new Map();
     this.maxContextMessages = config.bot.maxContextMessages;
-    this.systemPrompt = generateSystemPrompt();
     this.persistenceService = persistenceService || new SqlitePersistenceService();
 
     // Load existing conversations from persistent storage
@@ -91,34 +89,7 @@ class ConversationService {
         content: message.content
       }));
 
-    if (!config.mistral?.includeLocalSystemPrompt) {
-      return sanitized;
-    }
-
-    return [
-      {
-        role: 'system',
-        content: this.systemPrompt
-      },
-      ...sanitized
-    ];
-  }
-
-  /**
-   * Update system prompt (useful for dynamic context changes)
-   * @param {string} newPrompt - New system prompt
-   */
-  updateSystemPrompt(newPrompt) {
-    this.systemPrompt = newPrompt;
-  }
-
-  /**
-   * Reload system prompt from context configuration
-   */
-  reloadSystemPrompt() {
-    const { reloadConfig } = require('../config/context');
-    reloadConfig();
-    this.systemPrompt = generateSystemPrompt();
+    return sanitized;
   }
 
   /**
@@ -191,17 +162,7 @@ class ConversationService {
         content: message.content
       }));
 
-    if (!config.mistral?.includeLocalSystemPrompt) {
-      return sanitized;
-    }
-
-    return [
-      {
-        role: 'system',
-        content: this.systemPrompt
-      },
-      ...sanitized
-    ];
+    return sanitized;
   }
 
   /**
