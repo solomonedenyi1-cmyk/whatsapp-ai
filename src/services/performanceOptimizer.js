@@ -217,46 +217,11 @@ class PerformanceOptimizer extends EventEmitter {
   }
 
   /**
-   * Add message to processing queue
-   */
-  addToMessageQueue(message) {
-    this.metrics.messageQueue.push({
-      id: this.generateId(),
-      message,
-      timestamp: Date.now(),
-      priority: message.priority || 'normal'
-    });
-
-    // Sort by priority and timestamp
-    this.metrics.messageQueue.sort((a, b) => {
-      const priorityOrder = { high: 3, normal: 2, low: 1 };
-      const aPriority = priorityOrder[a.priority] || 2;
-      const bPriority = priorityOrder[b.priority] || 2;
-
-      if (aPriority !== bPriority) {
-        return bPriority - aPriority;
-      }
-
-      return a.timestamp - b.timestamp;
-    });
-  }
-
-  /**
-   * Get next message from queue
-   */
-  getNextMessage() {
-    return this.metrics.messageQueue.shift();
-  }
-
-  /**
    * Record message received
    */
   recordMessageReceived(chatId, messageLength) {
     this.metrics.messagesProcessed++;
     this.metrics.totalMessageLength += messageLength;
-
-    // Update message queue stats
-    this.metrics.messageQueue.processed = this.metrics.messagesProcessed;
 
     // Record in history for analytics
     this.metrics.messageHistory = this.metrics.messageHistory || [];
@@ -328,38 +293,6 @@ class PerformanceOptimizer extends EventEmitter {
   }
 
   /**
-   * Cache management
-   */
-  setCache(key, value, ttl = 30 * 60 * 1000) {
-    this.cache.set(key, {
-      value,
-      timestamp: Date.now(),
-      ttl
-    });
-    this.cacheStats.size = this.cache.size;
-  }
-
-  getCache(key) {
-    const cached = this.cache.get(key);
-
-    if (!cached) {
-      this.cacheStats.misses++;
-      return null;
-    }
-
-    // Check if expired
-    if (cached.ttl && (Date.now() - cached.timestamp) > cached.ttl) {
-      this.cache.delete(key);
-      this.cacheStats.misses++;
-      this.cacheStats.size = this.cache.size;
-      return null;
-    }
-
-    this.cacheStats.hits++;
-    return cached.value;
-  }
-
-  /**
    * Performance cleanup
    */
   async performCleanup() {
@@ -403,7 +336,7 @@ class PerformanceOptimizer extends EventEmitter {
 
     // Calculate averages
     const avgMemory = this.metrics.memoryHistory.length > 0
-      ? this.metrics.memoryHistory.reduce((sum, m) => sum + m.memory, 0) / this.metrics.memoryHistory.length
+      ? this.metrics.memoryHistory.reduce((sum, m) => sum + m.value, 0) / this.metrics.memoryHistory.length
       : currentMemoryMB;
 
     const avgResponseTime = this.responseTimeStats ? this.responseTimeStats.average : 0;
@@ -412,7 +345,7 @@ class PerformanceOptimizer extends EventEmitter {
       memory: {
         current: currentMemoryMB,
         average: avgMemory,
-        peak: Math.max(...this.metrics.memoryHistory.map(m => m.memory), currentMemoryMB)
+        peak: Math.max(...this.metrics.memoryHistory.map(m => m.value), currentMemoryMB)
       },
       responseTime: {
         average: avgResponseTime,
@@ -446,44 +379,6 @@ class PerformanceOptimizer extends EventEmitter {
     }, 0);
 
     return totalWaitTime / this.metrics.messageQueue.length;
-  }
-
-  /**
-   * Update performance thresholds
-   */
-  updateThresholds(newThresholds) {
-    this.thresholds = { ...this.thresholds, ...newThresholds };
-    console.log('⚙️ Performance thresholds updated:', this.thresholds);
-  }
-
-  /**
-   * Generate unique ID
-   */
-  generateId() {
-    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Get system resource usage
-   */
-  getResourceUsage() {
-    const memUsage = process.memoryUsage();
-    const cpuUsage = process.cpuUsage();
-
-    return {
-      memory: {
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
-        rss: Math.round(memUsage.rss / 1024 / 1024),
-        external: Math.round(memUsage.external / 1024 / 1024)
-      },
-      cpu: {
-        user: cpuUsage.user,
-        system: cpuUsage.system
-      },
-      uptime: process.uptime(),
-      pid: process.pid
-    };
   }
 
   /**
