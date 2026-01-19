@@ -21,7 +21,7 @@ class MessageService {
       return true;
     }
 
-    // Ignore non-text messages for now (Phase 1)
+    // Ignore non-text messages
     if (message.type !== 'chat') {
       return true;
     }

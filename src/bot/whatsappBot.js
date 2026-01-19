@@ -23,12 +23,10 @@ class WhatsAppBot {
   constructor() {
     this.client = null;
 
-    // Initialize Phase 3 services
     this.errorHandler = new ErrorHandler();
     this.performanceOptimizer = new PerformanceOptimizer();
     this.monitoringService = new MonitoringService(this.errorHandler, this.performanceOptimizer);
 
-    // Initialize Phase 3.5 services
     this.timeoutHandler = new TimeoutHandler();
     this.adminService = new AdminService();
     this.performanceOptimizations = new PerformanceOptimizations();
@@ -508,12 +506,10 @@ class WhatsAppBot {
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'shutting_down');
 
-      // Shutdown Phase 3 services
       await this.monitoringService.shutdown();
       await this.performanceOptimizer.shutdown();
       await this.errorHandler.shutdown();
 
-      // Shutdown Phase 3.5 services
       await this.timeoutHandler.shutdown();
       await this.performanceOptimizations.shutdown();
 

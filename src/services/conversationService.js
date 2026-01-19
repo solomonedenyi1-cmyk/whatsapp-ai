@@ -3,7 +3,6 @@ const SqlitePersistenceService = require('./sqlitePersistenceService');
 
 class ConversationService {
   constructor({ persistenceService } = {}) {
-    // Enhanced with persistent storage (Phase 2)
     this.conversations = new Map();
     this.maxContextMessages = config.bot.maxContextMessages;
     this.persistenceService = persistenceService || new SqlitePersistenceService();

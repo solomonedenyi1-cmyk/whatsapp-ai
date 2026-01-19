@@ -627,7 +627,7 @@ Exact performance depends on hardware, disk, and workload.`;
             `Available subcommands:\n` +
             `• /sqlite status - Show SQLite status\n` +
             `• /sqlite migrate - Migration information\n` +
-            `• /sqlite performance - Performance comparison`;
+            `• /sqlite performance - Performance notes`;
       }
     } catch (error) {
       console.error('❌ Error in SQLite command:', error);
