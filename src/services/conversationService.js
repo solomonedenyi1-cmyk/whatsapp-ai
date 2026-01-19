@@ -1,6 +1,6 @@
 const config = require('../config/config');
 const { generateSystemPrompt } = require('../config/context');
-const PersistenceService = require('./persistenceService');
+const SqlitePersistenceService = require('./sqlitePersistenceService');
 
 class ConversationService {
   constructor({ persistenceService } = {}) {
@@ -8,7 +8,7 @@ class ConversationService {
     this.conversations = new Map();
     this.maxContextMessages = config.bot.maxContextMessages;
     this.systemPrompt = generateSystemPrompt();
-    this.persistenceService = persistenceService || new PersistenceService();
+    this.persistenceService = persistenceService || new SqlitePersistenceService();
 
     // Load existing conversations from persistent storage
     this.loadPersistedConversations();
