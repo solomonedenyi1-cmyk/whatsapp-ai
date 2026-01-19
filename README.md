@@ -177,7 +177,6 @@ pnpm start
 
 - `/admin` - Admin command statistics and access control information
 - `/sqlite` - SQLite performance comparison and database management
-- `/optimize` - Advanced performance optimization controls and cache management
 
 ### Business Context Configuration
 

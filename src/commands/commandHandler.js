@@ -62,9 +62,6 @@ class CommandHandler {
       case 'sqlite':
         return await this.handleSqliteCommand(args, chatId);
 
-      case 'optimize':
-        return await this.handleOptimizeCommand(args, chatId);
-
       default:
         return `❓ Comando desconhecido: ${command}\n\n` +
           `📋 Comandos disponíveis:\n` +
@@ -77,8 +74,7 @@ class CommandHandler {
           `• /performance - Métricas de performance\n` +
           `• /errors - Relatório de erros\n` +
           `• /admin - Comandos administrativos\n` +
-          `• /sqlite - Gerenciamento SQLite\n` +
-          `• /optimize - Otimizações de performance`;
+          `• /sqlite - Gerenciamento SQLite`;
     }
   }
 
@@ -690,134 +686,6 @@ To enable SQLite:
     } catch (error) {
       console.error('❌ Error in SQLite command:', error);
       return '❌ Error occurred while processing SQLite command.';
-    }
-  }
-
-  /**
-   * Handle /optimize command
-   * @param {Array} args - Command arguments
-   * @param {string} chatId - WhatsApp chat ID
-   * @returns {Promise<string>} - Optimize command response
-   */
-  async handleOptimizeCommand(args, chatId) {
-    try {
-      // Get performance optimizations service from bot instance
-      const bot = require('../bot/whatsappBot');
-      const optimizationService = bot.performanceOptimizations;
-
-      if (!optimizationService) {
-        return '❌ Performance optimizations service not available.';
-      }
-
-      const subCommand = args[0] || 'status';
-
-      switch (subCommand) {
-        case 'status':
-          const stats = optimizationService.getOptimizationStats();
-          return `⚡ *Performance Optimization Status*
-
-🎯 *Cache Performance:*
-• Size: ${stats.cacheStats.size}/${stats.cacheStats.maxSize}
-• Hit Rate: ${stats.cacheStats.hitRate}
-• Hits: ${stats.cacheStats.hits}
-• Misses: ${stats.cacheStats.misses}
-
-📊 *Queue Management:*
-• Active Queues: ${stats.queueStats.totalQueues}
-• Queued Items: ${stats.queueStats.totalItems}
-• Max Queue Size: ${stats.queueStats.maxQueueSize}
-
-💾 *Memory Optimization:*
-• Heap Used: ${(stats.memoryStats.current.heapUsed / 1024 / 1024).toFixed(2)}MB
-• Pool Size: ${stats.memoryStats.poolSize}
-
-🚀 *Active Optimizations:*
-• Message Queue: ${stats.optimizations.enabled.messageQueue ? '✅' : '❌'}
-• Response Cache: ${stats.optimizations.enabled.responseCache ? '✅' : '❌'}
-• Compression: ${stats.optimizations.enabled.compressionEnabled ? '✅' : '❌'}
-• Batch Processing: ${stats.optimizations.enabled.batchProcessing ? '✅' : '❌'}
-• Lazy Loading: ${stats.optimizations.enabled.lazyLoading ? '✅' : '❌'}
-
-⏱️ *Performance Gains:*
-• Time Saved: ${stats.optimizations.timeSaved}ms
-• Status: ${stats.optimizations.isActive ? 'Active' : 'Inactive'}`;
-
-        case 'cache':
-          const cacheStats = optimizationService.getOptimizationStats().cacheStats;
-          return `🗄️ *Cache Optimization Details*
-
-📈 *Performance Metrics:*
-• Current Size: ${cacheStats.size} entries
-• Maximum Size: ${cacheStats.maxSize} entries
-• Usage: ${((cacheStats.size / cacheStats.maxSize) * 100).toFixed(1)}%
-
-🎯 *Hit Statistics:*
-• Cache Hits: ${cacheStats.hits}
-• Cache Misses: ${cacheStats.misses}
-• Hit Rate: ${cacheStats.hitRate}
-
-⚡ *Benefits:*
-• Faster response times for repeated queries
-• Reduced AI API calls
-• Lower memory usage
-• Improved user experience
-
-🔧 *Cache Strategy:*
-• TTL: 1 hour for entries
-• LRU eviction when full
-• Smart caching based on message patterns`;
-
-        case 'memory':
-          const memStats = optimizationService.getOptimizationStats().memoryStats;
-          return `💾 *Memory Optimization Status*
-
-📊 *Current Usage:*
-• Heap Used: ${(memStats.current.heapUsed / 1024 / 1024).toFixed(2)}MB
-• Heap Total: ${(memStats.current.heapTotal / 1024 / 1024).toFixed(2)}MB
-• External: ${(memStats.current.external / 1024 / 1024).toFixed(2)}MB
-• RSS: ${(memStats.current.rss / 1024 / 1024).toFixed(2)}MB
-
-🧹 *Cleanup Features:*
-• Automatic garbage collection
-• Memory pool management
-• Cache eviction policies
-• Queue cleanup routines
-
-⚡ *Optimizations:*
-• Pool Size: ${memStats.poolSize} objects
-• Cleanup Interval: 5 minutes
-• Performance Monitoring: Active`;
-
-        case 'toggle':
-          const optimization = args[1];
-          const enabled = args[2] === 'true';
-
-          if (!optimization) {
-            return `❓ Usage: /optimize toggle <optimization> <true/false>
-
-Available optimizations:
-• messageQueue
-• responseCache  
-• compressionEnabled
-• batchProcessing
-• lazyLoading`;
-          }
-
-          optimizationService.toggleOptimization(optimization, enabled);
-          return `${enabled ? '✅' : '❌'} ${optimization} optimization ${enabled ? 'enabled' : 'disabled'}`;
-
-        default:
-          return `❓ Unknown optimize subcommand: ${subCommand}
-
-Available subcommands:
-• /optimize status - Show optimization status
-• /optimize cache - Cache performance details
-• /optimize memory - Memory usage details
-• /optimize toggle <opt> <true/false> - Toggle optimization`;
-      }
-    } catch (error) {
-      console.error('❌ Error in optimize command:', error);
-      return '❌ Error occurred while processing optimize command.';
     }
   }
 }
