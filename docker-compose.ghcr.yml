@@ -16,14 +16,15 @@ services:
       MISTRAL_AUDIO_TRANSCRIPTION_LANGUAGE: ""
 
       TTS_ENABLED: "false"
-      TTS_VOICE: "pt-BR-FranciscaNeural"
-      TTS_LANG: "pt-BR"
-      TTS_OUTPUT_FORMAT: "ogg-24khz-16bit-mono-opus"
+      TTS_PROVIDER: "google"
       TTS_MIME_TYPE: "audio/ogg; codecs=opus"
       TTS_MAX_CHARS: "900"
-      TTS_TIMEOUT_MS: "45000"
-      TTS_PROXY: ""
-      TTS_DNS_RESULT_ORDER: "ipv4first"
+
+      GOOGLE_APPLICATION_CREDENTIALS: ""
+      GOOGLE_TTS_LANGUAGE_CODE: "pt-BR"
+      GOOGLE_TTS_VOICE_NAME: "pt-BR-Standard-A"
+      GOOGLE_TTS_SPEAKING_RATE: "1.0"
+      GOOGLE_TTS_PITCH: "0.0"
 
       CAL_API_KEY: your_cal_api_key
       CAL_EVENT_TYPE_ID: "your_event_type_id"

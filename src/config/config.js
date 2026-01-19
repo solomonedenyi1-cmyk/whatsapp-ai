@@ -61,14 +61,15 @@ const config = {
 
   tts: {
     enabled: parseEnvBoolean(process.env.TTS_ENABLED, false),
-    voice: process.env.TTS_VOICE?.trim() || 'pt-BR-FranciscaNeural',
-    lang: process.env.TTS_LANG?.trim() || 'pt-BR',
-    outputFormat: process.env.TTS_OUTPUT_FORMAT?.trim() || 'ogg-24khz-16bit-mono-opus',
+    provider: process.env.TTS_PROVIDER?.trim() || 'google',
     mimeType: process.env.TTS_MIME_TYPE?.trim() || 'audio/ogg; codecs=opus',
     maxChars: Number.parseInt(process.env.TTS_MAX_CHARS, 10) || 900,
-    timeoutMs: Number.parseInt(process.env.TTS_TIMEOUT_MS, 10) || 45000,
-    proxy: process.env.TTS_PROXY?.trim() || null,
-    dnsResultOrder: process.env.TTS_DNS_RESULT_ORDER?.trim() || null,
+    google: {
+      languageCode: process.env.GOOGLE_TTS_LANGUAGE_CODE?.trim() || 'pt-BR',
+      voiceName: process.env.GOOGLE_TTS_VOICE_NAME?.trim() || 'pt-BR-Standard-A',
+      speakingRate: Number.parseFloat(process.env.GOOGLE_TTS_SPEAKING_RATE) || 1.0,
+      pitch: Number.parseFloat(process.env.GOOGLE_TTS_PITCH) || 0.0,
+    },
   },
 
   cal: {
