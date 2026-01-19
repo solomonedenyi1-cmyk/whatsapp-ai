@@ -406,8 +406,7 @@ class PerformanceOptimizations extends EventEmitter {
       memory: currentMemory,
       cpu: currentCpu,
       cacheSize: this.optimizations.responseCache.size,
-      queueSize: Array.from(this.optimizations.messageQueue.values())
-        .reduce((total, queue) => total + queue.length, 0)
+      queueSize: 0
     });
   }
 
