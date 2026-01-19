@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const config = require('../config/config');
 
 /**
  * Performance Optimizations Service
@@ -324,7 +325,9 @@ class PerformanceOptimizations extends EventEmitter {
    * Perform memory cleanup
    */
   performMemoryCleanup() {
-    console.log('🧹 Performing memory cleanup...');
+    if (config.env?.debug) {
+      console.log('🧹 Performing memory cleanup...');
+    }
 
     const beforeMemory = process.memoryUsage();
 
@@ -337,9 +340,12 @@ class PerformanceOptimizations extends EventEmitter {
     }
 
     const afterMemory = process.memoryUsage();
-    const saved = beforeMemory.heapUsed - afterMemory.heapUsed;
+    const saved = Math.max(0, beforeMemory.heapUsed - afterMemory.heapUsed);
+    const savedMb = saved / 1024 / 1024;
 
-    console.log(`✅ Memory cleanup complete. Saved: ${(saved / 1024 / 1024).toFixed(2)}MB`);
+    if (saved > 0 || config.env?.debug) {
+      console.log(`✅ Memory cleanup complete. Saved: ${savedMb.toFixed(2)}MB`);
+    }
 
     this.emit('memoryCleanup', {
       beforeMemory,
