@@ -29,6 +29,7 @@ class AdminService {
     this.adminCommands = [
       'help',
       'reset',
+      'clear',
       'status',
       'about',
       'context',
