@@ -57,7 +57,7 @@ class CommandHandler {
         return await this.handlePerformance();
 
       case 'errors':
-        return await this.handleErrorsCommand(args, chatId);
+        return await this.handleErrors();
 
       case 'admin':
         return await this.handleAdminCommand(args, chatId);
@@ -533,17 +533,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       console.error('❌ Error getting error diagnostics:', error);
       return '❌ Error occurred while retrieving error data.';
     }
-  }
-
-  /**
-   * Handle unknown command
-   * @param {string} command - Unknown command name
-   * @returns {string} - Error message
-   */
-  handleUnknownCommand(command) {
-    return `❓ *Unknown command: /${command}*
-
-Type /help to see available commands.`;
   }
 
   /**
