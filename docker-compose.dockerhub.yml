@@ -50,7 +50,7 @@ services:
       ADMIN_WHATSAPP_NUMBER: 551234567890@c.us
 
     volumes:
-      - ${HOME:-/root}/docker/docker-data/whatsapp-ai/gcp-tts.json:/run/secrets/gcp-tts.json:ro
+      - ./gcp-tts.json:/run/secrets/gcp-tts.json:ro
       - whatsapp_ai_session:/app/session
       - whatsapp_ai_data:/app/data
 
