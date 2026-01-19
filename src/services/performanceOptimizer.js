@@ -10,7 +10,7 @@ const EventEmitter = require('events');
 class PerformanceOptimizer extends EventEmitter {
   constructor() {
     super();
-    
+
     // Performance thresholds
     this.thresholds = {
       memoryUsage: 512, // MB
@@ -18,7 +18,7 @@ class PerformanceOptimizer extends EventEmitter {
       messageQueueSize: 100,
       errorRate: 0.05 // 5%
     };
-    
+
     // Initialize metrics
     this.metrics = {
       memoryHistory: [],
@@ -29,7 +29,7 @@ class PerformanceOptimizer extends EventEmitter {
       totalMessageLength: 0,
       messageHistory: []
     };
-    
+
     // Optimization flags
     this.optimizations = {
       messageQueueEnabled: true,
@@ -37,7 +37,7 @@ class PerformanceOptimizer extends EventEmitter {
       memoryOptimization: true,
       cacheOptimization: true
     };
-    
+
     // Cache for frequently accessed data
     this.cache = new Map();
     this.cacheStats = {
@@ -45,7 +45,7 @@ class PerformanceOptimizer extends EventEmitter {
       misses: 0,
       size: 0
     };
-    
+
     this.startPerformanceMonitoring();
   }
 
@@ -57,12 +57,12 @@ class PerformanceOptimizer extends EventEmitter {
     this.monitoringInterval = setInterval(() => {
       this.collectMetrics();
     }, 30000);
-    
+
     // Cleanup interval every 5 minutes
     this.cleanupInterval = setInterval(() => {
       this.performCleanup();
     }, 5 * 60 * 1000);
-    
+
     console.log('🚀 Performance monitoring started');
   }
 
@@ -87,29 +87,29 @@ class PerformanceOptimizer extends EventEmitter {
       // Memory usage
       const memUsage = process.memoryUsage();
       const memoryMB = memUsage.heapUsed / 1024 / 1024;
-      
+
       this.metrics.memoryHistory.push({
         timestamp: Date.now(),
         value: memoryMB
       });
-      
+
       // Keep only last 100 entries
       if (this.metrics.memoryHistory.length > 100) {
         this.metrics.memoryHistory = this.metrics.memoryHistory.slice(-100);
       }
-      
+
       // Check memory threshold
       if (memoryMB > this.thresholds.memoryUsage) {
         this.emit('memoryThresholdExceeded', { usage: memoryMB, threshold: this.thresholds.memoryUsage });
         await this.optimizeMemoryUsage();
       }
-      
+
       // Message queue size
       if (this.metrics.messageQueue.length > this.thresholds.messageQueueSize) {
         this.emit('messageQueueThresholdExceeded', { size: this.metrics.messageQueue.length });
         await this.optimizeMessageQueue();
       }
-      
+
     } catch (error) {
       console.error('❌ Error collecting metrics:', error.message);
     }
@@ -121,21 +121,21 @@ class PerformanceOptimizer extends EventEmitter {
   async optimizeMemoryUsage() {
     try {
       console.log('🧹 Optimizing memory usage...');
-      
+
       // Clear old cache entries
       await this.optimizeCache();
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
         console.log('♻️ Garbage collection triggered');
       }
-      
+
       // Clear old metrics
       this.clearOldMetrics();
-      
+
       this.emit('memoryOptimized');
-      
+
     } catch (error) {
       console.error('❌ Memory optimization failed:', error.message);
     }
@@ -147,13 +147,13 @@ class PerformanceOptimizer extends EventEmitter {
   async optimizeMessageQueue() {
     try {
       console.log('📬 Optimizing message queue...');
-      
+
       // Process oldest messages first
       const oldMessages = this.metrics.messageQueue.splice(0, 50);
-      
+
       // Emit event for processing
       this.emit('messageQueueOptimized', { processedCount: oldMessages.length });
-      
+
     } catch (error) {
       console.error('❌ Message queue optimization failed:', error.message);
     }
@@ -167,9 +167,9 @@ class PerformanceOptimizer extends EventEmitter {
       const maxCacheSize = 1000;
       const maxCacheAge = 30 * 60 * 1000; // 30 minutes
       const now = Date.now();
-      
+
       let removedCount = 0;
-      
+
       // Remove old entries
       for (const [key, value] of this.cache.entries()) {
         if (value.timestamp && (now - value.timestamp) > maxCacheAge) {
@@ -177,25 +177,25 @@ class PerformanceOptimizer extends EventEmitter {
           removedCount++;
         }
       }
-      
+
       // Remove excess entries if cache is too large
       if (this.cache.size > maxCacheSize) {
         const entries = Array.from(this.cache.entries());
         entries.sort((a, b) => (a[1].timestamp || 0) - (b[1].timestamp || 0));
-        
+
         const toRemove = entries.slice(0, this.cache.size - maxCacheSize);
         toRemove.forEach(([key]) => {
           this.cache.delete(key);
           removedCount++;
         });
       }
-      
+
       this.cacheStats.size = this.cache.size;
-      
+
       if (removedCount > 0) {
         console.log(`🗑️ Cache optimized: removed ${removedCount} entries`);
       }
-      
+
     } catch (error) {
       console.error('❌ Cache optimization failed:', error.message);
     }
@@ -206,11 +206,11 @@ class PerformanceOptimizer extends EventEmitter {
    */
   clearOldMetrics() {
     const maxEntries = 100;
-    
+
     if (this.metrics.responseTimeHistory.length > maxEntries) {
       this.metrics.responseTimeHistory = this.metrics.responseTimeHistory.slice(-maxEntries);
     }
-    
+
     if (this.metrics.errorRateHistory.length > maxEntries) {
       this.metrics.errorRateHistory = this.metrics.errorRateHistory.slice(-maxEntries);
     }
@@ -226,17 +226,17 @@ class PerformanceOptimizer extends EventEmitter {
       timestamp: Date.now(),
       priority: message.priority || 'normal'
     });
-    
+
     // Sort by priority and timestamp
     this.metrics.messageQueue.sort((a, b) => {
       const priorityOrder = { high: 3, normal: 2, low: 1 };
       const aPriority = priorityOrder[a.priority] || 2;
       const bPriority = priorityOrder[b.priority] || 2;
-      
+
       if (aPriority !== bPriority) {
         return bPriority - aPriority;
       }
-      
+
       return a.timestamp - b.timestamp;
     });
   }
@@ -254,10 +254,10 @@ class PerformanceOptimizer extends EventEmitter {
   recordMessageReceived(chatId, messageLength) {
     this.metrics.messagesProcessed++;
     this.metrics.totalMessageLength += messageLength;
-    
+
     // Update message queue stats
     this.metrics.messageQueue.processed = this.metrics.messagesProcessed;
-    
+
     // Record in history for analytics
     this.metrics.messageHistory = this.metrics.messageHistory || [];
     this.metrics.messageHistory.push({
@@ -265,7 +265,7 @@ class PerformanceOptimizer extends EventEmitter {
       chatId,
       length: messageLength
     });
-    
+
     // Keep only last 1000 messages in history
     if (this.metrics.messageHistory.length > 1000) {
       this.metrics.messageHistory = this.metrics.messageHistory.slice(-1000);
@@ -280,13 +280,13 @@ class PerformanceOptimizer extends EventEmitter {
       timestamp: Date.now(),
       responseTime
     });
-    
+
     // Update running averages
     this.updateResponseTimeStats(responseTime);
-    
+
     // Check thresholds
     this.checkResponseTimeThreshold(responseTime);
-    
+
     // Clean old data
     this.clearOldMetrics();
     return responseTime;
@@ -306,7 +306,7 @@ class PerformanceOptimizer extends EventEmitter {
       };
       return;
     }
-    
+
     this.responseTimeStats.min = Math.min(this.responseTimeStats.min, responseTime);
     this.responseTimeStats.max = Math.max(this.responseTimeStats.max, responseTime);
     this.responseTimeStats.total += responseTime;
@@ -341,12 +341,12 @@ class PerformanceOptimizer extends EventEmitter {
 
   getCache(key) {
     const cached = this.cache.get(key);
-    
+
     if (!cached) {
       this.cacheStats.misses++;
       return null;
     }
-    
+
     // Check if expired
     if (cached.ttl && (Date.now() - cached.timestamp) > cached.ttl) {
       this.cache.delete(key);
@@ -354,7 +354,7 @@ class PerformanceOptimizer extends EventEmitter {
       this.cacheStats.size = this.cache.size;
       return null;
     }
-    
+
     this.cacheStats.hits++;
     return cached.value;
   }
@@ -366,15 +366,15 @@ class PerformanceOptimizer extends EventEmitter {
     try {
       // Clear expired cache entries
       this.clearExpiredCache();
-      
+
       // Clear old metrics
       this.clearOldMetrics();
-      
+
       // Garbage collection hint
       if (global.gc) {
         global.gc();
       }
-      
+
       console.log('🧹 Performance cleanup completed');
     } catch (error) {
       console.error('❌ Error during performance cleanup:', error);
@@ -400,14 +400,14 @@ class PerformanceOptimizer extends EventEmitter {
   getPerformanceStats() {
     const memUsage = process.memoryUsage();
     const currentMemoryMB = memUsage.heapUsed / 1024 / 1024;
-    
+
     // Calculate averages
-    const avgMemory = this.metrics.memoryHistory.length > 0 
-      ? this.metrics.memoryHistory.reduce((sum, m) => sum + m.memory, 0) / this.metrics.memoryHistory.length 
+    const avgMemory = this.metrics.memoryHistory.length > 0
+      ? this.metrics.memoryHistory.reduce((sum, m) => sum + m.memory, 0) / this.metrics.memoryHistory.length
       : currentMemoryMB;
-    
+
     const avgResponseTime = this.responseTimeStats ? this.responseTimeStats.average : 0;
-    
+
     return {
       memory: {
         current: currentMemoryMB,
@@ -439,12 +439,12 @@ class PerformanceOptimizer extends EventEmitter {
     if (this.metrics.messageQueue.length === 0) {
       return 0;
     }
-    
+
     const now = Date.now();
     const totalWaitTime = this.metrics.messageQueue.reduce((sum, msg) => {
       return sum + (now - msg.timestamp);
     }, 0);
-    
+
     return totalWaitTime / this.metrics.messageQueue.length;
   }
 
@@ -454,16 +454,6 @@ class PerformanceOptimizer extends EventEmitter {
   updateThresholds(newThresholds) {
     this.thresholds = { ...this.thresholds, ...newThresholds };
     console.log('⚙️ Performance thresholds updated:', this.thresholds);
-  }
-
-  /**
-   * Enable/disable optimizations
-   */
-  toggleOptimization(optimization, enabled) {
-    if (this.optimizations.hasOwnProperty(optimization)) {
-      this.optimizations[optimization] = enabled;
-      console.log(`⚙️ ${optimization} optimization ${enabled ? 'enabled' : 'disabled'}`);
-    }
   }
 
   /**
@@ -479,7 +469,7 @@ class PerformanceOptimizer extends EventEmitter {
   getResourceUsage() {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
-    
+
     return {
       memory: {
         heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
@@ -502,10 +492,10 @@ class PerformanceOptimizer extends EventEmitter {
   async shutdown() {
     try {
       this.stopPerformanceMonitoring();
-      
+
       // Final cleanup
       await this.performCleanup();
-      
+
       console.log('✅ Performance optimizer shutdown complete');
     } catch (error) {
       console.error('❌ Error during performance optimizer shutdown:', error);
