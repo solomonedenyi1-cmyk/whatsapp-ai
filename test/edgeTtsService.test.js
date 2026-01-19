@@ -10,6 +10,8 @@ test('EdgeTtsService.synthesizeToBuffer returns buffer written by edge client', 
     const edgeTts = {
         voice: null,
         outputFormat: null,
+        lang: null,
+        timeout: null,
         ttsPromise: async (text, audioPath) => {
             assert.equal(typeof text, 'string');
             assert.equal(typeof audioPath, 'string');
@@ -21,8 +23,13 @@ test('EdgeTtsService.synthesizeToBuffer returns buffer written by edge client', 
     const result = await service.synthesizeToBuffer('hello world', {
         outputFormat: 'ogg-24khz-16bit-mono-opus',
         mimeType: 'audio/ogg; codecs=opus',
+        lang: 'pt-BR',
+        timeoutMs: 60000,
         maxChars: 1000,
     });
+
+    assert.equal(edgeTts.lang, 'pt-BR');
+    assert.equal(edgeTts.timeout, 60000);
 
     assert.equal(result.mimeType, 'audio/ogg; codecs=opus');
     assert.ok(Buffer.isBuffer(result.buffer));

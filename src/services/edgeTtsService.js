@@ -2,10 +2,37 @@ const config = require('../config/config');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const dns = require('node:dns');
 
 class EdgeTtsService {
     constructor({ edgeTts } = {}) {
         this.edgeTts = edgeTts || null;
+        this.dnsConfigured = false;
+    }
+
+    configureDns() {
+        if (this.dnsConfigured) {
+            return;
+        }
+
+        this.dnsConfigured = true;
+
+        const order = config.tts?.dnsResultOrder;
+        if (!order || typeof order !== 'string' || order.trim().length === 0) {
+            return;
+        }
+
+        if (typeof dns.setDefaultResultOrder !== 'function') {
+            return;
+        }
+
+        try {
+            dns.setDefaultResultOrder(order.trim());
+        } catch (error) {
+            if (config.env?.debug) {
+                console.warn('⚠️ Failed to set dns result order for TTS:', error?.message || error);
+            }
+        }
     }
 
     async getClient() {
@@ -90,6 +117,8 @@ class EdgeTtsService {
             : (config.tts.proxy || null);
 
         this.validateText(text, selectedMaxChars);
+
+        this.configureDns();
 
         const client = await this.getClient();
 

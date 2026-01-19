@@ -68,6 +68,7 @@ const config = {
     maxChars: Number.parseInt(process.env.TTS_MAX_CHARS, 10) || 900,
     timeoutMs: Number.parseInt(process.env.TTS_TIMEOUT_MS, 10) || 45000,
     proxy: process.env.TTS_PROXY?.trim() || null,
+    dnsResultOrder: process.env.TTS_DNS_RESULT_ORDER?.trim() || null,
   },
 
   cal: {
