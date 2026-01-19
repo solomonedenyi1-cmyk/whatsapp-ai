@@ -264,38 +264,43 @@ class WhatsAppBot {
         let inputText = messageText;
 
         if (message.type === 'ptt' || message.type === 'audio') {
-          try {
-            const media = await message.downloadMedia();
-            const mimeType = media?.mimetype;
-            const data = media?.data;
+          const transcriptionEnabled = Boolean(config.mistral?.audioTranscription?.enabled);
+          if (!transcriptionEnabled) {
+            response = 'No momento, a transcrição de áudio está desativada. Pode enviar em texto?';
+          } else {
+            try {
+              const media = await message.downloadMedia();
+              const mimeType = media?.mimetype;
+              const data = media?.data;
 
-            if (!mimeType || typeof data !== 'string' || data.trim().length === 0) {
-              throw new Error('Unable to download audio media');
+              if (!mimeType || typeof data !== 'string' || data.trim().length === 0) {
+                throw new Error('Unable to download audio media');
+              }
+
+              const buffer = Buffer.from(data, 'base64');
+
+              const transcription = await this.mistralAudioService.transcribeAudio({
+                buffer,
+                mimeType,
+                fileName: media?.filename,
+                model: config.mistral?.audioTranscription?.model,
+                language: config.mistral?.audioTranscription?.language,
+              });
+
+              const transcribedText = transcription?.text;
+              if (typeof transcribedText !== 'string' || transcribedText.trim().length === 0) {
+                throw new Error('Empty transcription');
+              }
+
+              inputText = transcribedText.trim();
+
+              if (config.env.debug) {
+                console.log(`[${requestId}] 🎙️ Transcribed audio: ${inputText.substring(0, 120)}...`);
+              }
+            } catch (error) {
+              console.error('❌ Error transcribing audio message:', error?.message || error);
+              response = 'Desculpe, não consegui transcrever o áudio. Pode tentar novamente ou enviar em texto?';
             }
-
-            const buffer = Buffer.from(data, 'base64');
-
-            const transcription = await this.mistralAudioService.transcribeAudio({
-              buffer,
-              mimeType,
-              fileName: media?.filename,
-              model: 'voxtral-mini-latest',
-              language: 'pt',
-            });
-
-            const transcribedText = transcription?.text;
-            if (typeof transcribedText !== 'string' || transcribedText.trim().length === 0) {
-              throw new Error('Empty transcription');
-            }
-
-            inputText = transcribedText.trim();
-
-            if (config.env.debug) {
-              console.log(`[${requestId}] 🎙️ Transcribed audio: ${inputText.substring(0, 120)}...`);
-            }
-          } catch (error) {
-            console.error('❌ Error transcribing audio message:', error?.message || error);
-            response = 'Desculpe, não consegui transcrever o áudio. Pode tentar novamente ou enviar em texto?';
           }
         }
 

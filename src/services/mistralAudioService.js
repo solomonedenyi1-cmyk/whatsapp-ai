@@ -5,6 +5,9 @@ class MistralAudioService {
         this.apiKey = config.mistral.apiKey;
         this.baseUrl = 'https://api.mistral.ai/v1';
         this.fetch = fetchImpl || globalThis.fetch;
+
+        this.defaultModel = config.mistral.audioTranscription?.model || 'voxtral-mini-latest';
+        this.defaultLanguage = config.mistral.audioTranscription?.language || null;
     }
 
     validateConfig() {
@@ -17,7 +20,7 @@ class MistralAudioService {
         }
     }
 
-    async transcribeAudio({ buffer, mimeType, fileName, model = 'voxtral-mini-latest', language } = {}) {
+    async transcribeAudio({ buffer, mimeType, fileName, model, language } = {}) {
         this.validateConfig();
 
         if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
@@ -32,11 +35,19 @@ class MistralAudioService {
             ? mimeType.trim()
             : 'application/octet-stream';
 
-        const form = new FormData();
-        form.append('model', model);
+        const selectedModel = typeof model === 'string' && model.trim().length > 0
+            ? model.trim()
+            : this.defaultModel;
 
-        if (typeof language === 'string' && language.trim().length > 0) {
-            form.append('language', language.trim());
+        const selectedLanguage = typeof language === 'string'
+            ? language.trim()
+            : this.defaultLanguage;
+
+        const form = new FormData();
+        form.append('model', selectedModel);
+
+        if (typeof selectedLanguage === 'string' && selectedLanguage.length > 0) {
+            form.append('language', selectedLanguage);
         }
 
         form.append('file', new Blob([buffer], { type: contentType }), safeFileName);

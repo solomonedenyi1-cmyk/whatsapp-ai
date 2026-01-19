@@ -52,6 +52,11 @@ const config = {
     conversationHandoffExecution: process.env.MISTRAL_CONVERSATION_HANDOFF_EXECUTION?.trim() || 'server',
     timeout: 0, // No timeout - wait indefinitely
     warningTimeout: 5 * 60 * 1000, // 5 minutes warning
+    audioTranscription: {
+      enabled: parseEnvBoolean(process.env.MISTRAL_AUDIO_TRANSCRIPTION_ENABLED, true),
+      model: process.env.MISTRAL_AUDIO_TRANSCRIPTION_MODEL?.trim() || 'voxtral-mini-latest',
+      language: process.env.MISTRAL_AUDIO_TRANSCRIPTION_LANGUAGE?.trim() || null,
+    },
   },
 
   cal: {
