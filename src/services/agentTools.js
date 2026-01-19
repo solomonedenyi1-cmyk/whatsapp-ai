@@ -3,88 +3,6 @@ const EmailService = require('./emailService');
 const { parseDateTimePtBr } = require('../utils/dateTimeParser');
 const { DateTime } = require('luxon');
 
-// FOR THIS FILE, ALL FUNCTION NAMES MUST BE IN PORTUGUESE
-// FUNCTIONS HERE DON'T WORK IN API AGENT USING Conversations API (beta.conversations), NEED TO BE ADDED TO IN AGENT CONSOLE: https://console.mistral.ai/build/agents
-
-function getAgentTools({ enableBooking = true, enableEmail = true, enableClock = true } = {}) {
-    const tools = [];
-
-    if (enableClock) {
-        tools.push({
-            type: 'function',
-            function: {
-                name: 'obter_data_hora_atual',
-                description: 'Retorna a data/hora atual do servidor (com timezone opcional). Útil para responder perguntas como "que dia é hoje?" e "que horas são?".',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        timeZone: { type: 'string', description: 'Opcional. Timezone IANA (ex: America/Sao_Paulo, UTC)' },
-                    },
-                },
-            },
-        });
-    }
-
-    if (enableBooking) {
-        tools.push({
-            type: 'function',
-            function: {
-                name: 'interpretar_data_hora',
-                description: 'Converte data/hora em português (ex: "amanhã 14h") para YYYY-MM-DD e HH:MM (America/Sao_Paulo)',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        text: { type: 'string', description: 'Texto com data/hora (ex: "amanhã 14h", "quinta 09:30", "hoje 16h")' },
-                    },
-                    required: ['text'],
-                },
-            },
-        });
-
-        tools.push({
-            type: 'function',
-            function: {
-                name: 'criar_agendamento',
-                description: 'Cria um agendamento no Cal.com e envia email de confirmação',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        name: { type: 'string', description: 'Nome do cliente' },
-                        email: { type: 'string', description: 'Email do cliente' },
-                        when: { type: 'string', description: 'Data e hora em português (ex: "amanhã 14h", "quinta-feira 09:30", "hoje 16h")' },
-                        date: { type: 'string', description: 'Opcional. Data no formato YYYY-MM-DD' },
-                        time: { type: 'string', description: 'Opcional. Hora no formato HH:MM' },
-                    },
-                    required: ['name', 'email'],
-                },
-            },
-        });
-    }
-
-    if (enableEmail) {
-        tools.push({
-            type: 'function',
-            function: {
-                name: 'enviar_email_confirmacao',
-                description: 'Envia email de confirmação via Resend',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        to: { type: 'string', description: 'Email de destino' },
-                        name: { type: 'string', description: 'Nome do cliente' },
-                        date: { type: 'string', description: 'Data no formato YYYY-MM-DD' },
-                        time: { type: 'string', description: 'Hora no formato HH:MM' },
-                        timeZone: { type: 'string', description: 'Opcional. Timezone (ex: America/Sao_Paulo)' },
-                    },
-                    required: ['to', 'name', 'date', 'time'],
-                },
-            },
-        });
-    }
-
-    return tools;
-}
-
 async function interpretarDataHora(args) {
     const text = args?.text;
     if (typeof text !== 'string' || text.trim().length === 0) {
@@ -273,6 +191,5 @@ function createToolDispatcher({ allowedTools, calService, emailService } = {}) {
 }
 
 module.exports = {
-    getAgentTools,
     createToolDispatcher,
 };

@@ -111,6 +111,150 @@ class MistralAgentService {
         }
     }
 
+    async sendChatMessageWithDispatcher(messages, { dispatcher, warningCallback = null } = {}) {
+        let warningTimer = null;
+        let warningSent = false;
+
+        const toolMessages = [];
+        const maxIterations = 12;
+
+        try {
+            this.validateConfig();
+
+            if (!dispatcher || typeof dispatcher.dispatchToolCall !== 'function') {
+                throw new Error('Dispatcher with dispatchToolCall(toolCall) is required');
+            }
+
+            if (warningCallback) {
+                warningTimer = setTimeout(() => {
+                    if (!warningSent) {
+                        warningSent = true;
+                        console.log('⏰ 5-minute warning sent to user');
+                        warningCallback();
+                    }
+                }, this.warningTimeout);
+            }
+
+            const client = await this.getClient();
+
+            let result = await client.agents.complete({
+                agentId: this.agentId,
+                messages,
+                stream: false,
+            });
+
+            let message = result?.choices?.[0]?.message;
+
+            for (let i = 0; i < maxIterations; i += 1) {
+                const toolCalls = getMistralToolCalls(message);
+                if (toolCalls.length === 0) {
+                    break;
+                }
+
+                if (config.env?.debug) {
+                    console.log('mistral.tool_calls', toolCalls.map((toolCall) => ({
+                        id: toolCall?.id,
+                        tool_call_id: toolCall?.tool_call_id,
+                        toolCallId: toolCall?.toolCallId,
+                        functionName: toolCall?.function?.name,
+                    })));
+                }
+
+                messages.push(message);
+
+                const toolResults = await Promise.all(
+                    toolCalls.map(async (toolCall) => {
+                        const functionName = toolCall?.function?.name;
+                        try {
+                            const value = await dispatcher.dispatchToolCall(toolCall);
+                            return {
+                                toolCall,
+                                functionName,
+                                content: JSON.stringify(value),
+                            };
+                        } catch (error) {
+                            const safeError = {
+                                success: false,
+                                error: error?.message || String(error),
+                            };
+
+                            return {
+                                toolCall,
+                                functionName,
+                                content: JSON.stringify(safeError),
+                            };
+                        }
+                    })
+                );
+
+                for (const toolResult of toolResults) {
+                    const toolCallId = getMistralToolCallId(toolResult.toolCall);
+                    if (!isValidToolCallId(toolCallId)) {
+                        const functionName = toolResult?.functionName;
+                        const error = new Error(`Missing tool_call_id for tool result (${functionName || 'unknown'})`);
+                        error.details = {
+                            toolCallKeys: toolResult?.toolCall && typeof toolResult.toolCall === 'object'
+                                ? Object.keys(toolResult.toolCall)
+                                : null,
+                        };
+                        throw error;
+                    }
+
+                    const toolMessage = {
+                        role: 'tool',
+                        name: toolResult.functionName,
+                        content: toolResult.content,
+                        tool_call_id: toolCallId,
+                        toolCallId: toolCallId,
+                    };
+
+                    toolMessages.push(toolMessage);
+                    messages.push(toolMessage);
+                }
+
+                result = await client.agents.complete({
+                    agentId: this.agentId,
+                    messages,
+                    stream: false,
+                });
+
+                message = result?.choices?.[0]?.message;
+            }
+
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+                warningTimer = null;
+            }
+
+            const normalized = normalizeMistralContent(message?.content);
+            if (typeof normalized === 'string' && normalized.trim().length > 0) {
+                return { content: normalized, toolMessages };
+            }
+
+            if (config.env?.debug) {
+                console.log('mistral.invalid_content', {
+                    contentType: typeof message?.content,
+                    isArray: Array.isArray(message?.content),
+                    contentPreview: JSON.stringify(message?.content)?.slice(0, 400),
+                });
+            }
+
+            throw new Error('Invalid response format from Mistral Agents API');
+        } catch (error) {
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+                warningTimer = null;
+            }
+
+            console.error('Error calling Mistral Agents API:', error.message);
+            return { content: this.getFallbackResponse(error), toolMessages };
+        } finally {
+            if (warningTimer) {
+                clearTimeout(warningTimer);
+            }
+        }
+    }
+
     async sendChatMessageWithTools(messages, { tools, dispatcher, warningCallback = null } = {}) {
         let warningTimer = null;
         let warningSent = false;
@@ -341,6 +485,11 @@ class MistralAgentService {
     async sendMessage(userMessage, conversationHistory = [], warningCallback = null) {
         const messages = [...conversationHistory, { role: 'user', content: userMessage }];
         return this.sendChatMessage(messages, warningCallback);
+    }
+
+    async sendMessageWithDispatcher(userMessage, conversationHistory = [], { dispatcher, warningCallback = null } = {}) {
+        const messages = [...conversationHistory, { role: 'user', content: userMessage }];
+        return this.sendChatMessageWithDispatcher(messages, { dispatcher, warningCallback });
     }
 
     async sendMessageWithTools(userMessage, conversationHistory = [], { tools, dispatcher, warningCallback = null } = {}) {

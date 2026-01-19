@@ -14,7 +14,7 @@ const MonitoringService = require('../services/monitoringService');
 const TimeoutHandler = require('../services/timeoutHandler');
 const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
-const { getAgentTools, createToolDispatcher } = require('../services/agentTools');
+const { createToolDispatcher } = require('../services/agentTools');
 const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
 const { resolveStableChatId } = require('./chatIdResolver');
 const { generateRequestId } = require('../utils/requestContext');
@@ -328,11 +328,6 @@ class WhatsAppBot {
       // Booking tool always sends email confirmation, so it requires both Cal and Resend configured
       const enableBookingTool = Boolean(hasCal && enableEmailTool);
 
-      const tools = getAgentTools({
-        enableBooking: enableBookingTool,
-        enableEmail: enableEmailTool,
-      });
-
       let aiResponse;
       if (config.mistral.useConversations) {
         const allowedTools = new Set(['obter_data_hora_atual']);
@@ -350,7 +345,6 @@ class WhatsAppBot {
             contextChatId,
             messageText,
             {
-              tools,
               dispatcher,
               warningCallback,
             }
@@ -361,18 +355,14 @@ class WhatsAppBot {
           }
 
           const context = this.conversationService.getFormattedContext(contextChatId);
-          if (tools.length > 0) {
-            const result = await this.mistralAgentService.sendMessageWithTools(messageText, context, {
-              tools,
-              dispatcher,
-              warningCallback,
-            });
-            aiResponse = result?.content;
-          } else {
-            aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
-          }
+          const result = await this.mistralAgentService.sendMessageWithDispatcher(messageText, context, {
+            dispatcher,
+            warningCallback,
+          });
+          aiResponse = result?.content;
         }
-      } else if (tools.length > 0) {
+      } else {
+        const context = this.conversationService.getFormattedContext(contextChatId);
         const allowedTools = new Set(['obter_data_hora_atual']);
         if (enableBookingTool) {
           allowedTools.add('interpretar_data_hora');
@@ -383,16 +373,11 @@ class WhatsAppBot {
         }
 
         const dispatcher = createToolDispatcher({ allowedTools });
-        const context = this.conversationService.getFormattedContext(contextChatId);
-        const result = await this.mistralAgentService.sendMessageWithTools(messageText, context, {
-          tools,
+        const result = await this.mistralAgentService.sendMessageWithDispatcher(messageText, context, {
           dispatcher,
           warningCallback,
         });
         aiResponse = result?.content;
-      } else {
-        const context = this.conversationService.getFormattedContext(contextChatId);
-        aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
       }
       responseReceived = true; // Mark that response was received
 
