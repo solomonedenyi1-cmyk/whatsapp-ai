@@ -134,6 +134,7 @@ test('MistralConversationService.sendMessage loops over function calls and sends
                     assert.equal(req.conversationId, 'conv_1');
 
                     const [input] = req.conversationAppendRequest.inputs;
+                    assert.equal(input.type, 'function.result');
                     assert.equal(input.toolCallId, 'call_1');
                     assert.equal(typeof input.result, 'string');
 
@@ -156,7 +157,6 @@ test('MistralConversationService.sendMessage loops over function calls and sends
 
     const service = new MistralConversationService({ mistralClient: fakeClient, persistenceService: persistence });
     const result = await service.sendMessage('chat_1', 'hello', {
-        tools: [{ type: 'function', function: { name: 'interpretar_data_hora' } }],
         dispatcher,
     });
 

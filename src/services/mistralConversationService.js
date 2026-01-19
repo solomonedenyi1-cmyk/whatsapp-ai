@@ -188,10 +188,7 @@ class MistralConversationService {
             warningCallback = null,
         } = {}
     ) {
-        const hasTools = Array.isArray(tools) && tools.length > 0;
-        if (hasTools && (!dispatcher || typeof dispatcher.dispatchToolCall !== 'function')) {
-            throw new Error('Dispatcher with dispatchToolCall(toolCall) is required when tools are enabled');
-        }
+        const hasDispatcher = Boolean(dispatcher && typeof dispatcher.dispatchToolCall === 'function');
 
         this.validateConfig();
 
@@ -222,7 +219,6 @@ class MistralConversationService {
                 response = await client.beta.conversations.start({
                     agentId: this.agentId,
                     inputs: firstInput,
-                    tools: hasTools ? tools : undefined,
                     store,
                     handoffExecution,
                     instructions: typeof instructions === 'string' && instructions.trim().length > 0 ? instructions : undefined,
@@ -257,8 +253,12 @@ class MistralConversationService {
                     ? outputs.filter((out) => isFunctionCallOutput(out))
                     : [];
 
-                if (!hasTools || functionCalls.length === 0) {
+                if (functionCalls.length === 0) {
                     break;
+                }
+
+                if (!hasDispatcher) {
+                    throw new Error('Tool dispatcher is required to handle function.call outputs from Mistral Conversations API');
                 }
 
                 const toolInputs = await Promise.all(
@@ -293,6 +293,7 @@ class MistralConversationService {
                         }
 
                         return {
+                            type: 'function.result',
                             toolCallId,
                             result: safeJsonStringify(result),
                         };
