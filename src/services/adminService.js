@@ -33,7 +33,6 @@ class AdminService {
       'status',
       'about',
       'context',
-      'reload',
       'analytics',
       'cleanup',
       'health',
