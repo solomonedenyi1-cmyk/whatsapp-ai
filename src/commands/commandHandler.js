@@ -597,7 +597,6 @@ SQLite is the default persistence backend for this bot.
 • Optimized database schema
 • Prepared statements for performance
 • Automatic cleanup and maintenance
-• Backup and recovery support
 • Analytics and reporting
 
 ⚡ *Performance Benefits:*

@@ -10,17 +10,17 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 
 - **Natural Conversations**: Direct integration with a Mistral Agent (Agent ID)
 - **Agent Instructions**: Configure AI persona, policies and domain knowledge in the Mistral Agent instructions
-- **Conversation Persistence**: Permanent conversation storage with automatic backup and restoration
+- **Conversation Persistence**: Persistent conversation storage via SQLite
 - **Smart Message Handling**: Automatic message splitting, formatting, and emoji filtering
 - **Context Management**: Intelligent conversation context with configurable message limits
 
 ### Enterprise Security
 
-- **Admin Access Control**: Role-based command access with WhatsApp number authentication
+- **Admin Access Control**: Admin-only command access with WhatsApp number authentication
 - **Secure Logging**: Sanitized logs preventing API data exposure and sensitive information leaks
 - **Command Protection**: All administrative commands restricted to authorized users only
 - **Error Handling**: Comprehensive error management without information disclosure
-- **Data Privacy**: Local storage with no external data transmission
+- **Data Handling**: Local persistence via SQLite with external API calls to configured integrations
 
 ### Performance & Monitoring
 
@@ -28,17 +28,17 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 - **Advanced Analytics**: Comprehensive usage analytics, command tracking, and user engagement reports
 - **Performance Optimization**: Intelligent caching, memory management, and response time optimization
 - **Timeout Management**: Smart timeout handling with user notifications for long-running requests
-- **SQLite Integration**: High-performance database option for durable conversation storage
+- **SQLite Persistence**: Durable conversation storage via SQLite
 - **Resource Management**: Automatic cleanup, garbage collection, and memory optimization
 
 ### Production Features
 
 - **Error Recovery**: Automatic error detection, categorization, and recovery mechanisms
-- **Health Monitoring**: Continuous system health monitoring with automated alerts
+- **Health Monitoring**: Continuous system health monitoring and alert tracking
 - **Performance Metrics**: Real-time performance tracking with optimization recommendations
-- **Data Management**: Automated data cleanup, backup, and retention policies
+- **Data Management**: Automated data cleanup and retention policies
 - **Scalability**: Optimized architecture for high-volume production deployments
-- **Queue Processing**: Priority-based message processing with batch optimization
+- **Message Processing Optimizations**: Response caching and message processing optimizations
 
 ## 📋 Prerequisites
 
@@ -253,8 +253,8 @@ whatsapp-ai/
 #### Data Management
 
 - **Automatic Cleanup**: Built-in maintenance for storage optimization
-- **Privacy Focused**: All data stored locally, no external transmission
-- **Backup Ready**: Simple file-based storage for easy backup and migration
+- **Data Storage**: Conversations are stored locally in SQLite (while messages are sent to external APIs)
+- **Backup Ready**: File-based database storage for easy backup and migration
 - **Scalable Design**: Handles thousands of conversations efficiently
 
 ## Development
@@ -326,17 +326,15 @@ NODE_ENV=development
 - **Admin Access Control**: All commands restricted to configured admin WhatsApp numbers
 - **Sanitized Logging**: API URLs and sensitive data automatically redacted from logs
 - **Secure Error Handling**: Error messages prevent information disclosure
-- **Local Data Storage**: All data stored locally, no external transmission
+- **Local Data Storage**: Conversation persistence is stored locally in SQLite
 - **Encrypted Communication**: All API communication uses HTTPS
-- **WhatsApp Compliance**: Respects WhatsApp Terms of Service
 
 ### Privacy Protection
 
-- **No Data Collection**: No personal data sent to external services
-- **Local Processing**: All conversation processing happens locally
+- **External Processing**: Messages are sent to configured APIs (Mistral, and optional integrations)
 - **Configurable Retention**: Automatic cleanup of old conversation data
 - **User Control**: Users can reset their conversation history anytime
-- **Business Data Security**: Business configuration stays in local files
+- **Runtime Configuration**: Runtime configuration stays in environment variables
 
 ### Security Best Practices
 
