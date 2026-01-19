@@ -355,7 +355,6 @@ pnpm start
 ##### QR Code doesn't appear
 
 - Ensure Chrome/Chromium is installed
-- Check if port 3000 is available
 - Run with debug mode: `DEBUG=true pnpm start`
 - Verify Node.js version is 20+
 
