@@ -562,20 +562,20 @@ NODE_ENV=development
 
 #### Installation & Setup
 
-**QR Code doesn't appear**
+##### QR Code doesn't appear
 
 - Ensure Chrome/Chromium is installed
 - Check if port 3000 is available
 - Run with debug mode: `DEBUG=true pnpm start`
-- Verify Node.js version is 18+
+- Verify Node.js version is 20+
 
-**Bot doesn't respond to messages**
+##### Bot doesn't respond to messages
 
 - Check API connectivity with `/status` command
 - Verify `MISTRAL_API_KEY` and `MISTRAL_AGENT_ID` in `.env` are correct
 - Check internet connection stability
 
-**Authentication failures**
+##### Authentication failures
 
 - Delete `session/` folder and re-scan QR code
 - Ensure WhatsApp Web is not open in other browsers
@@ -584,21 +584,21 @@ NODE_ENV=development
 
 #### Configuration Issues
 
-**AI responses seem generic**
+##### AI responses seem generic
 
 - Edit `config.json` with your business information
 - Use `/reload` command to apply changes
 - Verify configuration with `/context` command
 - Check JSON syntax with online validator
 
-**Commands not working**
+##### Commands not working
 
 - Verify admin WhatsApp number format: `5511999999999@c.us`
 - Check if number matches exactly in `.env` file
 - Ensure commands start with `/` (forward slash)
 - Use `/help` to see available commands
 
-**Configuration file errors**
+##### Configuration file errors
 
 - Validate JSON syntax using online JSON validator
 - Check for missing commas, brackets, or quotes
@@ -607,14 +607,14 @@ NODE_ENV=development
 
 #### Performance Issues
 
-**Slow response times**
+##### Slow response times
 
 - Check API server performance
 - Monitor system resources with `/performance`
 - Review error logs with `/errors` command
 - Consider enabling SQLite for better performance
 
-**Memory usage high**
+##### Memory usage high
 
 - Use `/cleanup` to remove old conversation data
 - Check `/monitor` for memory usage statistics
@@ -644,7 +644,7 @@ pnpm start
 
 ## Support
 
-### Getting Help
+### Support Resources
 
 - **Documentation**: This README contains comprehensive setup and usage information
 - **Configuration**: Example `config.json` provides complete business setup templates
@@ -672,7 +672,7 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Developed with ❤️ using Node.js + WhatsApp Web + Mistral Agents API**
+### Developed with ❤️ using Node.js + WhatsApp Web + Mistral Agents API
 
 ## Use Cases
 
@@ -702,7 +702,7 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ---
 
-**Built with Node.js, WhatsApp Web.js, and Mistral Agents API integration**
+### Built with Node.js, WhatsApp Web.js, and Mistral Agents API integration
 
 ---
 
