@@ -16,6 +16,7 @@ const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
 const { getAgentTools, createToolDispatcher } = require('../services/agentTools');
 const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
+const { resolveStableChatId } = require('./chatIdResolver');
 const { generateRequestId } = require('../utils/requestContext');
 
 class WhatsAppBot {
@@ -209,7 +210,8 @@ class WhatsAppBot {
    */
   async handleMessage(message) {
     const startTime = Date.now();
-    const requestId = generateRequestId(message?.from || 'chat');
+    const rawChatId = message?.from || 'chat';
+    const requestId = generateRequestId(rawChatId);
 
     try {
       // Check if message should be ignored
@@ -222,12 +224,23 @@ class WhatsAppBot {
 
       const chat = await message.getChat();
 
+      const stableChatId = await resolveStableChatId({
+        rawChatId: chatId,
+        message,
+        chat,
+      });
+      const contextChatId = stableChatId || chatId;
+
+      if (config.env.debug && contextChatId !== chatId) {
+        console.log(`🔁 chat id normalized: ${chatId} -> ${contextChatId}`);
+      }
+
       if (config.env.debug) {
         console.log(`[${requestId}] 📨 Received message from ${chatId}: ${messageText}`);
       }
 
       // Record performance metrics
-      this.performanceOptimizer.recordMessageReceived(chatId, messageText.length);
+      this.performanceOptimizer.recordMessageReceived(contextChatId, messageText.length);
 
       // Show typing indicator
       await this.safeSendSeen(chatId, chat);
@@ -240,18 +253,18 @@ class WhatsAppBot {
         const { command, args } = this.messageService.parseCommand(messageText);
 
         // Check admin access for commands
-        const accessCheck = this.adminService.validateAdminAccess(chatId, command);
+        const accessCheck = this.adminService.validateAdminAccess(contextChatId, command);
         if (!accessCheck.allowed) {
           response = accessCheck.message;
         } else {
-          response = await this.commandHandler.handleCommand(command, args, chatId);
+          response = await this.commandHandler.handleCommand(command, args, contextChatId);
         }
       } else {
         // Regular message - send to AI with timeout handling and performance optimizations
         response = await this.performanceOptimizations.optimizeMessageProcessing(
-          chatId,
+          contextChatId,
           messageText,
-          (msg) => this.processAIMessageWithTimeout(msg, chatId, chat)
+          (msg) => this.processAIMessageWithTimeout(msg, chatId, chat, contextChatId)
         );
       }
 
@@ -281,15 +294,15 @@ class WhatsAppBot {
    * @param {string} chatId - WhatsApp chat ID
    * @returns {Promise<string>} - AI response
    */
-  async processAIMessageWithTimeout(messageText, chatId, chat) {
-    const requestId = generateRequestId(chatId);
+  async processAIMessageWithTimeout(messageText, chatId, chat, contextChatId = chatId) {
+    const requestId = generateRequestId(contextChatId);
 
     try {
       // Register request for timeout monitoring
       this.timeoutHandler.registerRequest(chatId, requestId, messageText);
 
       // Add user message to local context storage (analytics/persistence)
-      await this.conversationService.addMessage(chatId, 'user', messageText);
+      await this.conversationService.addMessage(contextChatId, 'user', messageText);
 
       // Update API status
       await this.monitoringService.updateComponentStatus('mistralAgent', 'processing');
@@ -336,7 +349,7 @@ class WhatsAppBot {
         const dispatcher = createToolDispatcher({ allowedTools });
         const instructions = config.mistral.includeLocalSystemPrompt ? this.conversationService.systemPrompt : null;
         aiResponse = await this.mistralConversationService.sendMessage(
-          chatId,
+          contextChatId,
           messageText,
           {
             tools,
@@ -356,7 +369,7 @@ class WhatsAppBot {
         }
 
         const dispatcher = createToolDispatcher({ allowedTools });
-        const context = this.conversationService.getFormattedContext(chatId);
+        const context = this.conversationService.getFormattedContext(contextChatId);
         const result = await this.mistralAgentService.sendMessageWithTools(messageText, context, {
           tools,
           dispatcher,
@@ -364,7 +377,7 @@ class WhatsAppBot {
         });
         aiResponse = result?.content;
       } else {
-        const context = this.conversationService.getFormattedContext(chatId);
+        const context = this.conversationService.getFormattedContext(contextChatId);
         aiResponse = await this.mistralAgentService.sendMessage(messageText, context, warningCallback);
       }
       responseReceived = true; // Mark that response was received
@@ -376,7 +389,7 @@ class WhatsAppBot {
       await this.monitoringService.updateComponentStatus('mistralAgent', 'ready');
 
       // Add AI response to context
-      await this.conversationService.addMessage(chatId, 'assistant', aiResponse);
+      await this.conversationService.addMessage(contextChatId, 'assistant', aiResponse);
 
       return this.messageService.formatResponse(aiResponse);
 

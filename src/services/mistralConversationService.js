@@ -190,6 +190,8 @@ class MistralConversationService {
     ) {
         const hasDispatcher = Boolean(dispatcher && typeof dispatcher.dispatchToolCall === 'function');
 
+        const requestedTools = Array.isArray(tools) && tools.length > 0 ? tools : undefined;
+
         this.validateConfig();
 
         const client = await this.getClient();
@@ -216,14 +218,38 @@ class MistralConversationService {
 
         try {
             if (!conversationId) {
-                response = await client.beta.conversations.start({
-                    agentId: this.agentId,
-                    inputs: firstInput,
-                    store,
-                    handoffExecution,
-                    instructions: typeof instructions === 'string' && instructions.trim().length > 0 ? instructions : undefined,
-                    stream: false,
-                });
+                try {
+                    response = await client.beta.conversations.start({
+                        agentId: this.agentId,
+                        inputs: firstInput,
+                        store,
+                        handoffExecution,
+                        instructions: typeof instructions === 'string' && instructions.trim().length > 0 ? instructions : undefined,
+                        tools: requestedTools,
+                        stream: false,
+                    });
+                } catch (error) {
+                    const message = error?.message || '';
+                    const status = error?.status || error?.statusCode;
+                    const looksLikeValidation = status === 422 || message.toLowerCase().includes('validation');
+
+                    if (requestedTools && looksLikeValidation) {
+                        if (config.env?.debug) {
+                            console.warn('⚠️ Conversations.start rejected tools payload, retrying without tools');
+                        }
+
+                        response = await client.beta.conversations.start({
+                            agentId: this.agentId,
+                            inputs: firstInput,
+                            store,
+                            handoffExecution,
+                            instructions: typeof instructions === 'string' && instructions.trim().length > 0 ? instructions : undefined,
+                            stream: false,
+                        });
+                    } else {
+                        throw error;
+                    }
+                }
                 conversationId = response?.conversationId;
                 if (conversationId) {
                     await this.setConversationId(chatId, conversationId);
@@ -243,6 +269,20 @@ class MistralConversationService {
                     conversationId = response.conversationId;
                     await this.setConversationId(chatId, conversationId);
                 }
+            }
+
+            if (config.env?.debug) {
+                const outputTypes = Array.isArray(response?.outputs)
+                    ? response.outputs.map((out) => getOutputType(out))
+                    : [];
+
+                console.log('mistral.conversation.response', {
+                    chatId,
+                    conversationId,
+                    store,
+                    handoffExecution,
+                    outputTypes,
+                });
             }
 
             const maxIterations = 12;
@@ -295,6 +335,7 @@ class MistralConversationService {
                         return {
                             type: 'function.result',
                             toolCallId,
+                            tool_call_id: toolCallId,
                             result: safeJsonStringify(result),
                         };
                     })
