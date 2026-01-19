@@ -221,8 +221,7 @@ whatsapp-ai/
 │   │   ├── errorHandler.js         # Centralized error handling
 │   │   ├── monitoringService.js    # System monitoring and health checks
 │   │   ├── performanceOptimizer.js # Performance optimization
-│   │   ├── persistenceService.js   # Data persistence and analytics
-│   │   ├── sqliteService.js        # SQLite database integration
+│   │   ├── sqlitePersistenceService.js # SQLite persistence and analytics
 │   │   └── timeoutHandler.js       # Request timeout management
 │   └── index.js                    # Application entry point
 ├── data/                           # Persistent data storage (auto-created)
@@ -310,6 +309,9 @@ GitHub Actions runs on every Pull Request and on pushes to `main`:
 # In .env file
 DEBUG=true
 NODE_ENV=development
+
+# Then start the bot
+pnpm start
 ```
 
 #### Common Debug Commands
@@ -477,8 +479,6 @@ LGPL-2.1 License - see LICENSE file for details.
 
 ### Technical Capabilities
 
-- **Multi-Language Support**: Configurable language and communication tone
-- **Gender-Inclusive AI**: Proper pronoun usage for all gender identities
 - **Scalable Architecture**: Handles high-volume conversations efficiently
 - **Performance Monitoring**: Real-time system monitoring and optimization
 - **Security-First Design**: Admin controls and secure data handling
