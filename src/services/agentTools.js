@@ -3,6 +3,9 @@ const EmailService = require('./emailService');
 const { parseDateTimePtBr } = require('../utils/dateTimeParser');
 const { DateTime } = require('luxon');
 
+// FOR THIS FILE, ALL FUNCTION NAMES MUST BE IN PORTUGUESE
+// FUNCTIONS HERE DON'T WORK IN API AGENT USING Conversations API (beta.conversations), NEED TO BE ADDED TO IN AGENT CONSOLE: https://console.mistral.ai/build/agents
+
 function getAgentTools({ enableBooking = true, enableEmail = true, enableClock = true } = {}) {
     const tools = [];
 
