@@ -2,6 +2,46 @@ require('dotenv').config();
 
 const { parseEnvBoolean } = require('../utils/env');
 
+function normalizeWhatsappNumber(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  let normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  if ((normalized.startsWith('"') && normalized.endsWith('"')) || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.includes('@')) {
+    return normalized;
+  }
+
+  return `${normalized}@c.us`;
+}
+
+function parseAdminNumbers(raw) {
+  if (typeof raw !== 'string') {
+    return [];
+  }
+
+  return raw
+    .split(',')
+    .map((entry) => normalizeWhatsappNumber(entry))
+    .filter((entry) => typeof entry === 'string' && entry.length > 0);
+}
+
 const config = {
   // Mistral Agents Configuration
   mistral: {
@@ -63,7 +103,8 @@ const config = {
 
   // Admin Configuration
   admin: {
-    whatsappNumber: process.env.ADMIN_WHATSAPP_NUMBER || '551234567890@c.us'
+    whatsappNumbers: parseAdminNumbers(process.env.ADMIN_WHATSAPP_NUMBER),
+    whatsappNumber: normalizeWhatsappNumber(process.env.ADMIN_WHATSAPP_NUMBER) || '551234567890@c.us'
   }
 };
 
