@@ -56,9 +56,6 @@
     "tar": "7.5.3"
   },
   "knip": {
-    "entry": [
-      "src/index.js"
-    ],
     "project": [
       "src/**/*.js",
       "test/**/*.js",
