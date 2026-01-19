@@ -42,7 +42,7 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 
 ## 📋 Prerequisites
 
-- Node.js 18+ installed
+- Node.js 20+ installed
 - Chrome/Chromium browser
 - Stable internet connection
 - Access to WhatsApp Web
@@ -155,6 +155,7 @@ pnpm start
 - `/status` - Check bot status, API connectivity, and system overview
 - `/about` - Information about the bot and its capabilities
 - `/reset` - Clear conversation history for the current chat
+- `/clear` - Alias for `/reset`
 
 #### Context Management
 
@@ -176,7 +177,7 @@ pnpm start
 #### Advanced Administration
 
 - `/admin` - Admin command statistics and access control information
-- `/sqlite` - SQLite performance comparison and database management
+- `/sqlite` - SQLite status and performance information
 
 ### Business Context Configuration
 
