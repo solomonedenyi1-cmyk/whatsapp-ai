@@ -26,6 +26,9 @@ class CommandHandler {
       case 'reset':
         return this.handleReset(chatId);
 
+      case 'clear':
+        return this.handleReset(chatId);
+
       case 'status':
         return await this.handleStatus();
 
@@ -615,7 +618,7 @@ ${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}`;
           return `💾 *SQLite Service Status*
 
 🔧 *Implementation:*
-SQLite service has been implemented for high-performance data storage as an alternative to JSON files.
+SQLite is the default persistence backend for this bot.
 
 📊 *Features:*
 • Optimized database schema
@@ -632,24 +635,14 @@ SQLite service has been implemented for high-performance data storage as an alte
 • ACID compliance
 
 🚀 *Migration:*
-Use \`/sqlite migrate\` to migrate from JSON to SQLite storage.`;
+JSON persistence has been removed. No migration is required.`;
 
         case 'migrate':
           return `🔄 *SQLite Migration*
 
-⚠️ *Migration Process:*
-1. Backup current JSON data
-2. Initialize SQLite database
-3. Migrate conversation history
-4. Verify data integrity
-5. Switch to SQLite storage
+SQLite is already enabled by default.
 
-📝 *Note:* Migration feature is ready but requires manual activation in the configuration to prevent accidental data loss.
-
-To enable SQLite:
-1. Set \`USE_SQLITE=true\` in .env
-2. Restart the bot
-3. Data will be automatically migrated`;
+Legacy JSON persistence has been removed, so there is no migration flow to run.`;
 
         case 'performance':
           return `⚡ *SQLite vs JSON Performance*
