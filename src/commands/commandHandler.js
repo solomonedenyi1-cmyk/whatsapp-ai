@@ -450,14 +450,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Memory: ${Math.round(stats.cache.memoryUsage)}MB\n\n`;
       }
 
-      // Message queue
-      if (stats.messageQueue) {
-        response += `📬 *Message Queue:*\n`;
-        response += `• Current Size: ${stats.messageQueue.size}\n`;
-        response += `• Processed: ${stats.messageQueue.processed}\n`;
-        response += `• Average Wait: ${Math.round(stats.messageQueue.averageWaitTime)}ms\n`;
-      }
-
       return response;
     } catch (error) {
       console.error('❌ Error getting performance metrics:', error);

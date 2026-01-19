@@ -16,7 +16,6 @@ class PerformanceOptimizer extends EventEmitter {
     this.thresholds = {
       memoryUsage: 512, // MB
       responseTime: 5000, // ms
-      messageQueueSize: 100,
       errorRate: 0.05 // 5%
     };
 
@@ -25,7 +24,6 @@ class PerformanceOptimizer extends EventEmitter {
       memoryHistory: [],
       responseTimeHistory: [],
       errorRateHistory: [],
-      messageQueue: [],
       messagesProcessed: 0,
       totalMessageLength: 0,
       messageHistory: []
@@ -33,7 +31,6 @@ class PerformanceOptimizer extends EventEmitter {
 
     // Optimization flags
     this.optimizations = {
-      messageQueueEnabled: true,
       responseTimeOptimization: true,
       memoryOptimization: true,
       cacheOptimization: true
@@ -105,12 +102,6 @@ class PerformanceOptimizer extends EventEmitter {
         await this.optimizeMemoryUsage();
       }
 
-      // Message queue size
-      if (this.metrics.messageQueue.length > this.thresholds.messageQueueSize) {
-        this.emit('messageQueueThresholdExceeded', { size: this.metrics.messageQueue.length });
-        await this.optimizeMessageQueue();
-      }
-
     } catch (error) {
       console.error('❌ Error collecting metrics:', error.message);
     }
@@ -139,24 +130,6 @@ class PerformanceOptimizer extends EventEmitter {
 
     } catch (error) {
       console.error('❌ Memory optimization failed:', error.message);
-    }
-  }
-
-  /**
-   * Optimize message queue
-   */
-  async optimizeMessageQueue() {
-    try {
-      console.log('📬 Optimizing message queue...');
-
-      // Process oldest messages first
-      const oldMessages = this.metrics.messageQueue.splice(0, 50);
-
-      // Emit event for processing
-      this.emit('messageQueueOptimized', { processedCount: oldMessages.length });
-
-    } catch (error) {
-      console.error('❌ Message queue optimization failed:', error.message);
     }
   }
 
@@ -359,29 +332,8 @@ class PerformanceOptimizer extends EventEmitter {
         hitRate: this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses) || 0,
         size: this.cacheStats.size,
         memoryUsage: this.cache.size * 0.1 // Rough estimate
-      },
-      messageQueue: {
-        size: this.metrics.messageQueue.length,
-        processed: this.metrics.messagesProcessed || 0,
-        averageWaitTime: this.calculateAverageWaitTime()
       }
     };
-  }
-
-  /**
-   * Calculate average wait time for message queue
-   */
-  calculateAverageWaitTime() {
-    if (this.metrics.messageQueue.length === 0) {
-      return 0;
-    }
-
-    const now = Date.now();
-    const totalWaitTime = this.metrics.messageQueue.reduce((sum, msg) => {
-      return sum + (now - msg.timestamp);
-    }, 0);
-
-    return totalWaitTime / this.metrics.messageQueue.length;
   }
 
   /**

@@ -129,10 +129,6 @@ class MonitoringService extends EventEmitter {
       this.performanceOptimizer.on('responseTimeThresholdExceeded', async (data) => {
         await this.handleAlert('RESPONSE_TIME_HIGH', `Response time exceeded threshold: ${data.responseTime}ms`, data);
       });
-
-      this.performanceOptimizer.on('messageQueueThresholdExceeded', async (data) => {
-        await this.handleAlert('QUEUE_SIZE_HIGH', `Message queue size exceeded threshold: ${data.size}`, data);
-      });
     }
   }
 
@@ -161,8 +157,7 @@ class MonitoringService extends EventEmitter {
         healthData.checks.performance = {
           status: perfStats.responseTime.average < this.config.alertThresholds.responseTime ? 'healthy' : 'warning',
           avgResponseTime: perfStats.responseTime.average,
-          cacheHitRate: perfStats.cache.hitRate,
-          queueSize: perfStats.messageQueue.size
+          cacheHitRate: perfStats.cache.hitRate
         };
       }
 
@@ -273,7 +268,6 @@ class MonitoringService extends EventEmitter {
     const severityMap = {
       'MEMORY_HIGH': 'high',
       'RESPONSE_TIME_HIGH': 'medium',
-      'QUEUE_SIZE_HIGH': 'medium',
       'ERROR_RATE_HIGH': 'high',
       'COMPONENT_DOWN': 'critical',
       'DISK_SPACE_LOW': 'high',
@@ -352,8 +346,7 @@ class MonitoringService extends EventEmitter {
       performance: {
         memory: performanceStats.memory || {},
         responseTime: performanceStats.responseTime || {},
-        cache: performanceStats.cache || {},
-        messageQueue: performanceStats.messageQueue || {}
+        cache: performanceStats.cache || {}
       },
 
       errors: {
