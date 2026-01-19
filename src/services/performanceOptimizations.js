@@ -9,11 +9,8 @@ class PerformanceOptimizations extends EventEmitter {
     super();
 
     this.optimizations = {
-      messageQueue: new Map(),
       responseCache: new Map(),
-      memoryPool: new Set(),
       compressionEnabled: true,
-      batchProcessing: true,
       lazyLoading: true
     };
 
@@ -27,8 +24,6 @@ class PerformanceOptimizations extends EventEmitter {
 
     this.config = {
       maxCacheSize: 1000,
-      maxQueueSize: 500,
-      batchSize: 10,
       compressionThreshold: 1024,
       memoryCleanupInterval: 300000, // 5 minutes
       performanceCheckInterval: 60000 // 1 minute
@@ -139,11 +134,6 @@ class PerformanceOptimizations extends EventEmitter {
     const optimizedMessage = this.optimizations.compressionEnabled ?
       this.compressMessage(message) : message;
 
-    // Batch processing optimization
-    if (this.optimizations.batchProcessing && this.shouldBatch(chatId)) {
-      return await this.processBatch(chatId, optimizedMessage, processor);
-    }
-
     // Regular processing with optimizations
     return await processor(optimizedMessage);
   }
@@ -193,24 +183,7 @@ class PerformanceOptimizations extends EventEmitter {
       priority += 1;
     }
 
-    // Recent chat activity increases priority
-    const recentActivity = this.getRecentActivity(chatId);
-    if (recentActivity > 5) {
-      priority += 1;
-    }
-
     return priority;
-  }
-
-  /**
-   * Get recent activity for chat
-   * @param {string} chatId - Chat identifier
-   * @returns {number} - Recent activity count
-   */
-  getRecentActivity(chatId) {
-    const queue = this.optimizations.messageQueue.get(chatId) || [];
-    const fiveMinutesAgo = Date.now() - 300000;
-    return queue.filter(item => item.timestamp > fiveMinutesAgo).length;
   }
 
   /**
@@ -343,9 +316,6 @@ class PerformanceOptimizations extends EventEmitter {
       global.gc();
     }
 
-    // Clear memory pool of unused objects
-    this.optimizations.memoryPool.clear();
-
     // Update memory metrics
     this.metrics.memoryUsage = process.memoryUsage();
   }
@@ -360,12 +330,6 @@ class PerformanceOptimizations extends EventEmitter {
 
     // Clear old cache entries
     this.cleanupCache();
-
-    // Clear old queue items
-    this.cleanupQueues();
-
-    // Clear memory pool
-    this.optimizations.memoryPool.clear();
 
     // Force garbage collection
     if (global.gc) {
@@ -394,23 +358,6 @@ class PerformanceOptimizations extends EventEmitter {
     for (const [key, entry] of this.optimizations.responseCache.entries()) {
       if (now - entry.timestamp > maxAge) {
         this.optimizations.responseCache.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Cleanup old queue items
-   */
-  cleanupQueues() {
-    const maxAge = 600000; // 10 minutes
-    const now = Date.now();
-
-    for (const [chatId, queue] of this.optimizations.messageQueue.entries()) {
-      const filteredQueue = queue.filter(item => now - item.timestamp <= maxAge);
-      if (filteredQueue.length === 0) {
-        this.optimizations.messageQueue.delete(chatId);
-      } else {
-        this.optimizations.messageQueue.set(chatId, filteredQueue);
       }
     }
   }
@@ -481,8 +428,6 @@ class PerformanceOptimizations extends EventEmitter {
 
     // Clear caches and queues
     this.optimizations.responseCache.clear();
-    this.optimizations.messageQueue.clear();
-    this.optimizations.memoryPool.clear();
 
     // Final memory cleanup
     if (global.gc) {
