@@ -62,9 +62,12 @@ const config = {
   tts: {
     enabled: parseEnvBoolean(process.env.TTS_ENABLED, false),
     voice: process.env.TTS_VOICE?.trim() || 'pt-BR-FranciscaNeural',
+    lang: process.env.TTS_LANG?.trim() || 'pt-BR',
     outputFormat: process.env.TTS_OUTPUT_FORMAT?.trim() || 'ogg-24khz-16bit-mono-opus',
     mimeType: process.env.TTS_MIME_TYPE?.trim() || 'audio/ogg; codecs=opus',
     maxChars: Number.parseInt(process.env.TTS_MAX_CHARS, 10) || 900,
+    timeoutMs: Number.parseInt(process.env.TTS_TIMEOUT_MS, 10) || 45000,
+    proxy: process.env.TTS_PROXY?.trim() || null,
   },
 
   cal: {

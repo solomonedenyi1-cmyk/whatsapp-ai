@@ -22,7 +22,10 @@ class EdgeTtsService {
 
         this.edgeTts = new EdgeTTS({
             voice: config.tts.voice,
+            lang: config.tts.lang,
             outputFormat: config.tts.outputFormat,
+            proxy: config.tts.proxy || undefined,
+            timeout: config.tts.timeoutMs,
         });
 
         return this.edgeTts;
@@ -65,13 +68,26 @@ class EdgeTtsService {
         return path.join(os.tmpdir(), `whatsapp-ai-tts-${randomId}${extension}`);
     }
 
-    async synthesizeToBuffer(text, { voice, outputFormat, mimeType, maxChars } = {}) {
+    async synthesizeToBuffer(text, {
+        voice,
+        lang,
+        outputFormat,
+        mimeType,
+        maxChars,
+        timeoutMs,
+        proxy,
+    } = {}) {
         const selectedVoice = typeof voice === 'string' && voice.trim().length > 0 ? voice.trim() : config.tts.voice;
+        const selectedLang = typeof lang === 'string' && lang.trim().length > 0 ? lang.trim() : config.tts.lang;
         const selectedOutputFormat = typeof outputFormat === 'string' && outputFormat.trim().length > 0
             ? outputFormat.trim()
             : config.tts.outputFormat;
         const selectedMimeType = typeof mimeType === 'string' && mimeType.trim().length > 0 ? mimeType.trim() : config.tts.mimeType;
         const selectedMaxChars = Number.isFinite(maxChars) ? maxChars : config.tts.maxChars;
+        const selectedTimeoutMs = Number.isFinite(timeoutMs) ? timeoutMs : config.tts.timeoutMs;
+        const selectedProxy = typeof proxy === 'string' && proxy.trim().length > 0
+            ? proxy.trim()
+            : (config.tts.proxy || null);
 
         this.validateText(text, selectedMaxChars);
 
@@ -81,8 +97,20 @@ class EdgeTtsService {
             client.voice = selectedVoice;
         }
 
+        if (typeof selectedLang === 'string' && selectedLang.trim().length > 0) {
+            client.lang = selectedLang;
+        }
+
         if (typeof selectedOutputFormat === 'string' && selectedOutputFormat.trim().length > 0) {
             client.outputFormat = selectedOutputFormat;
+        }
+
+        if (Number.isFinite(selectedTimeoutMs) && selectedTimeoutMs > 0) {
+            client.timeout = selectedTimeoutMs;
+        }
+
+        if (selectedProxy) {
+            client.proxy = selectedProxy;
         }
 
         const fs = await import('node:fs/promises');
