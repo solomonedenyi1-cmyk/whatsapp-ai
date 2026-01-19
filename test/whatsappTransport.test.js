@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { safeSendSeen, safeSendMessage } = require('../src/bot/whatsappTransport');
+const { safeSendSeen, safeSendMessage, safeSendMedia } = require('../src/bot/whatsappTransport');
 
 test('safeSendSeen does nothing for @lid chats', async () => {
     let chatSeenCalls = 0;
@@ -114,4 +114,48 @@ test('safeSendMessage resolves @lid target via message.getContact when needed', 
     assert.equal(calls[0].id, '123@lid');
     assert.equal(calls[1].id, '555@c.us');
     assert.deepEqual(calls[1].options, { sendSeen: false });
+});
+
+test('safeSendMedia forces sendSeen=false and keeps sendAudioAsVoice option', async () => {
+    const calls = [];
+
+    const client = {
+        sendMessage: async (id, media, options) => {
+            calls.push({ id, media, options });
+        },
+    };
+
+    const media = { mimetype: 'audio/ogg', data: 'AAA' };
+    await safeSendMedia('123@c.us', media, { sendAudioAsVoice: true }, { client });
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].id, '123@c.us');
+    assert.equal(calls[0].media, media);
+    assert.deepEqual(calls[0].options, { sendAudioAsVoice: true, sendSeen: false });
+});
+
+test('safeSendMedia resolves @lid target via message.getContact when needed', async () => {
+    const calls = [];
+
+    const client = {
+        sendMessage: async (id, media, options) => {
+            calls.push({ id, media, options });
+
+            if (id.endsWith('@lid')) {
+                throw new Error('cannot send to lid');
+            }
+        },
+    };
+
+    const message = {
+        getContact: async () => ({ id: { _serialized: '555@c.us' } }),
+    };
+
+    const media = { mimetype: 'audio/ogg', data: 'AAA' };
+    await safeSendMedia('123@lid', media, { sendAudioAsVoice: true }, { message, client });
+
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].id, '123@lid');
+    assert.equal(calls[1].id, '555@c.us');
+    assert.deepEqual(calls[1].options, { sendAudioAsVoice: true, sendSeen: false });
 });

@@ -16,7 +16,8 @@ const AdminService = require('../services/adminService');
 const PerformanceOptimizations = require('../services/performanceOptimizations');
 const { createToolDispatcher } = require('../services/agentTools');
 const MistralAudioService = require('../services/mistralAudioService');
-const { safeSendSeen, safeSendMessage } = require('./whatsappTransport');
+const EdgeTtsService = require('../services/edgeTtsService');
+const { safeSendSeen, safeSendMessage, safeSendMedia } = require('./whatsappTransport');
 const { resolveStableChatId } = require('./chatIdResolver');
 const { generateRequestId } = require('../utils/requestContext');
 
@@ -39,6 +40,7 @@ class WhatsAppBot {
       persistenceService: this.conversationService.persistenceService,
     });
     this.mistralAudioService = new MistralAudioService();
+    this.edgeTtsService = new EdgeTtsService();
     this.messageService = new MessageService();
     this.commandHandler = new CommandHandler(
       this.mistralAgentService,
@@ -76,6 +78,15 @@ class WhatsAppBot {
 
   async safeSendMessage(chatId, text, message = null, chat = null) {
     await safeSendMessage(chatId, text, {
+      message,
+      chat,
+      client: this.client,
+      debug: config.env.debug,
+    });
+  }
+
+  async safeSendMedia(chatId, media, options = {}, message = null, chat = null) {
+    await safeSendMedia(chatId, media, options, {
       message,
       chat,
       client: this.client,
@@ -247,6 +258,7 @@ class WhatsAppBot {
       await this.safeSendTyping(chat, chatId);
 
       let response;
+      const shouldReplyWithAudio = Boolean(config.tts?.enabled) && (message.type === 'ptt' || message.type === 'audio');
 
       // Check if it's a command
       if (message.type === 'chat' && this.messageService.isCommand(messageText)) {
@@ -314,7 +326,22 @@ class WhatsAppBot {
       }
 
       // Send response
-      await this.sendResponse(chatId, response, message, chat);
+      if (shouldReplyWithAudio && typeof response === 'string') {
+        try {
+          const { MessageMedia } = require('whatsapp-web.js');
+          const { buffer, mimeType } = await this.edgeTtsService.synthesizeToBuffer(response);
+          const base64 = buffer.toString('base64');
+          const media = new MessageMedia(mimeType, base64, 'reply.ogg');
+          await this.safeSendMedia(chatId, media, { sendAudioAsVoice: true }, message, chat);
+        } catch (error) {
+          if (config.env.debug) {
+            console.warn('⚠️ Failed to generate/send TTS audio, falling back to text:', error?.message || error);
+          }
+          await this.sendResponse(chatId, response, message, chat);
+        }
+      } else {
+        await this.sendResponse(chatId, response, message, chat);
+      }
 
       // Record response time
       const responseTime = Date.now() - startTime;

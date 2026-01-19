@@ -91,7 +91,73 @@ async function safeSendMessage(chatId, text, { message = null, chat = null, clie
     throw lastError || new Error('No available method to send message');
 }
 
+async function safeSendMedia(chatId, media, options = {}, { message = null, chat = null, client = null, debug = config.env.debug } = {}) {
+    let lastError = null;
+
+    const isLidChat = chatId && typeof chatId === 'string' && chatId.endsWith('@lid');
+    const safeOptions = {
+        ...options,
+        sendSeen: false,
+    };
+
+    if (isLidChat && client && typeof client.sendMessage === 'function') {
+        try {
+            await client.sendMessage(chatId, media, safeOptions);
+            return;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    if (chat && typeof chat.sendMessage === 'function') {
+        try {
+            await chat.sendMessage(media, safeOptions);
+            return;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    if (!client || typeof client.sendMessage !== 'function') {
+        throw lastError || new Error('No available method to send message');
+    }
+
+    let targetId = chatId;
+    if (targetId && typeof targetId === 'string' && targetId.endsWith('@lid')) {
+        targetId = null;
+
+        try {
+            if (message && typeof message.getContact === 'function') {
+                const contact = await message.getContact();
+                const serialized = contact?.id?._serialized;
+                if (typeof serialized === 'string' && !serialized.endsWith('@lid')) {
+                    targetId = serialized;
+                }
+            }
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    if (!targetId) {
+        if (debug) {
+            console.warn(`⚠️ Could not resolve send target for ${chatId}`);
+        }
+        throw lastError || new Error('Could not resolve send target');
+    }
+
+    try {
+        await client.sendMessage(targetId, media, safeOptions);
+        return;
+    } catch (error) {
+        lastError = error;
+    }
+
+    throw lastError || new Error('No available method to send message');
+}
+
 module.exports = {
     safeSendSeen,
     safeSendMessage,
+    safeSendMedia,
 };
