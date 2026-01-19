@@ -20,7 +20,7 @@ services:
       TTS_MIME_TYPE: "audio/ogg; codecs=opus"
       TTS_MAX_CHARS: "900"
 
-      GOOGLE_APPLICATION_CREDENTIALS: ""
+      GOOGLE_APPLICATION_CREDENTIALS: "/run/secrets/gcp-tts.json"
       GOOGLE_TTS_LANGUAGE_CODE: "pt-BR"
       GOOGLE_TTS_VOICE_NAME: "pt-BR-Standard-A"
       GOOGLE_TTS_SPEAKING_RATE: "1.0"
@@ -50,6 +50,7 @@ services:
       ADMIN_WHATSAPP_NUMBER: 551234567890@c.us
 
     volumes:
+      - ${HOME:-/root}/docker/docker-data/whatsapp-ai/gcp-tts.json:/run/secrets/gcp-tts.json:ro
       - whatsapp_ai_session:/app/session
       - whatsapp_ai_data:/app/data
 
