@@ -1,24 +1,18 @@
-const EventEmitter = require('events');
 const config = require('../config/config');
 
 /**
  * Performance Optimizations Service
  * Advanced performance optimizations for the WhatsApp AI Bot
  */
-class PerformanceOptimizations extends EventEmitter {
+class PerformanceOptimizations {
   constructor() {
-    super();
-
     this.optimizations = {
       responseCache: new Map(),
-      compressionEnabled: true,
-      lazyLoading: true
+      compressionEnabled: true
     };
 
     this.metrics = {
       memoryUsage: process.memoryUsage(),
-      cpuUsage: process.cpuUsage(),
-      optimizationsSaved: 0,
       cacheHits: 0,
       cacheMisses: 0
     };
@@ -62,7 +56,7 @@ class PerformanceOptimizations extends EventEmitter {
   }
 
   /**
-   * Optimize message processing with queue management
+   * Optimize message processing with caching/compression
    * @param {string} chatId - Chat identifier
    * @param {string} message - Message content
    * @param {Function} processor - Processing function
@@ -72,62 +66,44 @@ class PerformanceOptimizations extends EventEmitter {
     const startTime = Date.now();
 
     try {
-      // Check cache first
       const cacheKey = this.generateCacheKey(chatId, message);
       const cachedResult = this.getFromCache(cacheKey);
 
       if (cachedResult) {
         this.metrics.cacheHits++;
-        this.emit('cacheHit', { chatId, cacheKey });
         return cachedResult;
       }
 
       this.metrics.cacheMisses++;
 
-      // Add to processing queue
-      const queueItem = {
-        chatId,
-        message,
-        processor,
-        timestamp: Date.now(),
-        priority: this.calculatePriority(chatId, message)
-      };
-
       // Process with optimizations
-      const result = await this.processWithOptimizations(queueItem);
+      const result = await this.processWithOptimizations(message, processor);
 
       // Cache result if beneficial
       if (this.shouldCache(message, result)) {
         this.addToCache(cacheKey, result);
       }
 
-      // Update metrics
-      const processingTime = Date.now() - startTime;
-      this.metrics.optimizationsSaved += Math.max(0, 1000 - processingTime);
-
-      this.emit('messageProcessed', {
-        chatId,
-        processingTime,
-        cached: false
-      });
-
       return result;
 
     } catch (error) {
       console.error('❌ Error in optimized message processing:', error);
-      this.emit('processingError', { chatId, error: error.message });
       throw error;
+    } finally {
+      const processingTime = Date.now() - startTime;
+      if (processingTime > 5000) {
+        console.log(`⚠️ Slow processing detected: ${processingTime}ms`);
+      }
     }
   }
 
   /**
    * Process message with various optimizations
-   * @param {Object} queueItem - Queue item to process
+   * @param {string} message - Message to process
+   * @param {Function} processor - Processing function
    * @returns {Promise<any>} - Processing result
    */
-  async processWithOptimizations(queueItem) {
-    const { chatId, message, processor } = queueItem;
-
+  async processWithOptimizations(message, processor) {
     // Memory optimization
     this.optimizeMemoryForProcessing();
 
@@ -163,28 +139,6 @@ class PerformanceOptimizations extends EventEmitter {
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
-  }
-
-  /**
-   * Calculate processing priority
-   * @param {string} chatId - Chat identifier
-   * @param {string} message - Message content
-   * @returns {number} - Priority score
-   */
-  calculatePriority(chatId, message) {
-    let priority = 1;
-
-    // Command messages get higher priority
-    if (message.startsWith('/')) {
-      priority += 2;
-    }
-
-    // Shorter messages get slightly higher priority
-    if (message.length < 100) {
-      priority += 1;
-    }
-
-    return priority;
   }
 
   /**
@@ -312,12 +266,6 @@ class PerformanceOptimizations extends EventEmitter {
     if (saved > 0 || config.env?.debug) {
       console.log(`✅ Memory cleanup complete. Saved: ${savedMb.toFixed(2)}MB`);
     }
-
-    this.emit('memoryCleanup', {
-      beforeMemory,
-      afterMemory,
-      saved
-    });
   }
 
   /**
@@ -360,7 +308,6 @@ class PerformanceOptimizations extends EventEmitter {
    */
   checkPerformanceMetrics() {
     const currentMemory = process.memoryUsage();
-    const currentCpu = process.cpuUsage();
 
     // Check memory usage
     const memoryIncrease = currentMemory.heapUsed - this.metrics.memoryUsage.heapUsed;
@@ -371,15 +318,6 @@ class PerformanceOptimizations extends EventEmitter {
 
     // Update metrics
     this.metrics.memoryUsage = currentMemory;
-    this.metrics.cpuUsage = currentCpu;
-
-    // Emit performance update
-    this.emit('performanceUpdate', {
-      memory: currentMemory,
-      cpu: currentCpu,
-      cacheSize: this.optimizations.responseCache.size,
-      queueSize: 0
-    });
   }
 
   /**
