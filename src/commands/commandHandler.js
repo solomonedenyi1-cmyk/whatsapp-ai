@@ -110,7 +110,7 @@ class CommandHandler {
 • The AI remembers our conversation context permanently
 • Conversations are automatically saved and restored
 • Use /reset if you want to start fresh
-• Edit config.json to customize the AI's personality
+• Update the Mistral Agent instructions to customize the assistant behavior
 
 *Need help?* Just ask me anything! 😊`;
   }
@@ -204,24 +204,20 @@ For more information, use /help`;
    * @returns {string} - Context information
    */
   handleContext() {
-    const { businessContext } = require('../config/context');
-    return `🎭 *Current AI Context*
+    return `🎭 *Current Bot Context*
 
-*Identity:*
-• Name: ${businessContext.identity.name}
-• Gender: ${businessContext.identity.gender}
-• Role: ${businessContext.identity.role}
-• Personality: ${businessContext.identity.personality}
+*Mistral:*
+• Agent ID: ${config.mistral.agentId}
+• Conversations API: ${config.mistral.useConversations ? 'enabled' : 'disabled'}
+• Conversation store: ${config.mistral.conversationStore ? 'enabled' : 'disabled'}
+• Handoff execution: ${config.mistral.conversationHandoffExecution}
 
-*Business:*
-• Company: ${businessContext.business.name}
-• Services: ${businessContext.business.services.length} configured
-• Products: ${businessContext.business.products.length} configured
+*Bot:*
+• Name: ${config.bot.name}
+• Max context messages: ${config.bot.maxContextMessages}
+• Message split length: ${config.bot.messageSplitLength}
 
-*Owner:*
-• ${businessContext.owner.name}, ${businessContext.owner.title}
-
-*Note:* Edit config.json in the root directory to customize the AI's knowledge and personality.`;
+*Note:* Update the Mistral Agent instructions to customize the assistant behavior.`;
   }
 
   /**

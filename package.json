@@ -41,8 +41,7 @@
   },
   "nodemonConfig": {
     "watch": [
-      "src",
-      "config.json"
+      "src"
     ],
     "ext": "js,json",
     "ignore": [

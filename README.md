@@ -99,33 +99,9 @@ DEBUG=false
 
 **Important**: Replace example values with your actual configuration.
 
-### 4. Business Context Setup
+### 4. Assistant Setup
 
-Edit `config.json` in the root directory to customize your AI assistant:
-
-```json
-{
-  "ai_identity": {
-    "name": "Your AI Name",
-    "gender": "female",
-    "role": "Customer Service Representative",
-    "personality": "professional, courteous and helpful",
-    "language": "English",
-    "tone": "professional and polite, but warm and human"
-  },
-  "business": {
-    "name": "Your Company Name",
-    "description": "Your business description",
-    "website": "https://yourwebsite.com",
-    "email": "contact@yourcompany.com",
-    "phone": "+1 555-123-4567",
-    "address": "Your business address",
-    "working_hours": "Monday to Friday, 9 AM to 5 PM (UTC-5)"
-  }
-}
-```
-
-**No coding required** - just edit the JSON configuration file.
+Configure your assistant behavior (persona, policies, business knowledge) in the **Mistral Agent instructions**.
 
 ### 5. Start the Bot
 
@@ -157,7 +133,7 @@ pnpm start
 
 #### Context Management
 
-- `/context` - View current AI configuration and business context
+- `/context` - View current bot configuration (Agent ID and runtime settings)
 
 #### Analytics & Reporting
 
@@ -175,48 +151,6 @@ pnpm start
 
 - `/admin` - Admin command statistics and access control information
 - `/sqlite` - SQLite status and performance information
-
-### Business Context Configuration
-
-The bot features a comprehensive business context system for creating professional AI assistants:
-
-#### Configuration Structure
-
-1. **AI Identity**: Name, gender, role, personality, language, and communication tone
-2. **Business Information**: Company details, services, products, contact information
-3. **Owner Details**: Your information, expertise, and specialties
-4. **FAQ System**: Common questions and standardized answers
-5. **Capabilities & Limitations**: What the AI can and cannot do
-6. **Standard Responses**: Predefined responses for common scenarios
-
-#### Configuration Management
-
-- **Edit `config.json`** in the root directory to customize all aspects
-- **Use `/context`** to verify current configuration and settings
-- **No coding required** - all configuration is done through JSON
-
-#### Example Business Configuration
-
-```json
-{
-  "services": [
-    {
-      "name": "Website Development",
-      "description": "Custom website design and development",
-      "price": "$2,500",
-      "duration": "2 weeks"
-    }
-  ],
-  "products": [
-    {
-      "name": "Hosting Package",
-      "description": "Managed web hosting with SSL",
-      "price": "$29/month",
-      "availability": "Available"
-    }
-  ]
-}
-```
 
 ### Normal Conversations
 
