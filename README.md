@@ -198,105 +198,7 @@ AI: 📊 Bot Status
 
 ### Complete Configuration Structure
 
-The `config.json` file supports comprehensive business configuration:
-
-#### AI Identity Configuration
-
-```json
-{
-  "ai_identity": {
-    "name": "Assistant Name",
-    "gender": "female",
-    "role": "Customer Service Representative",
-    "personality": "professional, courteous and helpful",
-    "language": "English",
-    "tone": "professional and polite, but warm and human"
-  }
-}
-```
-
-**Gender Pronoun Support**: Automatically uses appropriate pronouns (she/her, he/him, they/them, neutral) based on gender setting.
-
-#### Business Information
-
-```json
-{
-  "business": {
-    "name": "Your Company Name",
-    "description": "Complete business description",
-    "website": "https://yourwebsite.com",
-    "email": "contact@yourcompany.com",
-    "phone": "+1 555-123-4567",
-    "address": "Your business address",
-    "working_hours": "Monday to Friday, 9 AM to 5 PM (UTC-5)"
-  }
-}
-```
-
-#### Services and Products
-
-```json
-{
-  "services": [
-    {
-      "name": "Service Name",
-      "description": "Detailed service description",
-      "price": "$299",
-      "duration": "2 hours"
-    }
-  ],
-  "products": [
-    {
-      "name": "Product Name",
-      "description": "Product description",
-      "price": "$199",
-      "availability": "In stock"
-    }
-  ]
-}
-```
-
-#### FAQ and Owner Information
-
-```json
-{
-  "faq": [
-    {
-      "question": "What are your payment methods?",
-      "answer": "We accept credit cards, PayPal, and bank transfers."
-    }
-  ],
-  "owner": {
-    "name": "Your Name",
-    "title": "Founder & CEO",
-    "bio": "Brief professional biography",
-    "experience": "10+ years in the industry",
-    "specialties": ["Specialty 1", "Specialty 2"]
-  }
-}
-```
-
-#### Template Variables
-
-Supported template variables for dynamic content:
-
-- `{name}` - AI identity name
-- `{working_hours}` - Business working hours
-- `{phone}` - Business phone number
-- `{business_name}` - Business name
-- `{owner_name}` - Owner name
-
-#### Complete Customization Features
-
-- AI personality and behavior instructions
-- System prompt structure and headers
-- Gender pronouns and language rules
-- Business information and context
-- Standard responses and templates
-- Capabilities and limitations
-- FAQ and knowledge base
-
-**All configuration is done through JSON** - no code changes required.
+Assistant behavior (persona, policies, business knowledge and tool usage) is configured in the **Mistral Agent instructions**. This repository only keeps runtime configuration (API keys, bot settings, WhatsApp/Puppeteer and integrations) as environment variables.
 
 ## Architecture
 
@@ -310,8 +212,7 @@ whatsapp-ai/
 │   ├── commands/
 │   │   └── commandHandler.js        # Command processing and routing
 │   ├── config/
-│   │   ├── config.js               # System configuration loader
-│   │   └── context.js              # Business context and AI prompt generation
+│   │   └── config.js               # System configuration loader
 │   ├── services/
 │   │   ├── mistralAgentService.js  # Mistral Agents API client
 │   │   ├── conversationService.js  # Conversation context management
@@ -327,7 +228,6 @@ whatsapp-ai/
 ├── data/                           # Persistent data storage (auto-created)
 ├── session/                        # WhatsApp session data (auto-created)
 ├── .env                           # Environment configuration
-├── config.json                    # Business context configuration
 ├── package.json                   # Node.js dependencies
 └── README.md                      # Documentation
 ```
@@ -336,10 +236,9 @@ whatsapp-ai/
 
 #### Storage System
 
-- **Conversation Persistence**: Automatic backup of all conversations to JSON files
+- **Conversation Persistence**: Automatic persistence via SQLite
 - **Cross-Session Continuity**: Conversations persist across bot restarts
 - **On-Demand Loading**: Conversations loaded as needed to optimize memory
-- **SQLite Option**: High-performance database alternative (80-90% faster)
 - **Data Integrity**: Robust error handling and validation
 
 #### Analytics Features
@@ -391,15 +290,14 @@ GitHub Actions runs on every Pull Request and on pushes to `main`:
 
 ### Development Workflow
 
-1. **Configuration Changes**: Edit `config.json` for business context modifications
-2. **Verify Configuration**: Use `/context` command to check current settings
+1. **Agent Changes**: Update Mistral Agent instructions (persona and business knowledge)
+2. **Verify Runtime**: Use `/context` command to check current runtime settings
 3. **Monitor System**: Use `/health` and `/monitor` commands for system status
 4. **Debug Issues**: Enable `DEBUG=true` in `.env` for detailed logging
 
 ### Development Tips
 
-- **JSON Validation**: Ensure `config.json` has valid JSON syntax
-- **Incremental Testing**: Test configuration changes with `/context` before going live
+- **Incremental Testing**: Test changes with `/context` before going live
 - **Performance Monitoring**: Use `/performance` to monitor system resources
 - **Error Tracking**: Check `/errors` command for system issues
 - **Admin Security**: Ensure admin WhatsApp number is correctly configured
@@ -478,9 +376,8 @@ NODE_ENV=development
 
 ##### AI responses seem generic
 
-- Edit `config.json` with your business information
-- Verify configuration with `/context` command
-- Check JSON syntax with online validator
+- Update your Mistral Agent instructions with your business information
+- Verify runtime settings with `/context` command
 
 ##### Commands not working
 
@@ -491,10 +388,8 @@ NODE_ENV=development
 
 ##### Configuration file errors
 
-- Validate JSON syntax using online JSON validator
-- Check for missing commas, brackets, or quotes
-- Bot uses default configuration if `config.json` has errors
-- Check console for specific JSON parsing errors
+- Verify required environment variables are set correctly
+- Check console for specific startup errors
 
 #### Performance Issues
 
@@ -529,7 +424,7 @@ pnpm start
 
 1. **Check System Status**: Use `/health` command for component status
 2. **Review Logs**: Enable debug mode and check console output
-3. **Validate Configuration**: Use `/context` to verify business setup
+3. **Validate Runtime**: Use `/context` to verify runtime settings
 4. **Monitor Performance**: Use `/monitor` for system metrics
 5. **Check Errors**: Use `/errors` for recent error reports
 
@@ -538,7 +433,7 @@ pnpm start
 ### Support Resources
 
 - **Documentation**: This README contains comprehensive setup and usage information
-- **Configuration**: Example `config.json` provides complete business setup templates
+- **Configuration**: Configure assistant behavior in the Mistral Agent instructions
 - **Troubleshooting**: See troubleshooting section for common issues and solutions
 - **System Monitoring**: Use built-in commands (`/health`, `/monitor`, `/errors`) for diagnostics
 
@@ -546,7 +441,6 @@ pnpm start
 
 - **GitHub Issues**: Report bugs and technical problems through GitHub issues
 - **API Documentation**: Consult Mistral API documentation for API-related issues
-- **JSON Validation**: Use online JSON validators to verify configuration syntax
 - **Community**: Check existing issues and discussions for similar problems
 
 ### Self-Diagnosis Tools

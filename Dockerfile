@@ -57,7 +57,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY scripts ./scripts
-COPY config.json ./config.json
 COPY package.json ./package.json
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
