@@ -60,7 +60,21 @@ jobs:
       - name: semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec semantic-release
+        run: |
+          set -euo pipefail
+          attempts=4
+          delay=5
+          for i in $(seq 1 "$attempts"); do
+            if pnpm exec semantic-release; then
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "semantic-release failed (attempt $i/$attempts). Waiting ${delay}s before retry..."
+              sleep "$delay"
+              delay=$((delay * 2))
+            fi
+          done
+          exit 1
 
       - name: get current tag
         id: tag
