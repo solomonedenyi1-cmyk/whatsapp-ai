@@ -183,14 +183,37 @@ AI: 📊 Bot Status
 | ---------- | ------------- | ------- | -------- |
 | `MISTRAL_API_KEY` | Mistral API key | None | Yes |
 | `MISTRAL_AGENT_ID` | Mistral Agent ID (format: ag_...) | None | Yes |
-| `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
-| `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
-| `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
-| `WHATSAPP_PROVIDER` | WhatsApp provider implementation | `baileys` | No |
-| `WHATSAPP_SESSION_PATH` | Where WhatsApp session/auth data is stored | `./session` | No |
+| `MISTRAL_USE_CONVERSATIONS` | Enable server-side conversation storage | true | No |
+| `MISTRAL_CONVERSATION_STORE` | Store conversations on Mistral servers | true | No |
+| `MISTRAL_CONVERSATION_HANDOFF_EXECUTION` | Conversation execution mode | server | No |
+| `MISTRAL_AUDIO_TRANSCRIPTION_ENABLED` | Enable voice message transcription | true | No |
+| `MISTRAL_AUDIO_TRANSCRIPTION_MODEL` | Audio transcription model | voxtral-mini-latest | No |
+| `MISTRAL_AUDIO_TRANSCRIPTION_LANGUAGE` | Transcription language (auto if empty) | None | No |
+| `TTS_ENABLED` | Reply with voice notes when user sends voice | false | No |
+| `TTS_PROVIDER` | TTS provider | google | No |
+| `TTS_MIME_TYPE` | TTS audio MIME type | audio/ogg; codecs=opus | No |
+| `TTS_MAX_CHARS` | Max characters for TTS | 900 | No |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Google service account JSON | None | No |
+| `GOOGLE_TTS_LANGUAGE_CODE` | TTS language code | pt-BR | No |
+| `GOOGLE_TTS_VOICE_NAME` | TTS voice name | pt-BR-Standard-A | No |
+| `GOOGLE_TTS_SPEAKING_RATE` | TTS speaking rate | 1.0 | No |
+| `GOOGLE_TTS_PITCH` | TTS pitch | 0.0 | No |
+| `CAL_API_KEY` | Cal.com API key | None | No |
+| `CAL_EVENT_TYPE_ID` | Cal.com event type ID | None | No |
+| `CAL_API_URL` | Cal.com API URL | https://api.cal.com | No |
+| `CAL_API_VERSION` | Cal.com API version | 2024-08-13 | No |
+| `CAL_DEFAULT_TIME_ZONE` | Default timezone for Cal.com | America/Sao_Paulo | No |
+| `RESEND_API_KEY` | Resend API key | None | No |
+| `RESEND_FROM_NAME` | Email sender name | None | No |
+| `RESEND_FROM_EMAIL` | Email sender address | None | No |
+| `BOT_NAME` | Display name for the bot | WhatsApp AI Bot | No |
+| `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | 20 | No |
+| `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | 1500 | No |
+| `WHATSAPP_PROVIDER` | WhatsApp provider implementation | baileys | No |
+| `WHATSAPP_SESSION_PATH` | Where WhatsApp session/auth data is stored | ./session | No |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: <5511999999999@c.us>) | None | Yes |
-| `NODE_ENV` | Environment mode | `development` | No |
-| `DEBUG` | Enable debug logging | `false` | No |
+| `NODE_ENV` | Environment mode | development | No |
+| `DEBUG` | Enable debug logging | false | No |
 
 ### Complete Configuration Structure
 
@@ -204,21 +227,31 @@ Assistant behavior (persona, policies, business knowledge and tool usage) is con
 whatsapp-ai/
 ├── src/
 │   ├── bot/
-│   │   └── whatsappBot.js           # Main WhatsApp bot implementation
+│   │   ├── baileysClient.js        # Baileys WhatsApp client adapter
+│   │   ├── chatIdResolver.js       # Chat ID resolution utilities
+│   │   ├── whatsappBot.js          # Main WhatsApp bot implementation
+│   │   └── whatsappTransport.js    # Message sending abstractions
 │   ├── commands/
-│   │   └── commandHandler.js        # Command processing and routing
+│   │   └── commandHandler.js       # Command processing and routing
 │   ├── config/
 │   │   └── config.js               # System configuration loader
 │   ├── services/
-│   │   ├── mistralAgentService.js  # Mistral Agents API client
-│   │   ├── conversationService.js  # Conversation context management
-│   │   ├── messageService.js       # Message processing and formatting
 │   │   ├── adminService.js         # Admin access control and security
+│   │   ├── agentTools.js           # Tool dispatcher for AI functions
+│   │   ├── conversationService.js  # Conversation context management
 │   │   ├── errorHandler.js         # Centralized error handling
+│   │   ├── googleTtsService.js     # Google Text-to-Speech service
+│   │   ├── messageService.js       # Message processing and formatting
+│   │   ├── mistralAgentService.js  # Mistral Agents API client
+│   │   ├── mistralAudioService.js  # Audio transcription service
+│   │   ├── mistralConversationService.js # Mistral conversation API
 │   │   ├── monitoringService.js    # System monitoring and health checks
 │   │   ├── performanceOptimizer.js # Performance optimization
 │   │   ├── sqlitePersistenceService.js # SQLite persistence and analytics
 │   │   └── timeoutHandler.js       # Request timeout management
+│   ├── utils/
+│   │   ├── env.js                 # Environment variable utilities
+│   │   └── requestContext.js       # Request context tracking
 │   └── index.js                    # Application entry point
 ├── data/                           # Persistent data storage (auto-created)
 ├── session/                        # WhatsApp session data (auto-created)
@@ -480,7 +513,7 @@ AGPL-3.0-only License - see LICENSE file for details.
 
 ---
 
-### Built with Node.js, WhatsApp Web.js, and Mistral Agents API integration
+### Built with Node.js, WhatsApp Baileys, and Mistral Agents API integration
 
 ---
 
