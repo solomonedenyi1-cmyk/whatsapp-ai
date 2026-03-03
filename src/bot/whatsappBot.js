@@ -122,9 +122,20 @@ class WhatsAppBot {
       }
 
       const pino = require('pino');
+      const noOpLogger = {
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        debug: () => {},
+        trace: () => {},
+        fatal: () => {},
+        child: () => noOpLogger,
+        level: 'silent'
+      };
+
       this.client = new BaileysClient({
         sessionPath: config.whatsapp.sessionPath,
-        logger: pino({ level: 'silent' }),
+        logger: noOpLogger,
       });
 
       // Set up event listeners
