@@ -448,7 +448,7 @@ pnpm start
 
 ## License
 
-LGPL-2.1 License - see LICENSE file for details.
+AGPL-3.0-only License - see LICENSE file for details.
 
 ---
 
