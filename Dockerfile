@@ -1,8 +1,6 @@
 FROM node:20-bookworm-slim AS base
 
-ENV NODE_ENV=production \
-  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-  PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV NODE_ENV=production
 
 WORKDIR /app
 
@@ -13,19 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3 \
   make \
   g++ \
-  chromium \
-  chromium-driver \
   ca-certificates \
-  fonts-liberation \
-  libnss3 \
-  libatk-bridge2.0-0 \
-  libgtk-3-0 \
-  libx11-xcb1 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxrandr2 \
-  libgbm1 \
-  libasound2 \
   && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
@@ -38,20 +24,8 @@ RUN pnpm install --frozen-lockfile --prod
 FROM base AS runner
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  chromium \
-  chromium-driver \
   gosu \
   ca-certificates \
-  fonts-liberation \
-  libnss3 \
-  libatk-bridge2.0-0 \
-  libgtk-3-0 \
-  libx11-xcb1 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxrandr2 \
-  libgbm1 \
-  libasound2 \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /app/node_modules ./node_modules

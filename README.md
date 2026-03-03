@@ -43,7 +43,6 @@ A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featu
 ## 📋 Prerequisites
 
 - Node.js 20+ installed
-- Chrome/Chromium browser
 - Stable internet connection
 - Access to WhatsApp Web
 
@@ -82,12 +81,10 @@ BOT_NAME=Your Bot Name
 MAX_CONTEXT_MESSAGES=20
 MESSAGE_SPLIT_LENGTH=1500
 
-# WhatsApp / Puppeteer
-# Where WhatsApp Web auth/session cache will be stored
+# WhatsApp
+# Where WhatsApp session/auth data will be stored
+WHATSAPP_PROVIDER=baileys
 WHATSAPP_SESSION_PATH=./session
-PUPPETEER_HEADLESS=true
-# Optional. Useful in servers where chromium path is custom.
-PUPPETEER_EXECUTABLE_PATH=
 
 # Admin Configuration (REQUIRED)
 ADMIN_WHATSAPP_NUMBER=5511999999999@c.us
@@ -189,16 +186,15 @@ AI: 📊 Bot Status
 | `BOT_NAME` | Display name for the bot | `WhatsApp AI Bot` | No |
 | `MAX_CONTEXT_MESSAGES` | Maximum messages to keep in context | `20` | No |
 | `MESSAGE_SPLIT_LENGTH` | Maximum length before splitting messages | `1500` | No |
-| `WHATSAPP_SESSION_PATH` | Where WhatsApp Web session/auth cache is stored | `./session` | No |
-| `PUPPETEER_HEADLESS` | Run browser in headless mode | `true` | No |
-| `PUPPETEER_EXECUTABLE_PATH` | Custom Chromium executable path | None | No |
+| `WHATSAPP_PROVIDER` | WhatsApp provider implementation | `baileys` | No |
+| `WHATSAPP_SESSION_PATH` | Where WhatsApp session/auth data is stored | `./session` | No |
 | `ADMIN_WHATSAPP_NUMBER` | Admin WhatsApp number (format: <5511999999999@c.us>) | None | Yes |
 | `NODE_ENV` | Environment mode | `development` | No |
 | `DEBUG` | Enable debug logging | `false` | No |
 
 ### Complete Configuration Structure
 
-Assistant behavior (persona, policies, business knowledge and tool usage) is configured in the **Mistral Agent instructions**. This repository only keeps runtime configuration (API keys, bot settings, WhatsApp/Puppeteer and integrations) as environment variables.
+Assistant behavior (persona, policies, business knowledge and tool usage) is configured in the **Mistral Agent instructions**. This repository only keeps runtime configuration (API keys, bot settings, WhatsApp and integrations) as environment variables.
 
 ## Architecture
 

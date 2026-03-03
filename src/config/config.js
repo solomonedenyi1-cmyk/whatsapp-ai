@@ -101,22 +101,8 @@ const config = {
 
   // WhatsApp Configuration
   whatsapp: {
-    provider: process.env.WHATSAPP_PROVIDER?.trim() || 'wwebjs',
+    provider: process.env.WHATSAPP_PROVIDER?.trim() || 'baileys',
     sessionPath: process.env.WHATSAPP_SESSION_PATH || './session',
-    puppeteerOptions: {
-      headless: parseEnvBoolean(process.env.PUPPETEER_HEADLESS, true),
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    }
   },
 
   // Admin Configuration

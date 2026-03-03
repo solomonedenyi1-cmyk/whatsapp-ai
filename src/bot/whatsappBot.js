@@ -1,6 +1,4 @@
 const qrcode = require('qrcode-terminal');
-const path = require('path');
-const fs = require('fs').promises;
 const config = require('../config/config');
 const BaileysClient = require('./baileysClient');
 const MistralAgentService = require('../services/mistralAgentService');
@@ -106,32 +104,6 @@ class WhatsAppBot {
     }
   }
 
-  async cleanupChromiumProfileLocks() {
-    try {
-      const dataPath = path.resolve(config.whatsapp.sessionPath);
-      const profileDir = path.join(dataPath, 'session');
-
-      const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
-
-      await Promise.all(
-        lockFiles.map(async (filename) => {
-          const filePath = path.join(profileDir, filename);
-          try {
-            await fs.unlink(filePath);
-          } catch (error) {
-            if (error && error.code !== 'ENOENT') {
-              throw error;
-            }
-          }
-        })
-      );
-    } catch (error) {
-      if (config.env.debug) {
-        console.warn('⚠️ Could not cleanup Chromium profile lock files:', error?.message || error);
-      }
-    }
-  }
-
   /**
    * Initialize the WhatsApp bot
    */
@@ -139,33 +111,21 @@ class WhatsAppBot {
     try {
       console.log('🤖 Initializing WhatsApp AI Bot...');
 
-      const provider = config.whatsapp?.provider || 'wwebjs';
-
-      if (provider === 'wwebjs') {
-        await this.cleanupChromiumProfileLocks();
-      }
+      const provider = config.whatsapp?.provider || 'baileys';
 
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
 
       // Create WhatsApp client
-      if (provider === 'baileys') {
-        const pino = require('pino');
-
-        this.client = new BaileysClient({
-          sessionPath: config.whatsapp.sessionPath,
-          logger: pino({ level: 'silent' }),
-        });
-      } else {
-        const { Client, LocalAuth } = require('whatsapp-web.js');
-
-        this.client = new Client({
-          authStrategy: new LocalAuth({
-            dataPath: config.whatsapp.sessionPath
-          }),
-          puppeteer: config.whatsapp.puppeteerOptions
-        });
+      if (provider !== 'baileys') {
+        throw new Error(`Unsupported WHATSAPP_PROVIDER: ${provider}`);
       }
+
+      const pino = require('pino');
+      this.client = new BaileysClient({
+        sessionPath: config.whatsapp.sessionPath,
+        logger: pino({ level: 'silent' }),
+      });
 
       // Set up event listeners
       this.setupEventListeners();
@@ -346,14 +306,7 @@ class WhatsAppBot {
           const { buffer, mimeType } = await this.ttsService.synthesizeToBuffer(response);
           const base64 = buffer.toString('base64');
 
-          let media;
-          const provider = config.whatsapp?.provider || 'wwebjs';
-          if (provider === 'baileys') {
-            media = { mimetype: mimeType, data: base64, filename: 'reply.ogg' };
-          } else {
-            const { MessageMedia } = require('whatsapp-web.js');
-            media = new MessageMedia(mimeType, base64, 'reply.ogg');
-          }
+          const media = { mimetype: mimeType, data: base64, filename: 'reply.ogg' };
 
           await this.safeSendMedia(chatId, media, { sendAudioAsVoice: true }, message, chat);
         } catch (error) {

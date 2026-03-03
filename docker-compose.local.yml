@@ -45,8 +45,6 @@ services:
       MESSAGE_SPLIT_LENGTH: ${MESSAGE_SPLIT_LENGTH:-"1500"}
 
       WHATSAPP_SESSION_PATH: /app/session
-      PUPPETEER_HEADLESS: ${PUPPETEER_HEADLESS:-"true"}
-      PUPPETEER_EXECUTABLE_PATH: ${PUPPETEER_EXECUTABLE_PATH:-/usr/bin/chromium}
 
       NODE_ENV: ${NODE_ENV:-production}
       DEBUG: ${DEBUG:-"false"}

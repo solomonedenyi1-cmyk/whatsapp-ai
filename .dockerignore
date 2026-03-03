@@ -8,8 +8,6 @@ Dockerfile
 .pnpm-store
 
 session
-.wwebjs_auth
-.wwebjs_cache
 
 .env
 .env.*
