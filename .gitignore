@@ -90,3 +90,4 @@ temp/
 
 # User data
 data/
+gcp-tts.json
