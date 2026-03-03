@@ -1,8 +1,8 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const path = require('path');
 const fs = require('fs').promises;
 const config = require('../config/config');
+const BaileysClient = require('./baileysClient');
 const MistralAgentService = require('../services/mistralAgentService');
 const MistralConversationService = require('../services/mistralConversationService');
 const ConversationService = require('../services/conversationService');
@@ -139,18 +139,33 @@ class WhatsAppBot {
     try {
       console.log('🤖 Initializing WhatsApp AI Bot...');
 
-      await this.cleanupChromiumProfileLocks();
+      const provider = config.whatsapp?.provider || 'wwebjs';
+
+      if (provider === 'wwebjs') {
+        await this.cleanupChromiumProfileLocks();
+      }
 
       // Update component status
       await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
 
       // Create WhatsApp client
-      this.client = new Client({
-        authStrategy: new LocalAuth({
-          dataPath: config.whatsapp.sessionPath
-        }),
-        puppeteer: config.whatsapp.puppeteerOptions
-      });
+      if (provider === 'baileys') {
+        const pino = require('pino');
+
+        this.client = new BaileysClient({
+          sessionPath: config.whatsapp.sessionPath,
+          logger: pino({ level: 'silent' }),
+        });
+      } else {
+        const { Client, LocalAuth } = require('whatsapp-web.js');
+
+        this.client = new Client({
+          authStrategy: new LocalAuth({
+            dataPath: config.whatsapp.sessionPath
+          }),
+          puppeteer: config.whatsapp.puppeteerOptions
+        });
+      }
 
       // Set up event listeners
       this.setupEventListeners();
@@ -328,10 +343,18 @@ class WhatsAppBot {
       // Send response
       if (shouldReplyWithAudio && typeof response === 'string') {
         try {
-          const { MessageMedia } = require('whatsapp-web.js');
           const { buffer, mimeType } = await this.ttsService.synthesizeToBuffer(response);
           const base64 = buffer.toString('base64');
-          const media = new MessageMedia(mimeType, base64, 'reply.ogg');
+
+          let media;
+          const provider = config.whatsapp?.provider || 'wwebjs';
+          if (provider === 'baileys') {
+            media = { mimetype: mimeType, data: base64, filename: 'reply.ogg' };
+          } else {
+            const { MessageMedia } = require('whatsapp-web.js');
+            media = new MessageMedia(mimeType, base64, 'reply.ogg');
+          }
+
           await this.safeSendMedia(chatId, media, { sendAudioAsVoice: true }, message, chat);
         } catch (error) {
           if (config.env.debug) {

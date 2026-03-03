@@ -101,6 +101,7 @@ const config = {
 
   // WhatsApp Configuration
   whatsapp: {
+    provider: process.env.WHATSAPP_PROVIDER?.trim() || 'wwebjs',
     sessionPath: process.env.WHATSAPP_SESSION_PATH || './session',
     puppeteerOptions: {
       headless: parseEnvBoolean(process.env.PUPPETEER_HEADLESS, true),
