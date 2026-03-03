@@ -20,8 +20,8 @@
     "mistral",
     "agents"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Yuri Cunha",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
     "@mistralai/mistralai": "^1.11.0",
