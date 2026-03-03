@@ -5,6 +5,8 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   downloadMediaMessage,
+  fetchLatestBaileysVersion,
+  Browsers,
 } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 
@@ -19,16 +21,70 @@ class BaileysClient extends EventEmitter {
     this.saveCreds = null;
 
     this.isReady = false;
+
+    this.isInitializing = false;
+    this.reconnectTimer = null;
+
+    this.reconnectAttempt = 0;
+  }
+
+  scheduleReconnect({ reason = 'unknown' } = {}) {
+    if (this.reconnectTimer) {
+      return;
+    }
+
+    this.reconnectAttempt += 1;
+
+    const baseDelayMs = 5000;
+    const maxDelayMs = 60000;
+    const expDelay = Math.min(maxDelayMs, baseDelayMs * (2 ** Math.min(this.reconnectAttempt, 6)));
+    const jitter = Math.floor(Math.random() * 1000);
+    const delayMs = expDelay + jitter;
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.initialize().catch((error) => {
+        this.emit('error', error);
+      });
+    }, delayMs);
+
+    this.reconnectTimer.unref?.();
+
+    this.emit('debug', {
+      event: 'reconnect_scheduled',
+      reason,
+      attempt: this.reconnectAttempt,
+      delayMs,
+    });
   }
 
   async initialize() {
+    if (this.isInitializing) {
+      return;
+    }
+
+    this.isInitializing = true;
+
     const { state, saveCreds } = await useMultiFileAuthState(this.sessionPath);
     this.saveCreds = saveCreds;
+
+    const { version } = await fetchLatestBaileysVersion();
+
+    if (this.sock) {
+      try {
+        this.sock.end();
+      } catch (_) {
+        // ignore
+      }
+      this.sock = null;
+    }
 
     this.sock = makeWASocket({
       auth: state,
       logger: this.logger,
       printQRInTerminal: false,
+      browser: Browsers.windows('WhatsApp AI Bot'),
+      version,
       syncFullHistory: false,
       shouldSyncHistoryMessage: () => false,
       markOnlineOnConnect: true,
@@ -46,15 +102,19 @@ class BaileysClient extends EventEmitter {
 
       if (connection === 'open') {
         this.isReady = true;
+        this.isInitializing = false;
+        this.reconnectAttempt = 0;
         this.emit('authenticated');
         this.emit('ready');
       }
 
       if (connection === 'close') {
         this.isReady = false;
+        this.isInitializing = false;
 
         const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
         const loggedOut = statusCode === DisconnectReason.loggedOut;
+        const isStreamRestart = statusCode === 515;
 
         this.emit('disconnected', {
           loggedOut,
@@ -63,9 +123,11 @@ class BaileysClient extends EventEmitter {
         });
 
         if (!loggedOut) {
-          this.initialize().catch((error) => {
-            this.emit('error', error);
-          });
+          if (isStreamRestart) {
+            this.destroy().catch((error) => this.emit('error', error));
+          }
+
+          this.scheduleReconnect({ reason: `status_${statusCode || 'unknown'}` });
         }
       }
     });
@@ -88,10 +150,17 @@ class BaileysClient extends EventEmitter {
         this.emit('error', error);
       }
     });
+
+    this.isInitializing = false;
   }
 
   async destroy() {
     try {
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+
       if (this.sock) {
         this.sock.ev.removeAllListeners('creds.update');
         this.sock.ev.removeAllListeners('connection.update');
