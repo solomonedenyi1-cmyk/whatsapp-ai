@@ -35,7 +35,7 @@ COPY package.json ./package.json
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 RUN chmod +x /app/docker-entrypoint.sh \
-  && mkdir -p /app/session /app/data \
+  && mkdir -p /app/session /app/data /app/logs \
   && chown -R node:node /app
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
