@@ -2,6 +2,10 @@
 
 A production-ready WhatsApp AI bot integrated with the Mistral Agents API, featuring configurable assistant behavior via Mistral Agent instructions, advanced monitoring, and enterprise-grade security.
 
+**VERY VERY VERY IMPORTANT NOTE**:
+> The project migrated from Chromium to WhatsApp Baileys, which reduced the average memory footprint from 160MB to 50-60MB. In addition, resource usage dropped drastically: from a minimum of 512MB RAM and 2 vCPUs, down to just 25-40MB RAM and 0.5 vCPU (roughly 1 core at 1.1GHz, no boost).
+> Another thing to note: you will need to update one line in your `.env` file or in the environment variables of your Docker Compose setup. Everything else will migrate without issues. Also, when scanning the QR Code, you may encounter a 51x error (512, etc.), but that is simply the API reconnecting and will resolve on its own. I will get that fixed.
+
 **Important Note**: All configurations provided are examples only. You must configure your own API endpoints, models, business information, and other settings before deployment.
 
 ## Features
