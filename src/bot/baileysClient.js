@@ -1,437 +1,592 @@
-const EventEmitter = require('node:events');
+const qrcode = require('qrcode-terminal');
+const config = require('../config/config');
+const BaileysClient = require('./baileysClient');
+const MistralAgentService = require('../services/mistralAgentService');
+const MistralConversationService = require('../services/mistralConversationService');
+const ConversationService = require('../services/conversationService');
+const MessageService = require('../services/messageService');
+const CommandHandler = require('../commands/commandHandler');
+const ErrorHandler = require('../services/errorHandler');
+const PerformanceOptimizer = require('../services/performanceOptimizer');
+const MonitoringService = require('../services/monitoringService');
+const TimeoutHandler = require('../services/timeoutHandler');
+const AdminService = require('../services/adminService');
+const PerformanceOptimizations = require('../services/performanceOptimizations');
+const { createToolDispatcher } = require('../services/agentTools');
+const MistralAudioService = require('../services/mistralAudioService');
+const GoogleTtsService = require('../services/googleTtsService');
+const { safeSendSeen, safeSendMessage, safeSendMedia } = require('./whatsappTransport');
+const { resolveStableChatId } = require('./chatIdResolver');
+const { generateRequestId } = require('../utils/requestContext');
 
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  downloadMediaMessage,
-  fetchLatestBaileysVersion,
-  Browsers,
-} = require('@whiskeysockets/baileys');
-const { Boom } = require('@hapi/boom');
+class WhatsAppBot {
+  constructor() {
+    this.client = null;
 
-class BaileysClient extends EventEmitter {
-  constructor({ sessionPath, logger, pairingCode, printQR = false }) {
-    super();
+    this.errorHandler = new ErrorHandler();
+    this.performanceOptimizer = new PerformanceOptimizer();
+    this.monitoringService = new MonitoringService(this.errorHandler, this.performanceOptimizer);
 
-    this.sessionPath = sessionPath;
-    this.logger = logger;
-    this.pairingCode = pairingCode; // 🆕 Store pairing code
-    this.printQR = printQR; // 🆕 Control QR display
+    this.timeoutHandler = new TimeoutHandler();
+    this.adminService = new AdminService();
+    this.performanceOptimizations = new PerformanceOptimizations();
 
-    this.sock = null;
-    this.saveCreds = null;
+    // Initialize existing services with error handling
+    this.mistralAgentService = new MistralAgentService();
+    this.conversationService = new ConversationService();
+    this.mistralConversationService = new MistralConversationService({
+      persistenceService: this.conversationService.persistenceService,
+    });
+    this.mistralAudioService = new MistralAudioService();
+    this.ttsService = new GoogleTtsService();
+    this.messageService = new MessageService();
+    this.commandHandler = new CommandHandler(
+      this.mistralAgentService,
+      this.mistralConversationService,
+      this.conversationService,
+      this.errorHandler,
+      this.performanceOptimizer,
+      this.monitoringService,
+      this.adminService
+    );
+
+    this.setupTimeoutListeners();
 
     this.isReady = false;
-    this.isInitializing = false;
-    this.reconnectTimer = null;
-    this.reconnectAttempt = 0;
-    this.pairingCodeSent = false; // 🆕 Track if we've sent the pairing code
+    this.startTime = Date.now();
   }
 
-  scheduleReconnect({ reason = 'unknown' } = {}) {
-    if (this.reconnectTimer) {
-      return;
-    }
-
-    this.reconnectAttempt += 1;
-
-    const baseDelayMs = 5000;
-    const maxDelayMs = 60000;
-    const expDelay = Math.min(maxDelayMs, baseDelayMs * (2 ** Math.min(this.reconnectAttempt, 6)));
-    const jitter = Math.floor(Math.random() * 1000);
-    const delayMs = expDelay + jitter;
-
-    this.reconnectTimer = setTimeout(() => {
-      this.reconnectTimer = null;
-      this.initialize().catch((error) => {
-        this.emit('error', error);
-      });
-    }, delayMs);
-
-    this.reconnectTimer.unref?.();
-
-    this.emit('debug', {
-      event: 'reconnect_scheduled',
-      reason,
-      attempt: this.reconnectAttempt,
-      delayMs,
-    });
-  }
-
-  async initialize() {
-    if (this.isInitializing) {
-      return;
-    }
-
-    this.isInitializing = true;
-    this.pairingCodeSent = false;
-
-    const { state, saveCreds } = await useMultiFileAuthState(this.sessionPath);
-    this.saveCreds = saveCreds;
-
-    const { version } = await fetchLatestBaileysVersion();
-
-    if (this.sock) {
+  setupTimeoutListeners() {
+    this.timeoutHandler.on('sendTimeoutMessage', async (data) => {
       try {
-        this.sock.end();
-      } catch (_) {
-        // ignore
-      }
-      this.sock = null;
-    }
-
-    // 🆕 Determine if we should use pairing code
-    const usePairingCode = this.pairingCode && typeof this.pairingCode === 'string' && this.pairingCode.trim().length > 0;
-
-    this.sock = makeWASocket({
-      auth: state,
-      logger: this.logger,
-      printQRInTerminal: !usePairingCode && this.printQR,
-      browser: Browsers.windows('WhatsApp AI Bot'),
-      version,
-      syncFullHistory: false,
-      shouldSyncHistoryMessage: () => false,
-      markOnlineOnConnect: true,
-      emitOwnEvents: false,
-    });
-
-    this.sock.ev.on('creds.update', this.saveCreds);
-
-    this.sock.ev.on('connection.update', (update) => {
-      const { connection, lastDisconnect, qr } = update;
-
-      // 🆕 Handle QR code (only if printQR is enabled and no pairing code)
-      if (qr && this.printQR && !usePairingCode) {
-        this.emit('qr', qr);
-      }
-
-      // 🆕 Handle pairing code request
-      if (usePairingCode && !this.pairingCodeSent && connection === 'open') {
-        try {
-          const phoneNumber = this.pairingCode.trim().replace('@c.us', '');
-          const code = await this.sock.requestPairingCode(phoneNumber);
-          this.pairingCodeSent = true;
-          this.emit('pairing_code', code);
-          console.log(`\n📱 PAIRING CODE: ${code}`);
-          console.log('Enter this code in WhatsApp > Settings > Linked Devices > Link with Phone Number\n');
-        } catch (error) {
-          console.error('❌ Failed to get pairing code:', error.message);
-          this.sock.printQRInTerminal = true;
-          console.log('⚠️  Pairing code failed, falling back to QR code...');
-        }
-      }
-
-      if (connection === 'open') {
-        this.isReady = true;
-        this.isInitializing = false;
-        this.reconnectAttempt = 0;
-        this.emit('authenticated');
-        this.emit('ready');
-        
-        if (usePairingCode && this.pairingCodeSent) {
-          this.emit('paired', { method: 'pairing_code' });
-        }
-      }
-
-      if (connection === 'close') {
-        this.isReady = false;
-        this.isInitializing = false;
-        this.pairingCodeSent = false;
-
-        const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        const loggedOut = statusCode === DisconnectReason.loggedOut;
-        const isStreamRestart = statusCode === 515;
-
-        this.emit('disconnected', {
-          loggedOut,
-          statusCode,
-          error: lastDisconnect?.error,
-        });
-
-        if (!loggedOut) {
-          if (isStreamRestart) {
-            this.destroy().catch((error) => this.emit('error', error));
-          }
-
-          this.scheduleReconnect({ reason: `status_${statusCode || 'unknown'}` });
-        }
-      }
-    });
-
-    // 🆕 Handle messages with status detection
-    this.sock.ev.on('messages.upsert', async ({ messages }) => {
-      try {
-        if (!Array.isArray(messages) || messages.length === 0) {
+        if (!data?.chatId || !data?.message) {
           return;
         }
 
-        for (const rawMessage of messages) {
-          // 🆕 Check if it's a status message
-          if (this.isStatusMessage(rawMessage)) {
-            const statusMessage = this.createNormalizedStatusMessage(rawMessage);
-            if (statusMessage) {
-              this.emit('status', statusMessage);
-            }
-            continue;
-          }
-
-          const normalized = this.createNormalizedMessage(rawMessage);
-          if (!normalized) {
-            continue;
-          }
-
-          this.emit('message', normalized);
-        }
+        await this.sendResponse(data.chatId, data.message, null, null);
       } catch (error) {
-        this.emit('error', error);
+        console.error('❌ Error sending timeout message:', error);
       }
     });
+  }
 
-    // 🆕 Handle status read receipts
-    this.sock.ev.on('receipts.upsert', async (receipts) => {
-      for (const receipt of receipts) {
-        if (receipt.type === 'status' || receipt.type === 'read') {
-          this.emit('status_read', receipt);
-        }
-      }
+  async safeSendSeen(chatId, chat) {
+    await safeSendSeen(chatId, chat, this.client, config.env.debug);
+  }
+
+  async safeSendMessage(chatId, text, message = null, chat = null) {
+    await safeSendMessage(chatId, text, {
+      message,
+      chat,
+      client: this.client,
+      debug: config.env.debug,
     });
-
-    this.isInitializing = false;
   }
 
-  // 🆕 Check if message is a status
-  isStatusMessage(message) {
-    if (!message || !message.key) return false;
-    const jid = message.key.remoteJid;
-    return jid && (jid.endsWith('@broadcast') || jid.includes('status') || jid === 'status@broadcast');
+  async safeSendMedia(chatId, media, options = {}, message = null, chat = null) {
+    await safeSendMedia(chatId, media, options, {
+      message,
+      chat,
+      client: this.client,
+      debug: config.env.debug,
+    });
   }
 
-  // 🆕 Create normalized status message
-  createNormalizedStatusMessage(rawMessage) {
-    if (!rawMessage || !rawMessage.key) return null;
-
-    const jid = rawMessage.key.remoteJid;
-    const fromMe = Boolean(rawMessage.key.fromMe);
-    const participant = rawMessage.key.participant || rawMessage.key.remoteJid;
-
-    // Extract status text
-    const text = rawMessage.message?.conversation ||
-                 rawMessage.message?.extendedTextMessage?.text ||
-                 rawMessage.message?.imageMessage?.caption ||
-                 rawMessage.message?.videoMessage?.caption ||
-                 '';
-
-    // Check status types
-    const isImage = Boolean(rawMessage.message?.imageMessage);
-    const isVideo = Boolean(rawMessage.message?.videoMessage);
-    const isText = Boolean(rawMessage.message?.conversation || rawMessage.message?.extendedTextMessage);
-
-    return {
-      _raw: rawMessage,
-      _jid: jid,
-      _key: rawMessage.key,
-
-      fromMe: fromMe,
-      from: participant,
-      type: isImage ? 'image' : isVideo ? 'video' : 'text',
-      body: text,
-      hasMedia: isImage || isVideo,
-      isStatus: true,
-
-      // Status-specific methods
-      react: async (emoji) => {
-        if (!this.sock) throw new Error('Socket not initialized');
-        await this.sock.sendMessage(jid, {
-          react: {
-            text: emoji,
-            key: rawMessage.key
-          }
-        });
-      },
-
-      reply: async (replyText) => {
-        if (!this.sock) throw new Error('Socket not initialized');
-        await this.sock.sendMessage(jid, { text: replyText }, { quoted: rawMessage });
-      },
-
-      getChat: async () => {
-        return {
-          id: { _serialized: jid },
-          sendSeen: async () => {
-            if (rawMessage.key) {
-              await this.sock.readMessages([rawMessage.key]);
-            }
-          }
-        };
-      },
-
-      downloadMedia: async () => {
-        if (!isImage && !isVideo) return null;
-        const buffer = await downloadMediaMessage(rawMessage, 'buffer', {}, { logger: this.logger });
-        const mimetype = rawMessage.message?.imageMessage?.mimetype || 
-                        rawMessage.message?.videoMessage?.mimetype || 
-                        'image/jpeg';
-        return {
-          mimetype,
-          data: Buffer.from(buffer).toString('base64'),
-          filename: isImage ? 'image.jpg' : 'video.mp4',
-        };
-      }
-    };
-  }
-
-  async destroy() {
+  async safeSendTyping(chat, chatId) {
     try {
-      if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-      }
-
-      if (this.sock) {
-        this.sock.ev.removeAllListeners('creds.update');
-        this.sock.ev.removeAllListeners('connection.update');
-        this.sock.ev.removeAllListeners('messages.upsert');
-
-        this.sock.end();
-        this.sock = null;
+      if (chat && typeof chat.sendStateTyping === 'function') {
+        await chat.sendStateTyping();
       }
     } catch (error) {
-      this.emit('error', error);
+      if (config.env.debug) {
+        console.warn(`⚠️ Could not send typing state for ${chatId}:`, error?.message || error);
+      }
     }
   }
 
-  async sendMessage(chatId, content, options = {}) {
-    if (!this.sock) {
-      throw new Error('Baileys socket not initialized');
-    }
+  /**
+   * Initialize the WhatsApp bot
+   */
+  async initialize() {
+    try {
+      console.log('🤖 Initializing WhatsApp AI Bot...');
 
-    if (typeof content === 'string') {
-      return this.sock.sendMessage(chatId, { text: content }, options);
-    }
+      const provider = config.whatsapp?.provider || 'baileys';
 
-    return this.sock.sendMessage(chatId, content, options);
+      // Update component status
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'initializing');
+
+      // Create WhatsApp client
+      if (provider !== 'baileys') {
+        throw new Error(`Unsupported WHATSAPP_PROVIDER: ${provider}`);
+      }
+
+      const pino = require('pino');
+      const noOpLogger = {
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        debug: () => {},
+        trace: () => {},
+        fatal: () => {},
+        child: () => noOpLogger,
+        level: 'silent'
+      };
+
+      this.client = new BaileysClient({
+        sessionPath: config.whatsapp.sessionPath,
+        logger: noOpLogger,
+      });
+
+      // Set up event listeners
+      this.setupEventListeners();
+
+      // Initialize the client
+      await this.client.initialize();
+
+      // Update component status
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'ready');
+
+    } catch (error) {
+      console.error('❌ Failed to initialize WhatsApp bot:', error);
+      await this.errorHandler.handleError(error, {
+        component: 'whatsappBot',
+        operation: 'initialize'
+      });
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'error', { error: error.message });
+      throw error;
+    }
   }
 
-  createNormalizedMessage(rawMessage) {
-    if (!rawMessage || !rawMessage.key || !rawMessage.key.remoteJid) {
-      return null;
-    }
+  /**
+   * Set up WhatsApp client event listeners
+   */
+  setupEventListeners() {
+    // QR Code for authentication
+    this.client.on('qr', (qr) => {
+      console.log('📱 Scan this QR code with your WhatsApp:');
+      qrcode.generate(qr, { small: true });
+    });
 
-    const jid = rawMessage.key.remoteJid;
+    // Client ready
+    this.client.on('ready', () => {
+      console.log('✅ WhatsApp bot is ready!');
+      this.isReady = true;
+    });
 
-    const text =
-      rawMessage.message?.conversation ||
-      rawMessage.message?.extendedTextMessage?.text ||
-      rawMessage.message?.imageMessage?.caption ||
-      rawMessage.message?.videoMessage?.caption ||
-      '';
+    // Authentication success
+    this.client.on('authenticated', () => {
+      console.log('🔐 WhatsApp authenticated successfully');
+    });
 
-    const hasAudio = Boolean(rawMessage.message?.audioMessage);
-    const type = hasAudio ? (rawMessage.message?.audioMessage?.ptt ? 'ptt' : 'audio') : 'chat';
+    // Authentication failure
+    this.client.on('auth_failure', (msg) => {
+      console.error('❌ WhatsApp authentication failed:', msg);
+    });
 
-    const message = {
-      _raw: rawMessage,
-      _jid: jid,
-      _key: rawMessage.key,
+    // Client disconnected
+    this.client.on('disconnected', (reason) => {
+      console.log('📱 WhatsApp client disconnected:', reason);
+      this.isReady = false;
+    });
 
-      fromMe: Boolean(rawMessage.key.fromMe),
-      from: jid,
-      type,
-      body: text,
-      hasMedia: hasAudio,
+    // Incoming messages
+    this.client.on('message', async (message) => {
+      await this.handleMessage(message);
+    });
 
-      getChat: async () => {
-        return this.createNormalizedChat({ jid, rawMessage });
-      },
-
-      reply: async (replyText) => {
-        await this.sendMessage(jid, { text: replyText }, { quoted: rawMessage });
-      },
-
-      getContact: async () => {
-        return { id: { _serialized: jid } };
-      },
-
-      downloadMedia: async () => {
-        if (!hasAudio) {
-          return null;
-        }
-
-        const buffer = await downloadMediaMessage(rawMessage, 'buffer', {}, { logger: this.logger });
-        const mimetype = rawMessage.message?.audioMessage?.mimetype || 'audio/ogg';
-
-        return {
-          mimetype,
-          data: Buffer.from(buffer).toString('base64'),
-          filename: 'audio.ogg',
-        };
-      },
-    };
-
-    return message;
+    // Error handling
+    this.client.on('error', (error) => {
+      console.error('❌ WhatsApp client error:', error);
+    });
   }
 
-  createNormalizedChat({ jid, rawMessage }) {
-    return {
-      id: { _serialized: jid },
+  /**
+   * Handle incoming WhatsApp messages
+   * @param {Object} message - WhatsApp message object
+   */
+  async handleMessage(message) {
+    const startTime = Date.now();
+    const rawChatId = message?.from || 'chat';
+    const requestId = generateRequestId(rawChatId);
 
-      sendSeen: async () => {
-        if (!this.sock) {
-          return;
+    try {
+      // Check if message should be ignored
+      if (this.messageService.shouldIgnoreMessage(message)) {
+        return;
+      }
+
+      const chatId = message.from;
+      const messageText = this.messageService.cleanMessage(message.body || '');
+
+      const chat = await message.getChat();
+
+      const stableChatId = await resolveStableChatId({
+        rawChatId: chatId,
+        message,
+        chat,
+      });
+      const contextChatId = stableChatId || chatId;
+
+      if (config.env.debug && contextChatId !== chatId) {
+        console.log(`🔁 chat id normalized: ${chatId} -> ${contextChatId}`);
+      }
+
+      if (config.env.debug) {
+        console.log(`[${requestId}] 📨 Received message from ${chatId}: ${messageText}`);
+      }
+
+      // Record performance metrics
+      this.performanceOptimizer.recordMessageReceived(contextChatId, messageText.length);
+
+      // Show typing indicator
+      await this.safeSendSeen(chatId, chat);
+      await this.safeSendTyping(chat, chatId);
+
+      let response;
+      const shouldReplyWithAudio = Boolean(config.tts?.enabled) && (message.type === 'ptt' || message.type === 'audio');
+
+      // Check if it's a command
+      if (message.type === 'chat' && this.messageService.isCommand(messageText)) {
+        const { command, args } = this.messageService.parseCommand(messageText);
+
+        // Check admin access for commands
+        const accessCheck = this.adminService.validateAdminAccess(contextChatId, command);
+        if (!accessCheck.allowed) {
+          response = accessCheck.message;
+        } else {
+          response = await this.commandHandler.handleCommand(command, args, contextChatId);
+        }
+      } else {
+        // Regular message - send to AI with timeout handling and performance optimizations
+        let inputText = messageText;
+
+        if (message.type === 'ptt' || message.type === 'audio') {
+          const transcriptionEnabled = Boolean(config.mistral?.audioTranscription?.enabled);
+          if (!transcriptionEnabled) {
+            response = 'No momento, a transcrição de áudio está desativada. Pode enviar em texto?';
+          } else {
+            try {
+              const media = await message.downloadMedia();
+              const mimeType = media?.mimetype;
+              const data = media?.data;
+
+              if (!mimeType || typeof data !== 'string' || data.trim().length === 0) {
+                throw new Error('Unable to download audio media');
+              }
+
+              const buffer = Buffer.from(data, 'base64');
+
+              const transcription = await this.mistralAudioService.transcribeAudio({
+                buffer,
+                mimeType,
+                fileName: media?.filename,
+                model: config.mistral?.audioTranscription?.model,
+                language: config.mistral?.audioTranscription?.language,
+              });
+
+              const transcribedText = transcription?.text;
+              if (typeof transcribedText !== 'string' || transcribedText.trim().length === 0) {
+                throw new Error('Empty transcription');
+              }
+
+              inputText = transcribedText.trim();
+
+              if (config.env.debug) {
+                console.log(`[${requestId}] 🎙️ Transcribed audio: ${inputText.substring(0, 120)}...`);
+              }
+            } catch (error) {
+              console.error('❌ Error transcribing audio message:', error?.message || error);
+              response = 'Desculpe, não consegui transcrever o áudio. Pode tentar novamente ou enviar em texto?';
+            }
+          }
         }
 
-        if (rawMessage?.key) {
-          await this.sock.readMessages([rawMessage.key]);
+        if (typeof response !== 'string') {
+          response = await this.performanceOptimizations.optimizeMessageProcessing(
+            contextChatId,
+            inputText,
+            (msg) => this.processAIMessageWithTimeout(msg, chatId, chat, contextChatId)
+          );
         }
-      },
+      }
 
-      sendStateTyping: async () => {
-        if (!this.sock) {
-          return;
+      // Send response
+      if (shouldReplyWithAudio && typeof response === 'string') {
+        try {
+          const { buffer, mimeType } = await this.ttsService.synthesizeToBuffer(response);
+          const base64 = buffer.toString('base64');
+
+          const media = { mimetype: mimeType, data: base64, filename: 'reply.ogg' };
+
+          await this.safeSendMedia(chatId, media, { sendAudioAsVoice: true }, message, chat);
+        } catch (error) {
+          if (config.env.debug) {
+            console.warn('⚠️ Failed to generate/send TTS audio, falling back to text:', error?.message || error);
+          }
+          await this.sendResponse(chatId, response, message, chat);
+        }
+      } else {
+        await this.sendResponse(chatId, response, message, chat);
+      }
+
+      // Record response time
+      const responseTime = Date.now() - startTime;
+      this.performanceOptimizer.recordResponseTime(responseTime);
+
+    } catch (error) {
+      console.error('❌ Error handling message:', error);
+      await this.errorHandler.handleError(error, {
+        component: 'whatsappBot',
+        operation: 'handleMessage',
+        requestId,
+        chatId: message.from,
+        messageText: message.body?.substring(0, 100)
+      });
+      await this.sendErrorResponse(message.from, message);
+    }
+  }
+
+  /**
+   * Process message with AI with timeout handling
+   * @param {string} messageText - User message
+   * @param {string} chatId - WhatsApp chat ID
+   * @returns {Promise<string>} - AI response
+   */
+  async processAIMessageWithTimeout(messageText, chatId, chat, contextChatId = chatId) {
+    const requestId = generateRequestId(contextChatId);
+
+    try {
+      // Register request for timeout monitoring
+      this.timeoutHandler.registerRequest(chatId, requestId, messageText);
+
+      // Add user message to local context storage (analytics/persistence)
+      await this.conversationService.addMessage(contextChatId, 'user', messageText);
+
+      // Update API status
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'processing');
+
+      // Send to AI (this may take a long time)
+      let responseReceived = false;
+      const warningCallback = async () => {
+        try {
+          // Only send warning if response hasn't been received yet
+          if (!responseReceived) {
+            await this.sendResponse(chatId, '⏰ Sua mensagem está demorando mais que o esperado. Estou processando e responderei em breve!', null, chat);
+          }
+        } catch (error) {
+          console.error('❌ Error sending warning message:', error);
+        }
+      };
+
+      const hasCal = Boolean(config.cal?.apiKey && config.cal?.eventTypeId);
+      const enableEmailTool = Boolean(
+        config.resend?.apiKey &&
+        config.resend?.fromEmail &&
+        config.resend?.fromName
+      );
+
+      // Booking tool always sends email confirmation, so it requires both Cal and Resend configured
+      const enableBookingTool = Boolean(hasCal && enableEmailTool);
+
+      let aiResponse;
+      if (config.mistral.useConversations) {
+        const allowedTools = new Set(['obter_data_hora_atual']);
+        if (enableBookingTool) {
+          allowedTools.add('interpretar_data_hora');
+          allowedTools.add('criar_agendamento');
+        }
+        if (enableEmailTool) {
+          allowedTools.add('enviar_email_confirmacao');
         }
 
-        await this.sock.sendPresenceUpdate('composing', jid);
-      },
-
-      sendMessage: async (payload, options = {}) => {
-        if (typeof payload === 'string') {
-          await this.sendMessage(jid, { text: payload }, options);
-          return;
-        }
-
-        if (payload && typeof payload === 'object' && typeof payload.mimetype === 'string' && typeof payload.data === 'string') {
-          const buffer = Buffer.from(payload.data, 'base64');
-
-          if (payload.mimetype.startsWith('audio/')) {
-            await this.sendMessage(
-              jid,
-              {
-                audio: buffer,
-                mimetype: payload.mimetype,
-                ptt: Boolean(options.sendAudioAsVoice),
-              },
-              options
-            );
-            return;
+        const dispatcher = createToolDispatcher({ allowedTools });
+        try {
+          aiResponse = await this.mistralConversationService.sendMessage(
+            contextChatId,
+            messageText,
+            {
+              dispatcher,
+              warningCallback,
+            }
+          );
+        } catch (error) {
+          if (config.env?.debug) {
+            console.warn('⚠️ Conversations API failed, falling back to Agents API:', error?.message || error);
           }
 
-          await this.sendMessage(
-            jid,
-            {
-              document: buffer,
-              mimetype: payload.mimetype,
-              fileName: payload.filename || 'file',
-            },
-            options
-          );
-          return;
+          const context = this.conversationService.getFormattedContext(contextChatId);
+          const result = await this.mistralAgentService.sendMessageWithDispatcher(messageText, context, {
+            dispatcher,
+            warningCallback,
+          });
+          aiResponse = result?.content;
+        }
+      } else {
+        const context = this.conversationService.getFormattedContext(contextChatId);
+        const allowedTools = new Set(['obter_data_hora_atual']);
+        if (enableBookingTool) {
+          allowedTools.add('interpretar_data_hora');
+          allowedTools.add('criar_agendamento');
+        }
+        if (enableEmailTool) {
+          allowedTools.add('enviar_email_confirmacao');
         }
 
-        throw new Error('Unsupported payload type for Baileys chat.sendMessage');
+        const dispatcher = createToolDispatcher({ allowedTools });
+        const result = await this.mistralAgentService.sendMessageWithDispatcher(messageText, context, {
+          dispatcher,
+          warningCallback,
+        });
+        aiResponse = result?.content;
+      }
+      responseReceived = true; // Mark that response was received
+
+      // Complete the timeout request
+      const duration = this.timeoutHandler.completeRequest(requestId);
+
+      // Update API status
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'ready');
+
+      // Add AI response to context
+      await this.conversationService.addMessage(contextChatId, 'assistant', aiResponse);
+
+      return this.messageService.formatResponse(aiResponse);
+
+    } catch (error) {
+      console.error('❌ Error processing AI message:', error);
+
+      // Complete the timeout request on error
+      this.timeoutHandler.completeRequest(requestId);
+
+      await this.errorHandler.handleError(error, {
+        component: 'mistralAgent',
+        operation: 'processMessage',
+        requestId,
+        chatId,
+        messageLength: messageText.length
+      });
+      await this.monitoringService.updateComponentStatus('mistralAgent', 'error', { error: error.message });
+      return 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
+    }
+  }
+
+  /**
+   * Process message with AI (legacy method for compatibility)
+   * @param {string} messageText - User message
+   * @param {string} chatId - WhatsApp chat ID
+   * @returns {Promise<string>} - AI response
+   */
+  async processAIMessage(messageText, chatId) {
+    return this.processAIMessageWithTimeout(messageText, chatId);
+  }
+
+  /**
+   * Send response to WhatsApp chat
+   * @param {string} chatId - WhatsApp chat ID
+   * @param {string} response - Response text
+   */
+  async sendResponse(chatId, response, message = null, chat = null) {
+    try {
+      // Split long messages
+      const messageParts = this.messageService.splitMessage(response);
+
+      for (const part of messageParts) {
+        await this.safeSendMessage(chatId, part, message, chat);
+
+        // Small delay between parts to avoid rate limiting
+        if (messageParts.length > 1) {
+          await this.delay(1000);
+        }
+      }
+
+      if (config.env.debug) {
+        console.log(`📤 Sent response to ${chatId}: ${response.substring(0, 100)}...`);
+      }
+
+    } catch (error) {
+      console.error('❌ Error sending response:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send error response
+   * @param {string} chatId - WhatsApp chat ID
+   */
+  async sendErrorResponse(chatId, message = null) {
+    try {
+      const errorMessage = '❌ Ops! Algo deu errado. Tente enviar sua mensagem novamente.';
+
+      await this.safeSendMessage(chatId, errorMessage, message, null);
+    } catch (error) {
+      console.error('❌ Error sending error response:', error);
+    }
+  }
+
+  /**
+   * Utility function to add delay
+   * @param {number} ms - Milliseconds to delay
+   */
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Get bot status
+   * @returns {Object} - Bot status information
+   */
+  async getStatus() {
+    const conversationStats = await this.conversationService.getStats();
+    const performanceStats = this.performanceOptimizer.getPerformanceStats();
+    const errorStats = this.errorHandler.getErrorStats();
+    const monitoringDashboard = await this.monitoringService.getMonitoringDashboard();
+    const responseTime = ((Date.now() - this.startTime) / 1000).toFixed(2);
+
+    return {
+      status: 'healthy',
+      responseTime: `${responseTime}s`,
+      timestamp: new Date().toISOString(),
+      services: {
+        whatsapp: this.client ? 'connected' : 'disconnected',
+        mistral: await this.mistralAgentService.checkApiStatus() ? 'connected' : 'disconnected',
+        persistence: this.conversationService ? 'active' : 'inactive'
       },
+      monitoring: monitoringDashboard,
+      config: {
+        agentId: config.mistral.agentId,
+        maxContext: config.bot.maxContextMessages
+      }
     };
+  }
+
+  /**
+   * Gracefully shutdown the bot
+   */
+  async shutdown() {
+    try {
+      console.log('🛑 Shutting down WhatsApp bot...');
+
+      // Update component status
+      await this.monitoringService.updateComponentStatus('whatsappBot', 'shutting_down');
+
+      await this.monitoringService.shutdown();
+      await this.performanceOptimizer.shutdown();
+      await this.errorHandler.shutdown();
+
+      await this.timeoutHandler.shutdown();
+      await this.performanceOptimizations.shutdown();
+
+      // Shutdown WhatsApp client
+      if (this.client) {
+        await this.client.destroy();
+      }
+
+      console.log('✅ WhatsApp bot shutdown complete');
+    } catch (error) {
+      console.error('❌ Error during shutdown:', error);
+    }
   }
 }
 
-module.exports = BaileysClient;
+module.exports = WhatsAppBot;
