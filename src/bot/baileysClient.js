@@ -11,21 +11,22 @@ const {
 const { Boom } = require('@hapi/boom');
 
 class BaileysClient extends EventEmitter {
-  constructor({ sessionPath, logger }) {
+  constructor({ sessionPath, logger, pairingCode, printQR = false }) {
     super();
 
     this.sessionPath = sessionPath;
     this.logger = logger;
+    this.pairingCode = pairingCode; // 🆕 Store pairing code
+    this.printQR = printQR; // 🆕 Control QR display
 
     this.sock = null;
     this.saveCreds = null;
 
     this.isReady = false;
-
     this.isInitializing = false;
     this.reconnectTimer = null;
-
     this.reconnectAttempt = 0;
+    this.pairingCodeSent = false; // 🆕 Track if we've sent the pairing code
   }
 
   scheduleReconnect({ reason = 'unknown' } = {}) {
@@ -64,6 +65,7 @@ class BaileysClient extends EventEmitter {
     }
 
     this.isInitializing = true;
+    this.pairingCodeSent = false;
 
     const { state, saveCreds } = await useMultiFileAuthState(this.sessionPath);
     this.saveCreds = saveCreds;
@@ -79,10 +81,13 @@ class BaileysClient extends EventEmitter {
       this.sock = null;
     }
 
+    // 🆕 Determine if we should use pairing code
+    const usePairingCode = this.pairingCode && typeof this.pairingCode === 'string' && this.pairingCode.trim().length > 0;
+
     this.sock = makeWASocket({
       auth: state,
       logger: this.logger,
-      printQRInTerminal: false,
+      printQRInTerminal: !usePairingCode && this.printQR,
       browser: Browsers.windows('WhatsApp AI Bot'),
       version,
       syncFullHistory: false,
@@ -96,8 +101,25 @@ class BaileysClient extends EventEmitter {
     this.sock.ev.on('connection.update', (update) => {
       const { connection, lastDisconnect, qr } = update;
 
-      if (qr) {
+      // 🆕 Handle QR code (only if printQR is enabled and no pairing code)
+      if (qr && this.printQR && !usePairingCode) {
         this.emit('qr', qr);
+      }
+
+      // 🆕 Handle pairing code request
+      if (usePairingCode && !this.pairingCodeSent && connection === 'open') {
+        try {
+          const phoneNumber = this.pairingCode.trim().replace('@c.us', '');
+          const code = await this.sock.requestPairingCode(phoneNumber);
+          this.pairingCodeSent = true;
+          this.emit('pairing_code', code);
+          console.log(`\n📱 PAIRING CODE: ${code}`);
+          console.log('Enter this code in WhatsApp > Settings > Linked Devices > Link with Phone Number\n');
+        } catch (error) {
+          console.error('❌ Failed to get pairing code:', error.message);
+          this.sock.printQRInTerminal = true;
+          console.log('⚠️  Pairing code failed, falling back to QR code...');
+        }
       }
 
       if (connection === 'open') {
@@ -106,11 +128,16 @@ class BaileysClient extends EventEmitter {
         this.reconnectAttempt = 0;
         this.emit('authenticated');
         this.emit('ready');
+        
+        if (usePairingCode && this.pairingCodeSent) {
+          this.emit('paired', { method: 'pairing_code' });
+        }
       }
 
       if (connection === 'close') {
         this.isReady = false;
         this.isInitializing = false;
+        this.pairingCodeSent = false;
 
         const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
         const loggedOut = statusCode === DisconnectReason.loggedOut;
@@ -132,6 +159,7 @@ class BaileysClient extends EventEmitter {
       }
     });
 
+    // 🆕 Handle messages with status detection
     this.sock.ev.on('messages.upsert', async ({ messages }) => {
       try {
         if (!Array.isArray(messages) || messages.length === 0) {
@@ -139,6 +167,15 @@ class BaileysClient extends EventEmitter {
         }
 
         for (const rawMessage of messages) {
+          // 🆕 Check if it's a status message
+          if (this.isStatusMessage(rawMessage)) {
+            const statusMessage = this.createNormalizedStatusMessage(rawMessage);
+            if (statusMessage) {
+              this.emit('status', statusMessage);
+            }
+            continue;
+          }
+
           const normalized = this.createNormalizedMessage(rawMessage);
           if (!normalized) {
             continue;
@@ -151,7 +188,97 @@ class BaileysClient extends EventEmitter {
       }
     });
 
+    // 🆕 Handle status read receipts
+    this.sock.ev.on('receipts.upsert', async (receipts) => {
+      for (const receipt of receipts) {
+        if (receipt.type === 'status' || receipt.type === 'read') {
+          this.emit('status_read', receipt);
+        }
+      }
+    });
+
     this.isInitializing = false;
+  }
+
+  // 🆕 Check if message is a status
+  isStatusMessage(message) {
+    if (!message || !message.key) return false;
+    const jid = message.key.remoteJid;
+    return jid && (jid.endsWith('@broadcast') || jid.includes('status') || jid === 'status@broadcast');
+  }
+
+  // 🆕 Create normalized status message
+  createNormalizedStatusMessage(rawMessage) {
+    if (!rawMessage || !rawMessage.key) return null;
+
+    const jid = rawMessage.key.remoteJid;
+    const fromMe = Boolean(rawMessage.key.fromMe);
+    const participant = rawMessage.key.participant || rawMessage.key.remoteJid;
+
+    // Extract status text
+    const text = rawMessage.message?.conversation ||
+                 rawMessage.message?.extendedTextMessage?.text ||
+                 rawMessage.message?.imageMessage?.caption ||
+                 rawMessage.message?.videoMessage?.caption ||
+                 '';
+
+    // Check status types
+    const isImage = Boolean(rawMessage.message?.imageMessage);
+    const isVideo = Boolean(rawMessage.message?.videoMessage);
+    const isText = Boolean(rawMessage.message?.conversation || rawMessage.message?.extendedTextMessage);
+
+    return {
+      _raw: rawMessage,
+      _jid: jid,
+      _key: rawMessage.key,
+
+      fromMe: fromMe,
+      from: participant,
+      type: isImage ? 'image' : isVideo ? 'video' : 'text',
+      body: text,
+      hasMedia: isImage || isVideo,
+      isStatus: true,
+
+      // Status-specific methods
+      react: async (emoji) => {
+        if (!this.sock) throw new Error('Socket not initialized');
+        await this.sock.sendMessage(jid, {
+          react: {
+            text: emoji,
+            key: rawMessage.key
+          }
+        });
+      },
+
+      reply: async (replyText) => {
+        if (!this.sock) throw new Error('Socket not initialized');
+        await this.sock.sendMessage(jid, { text: replyText }, { quoted: rawMessage });
+      },
+
+      getChat: async () => {
+        return {
+          id: { _serialized: jid },
+          sendSeen: async () => {
+            if (rawMessage.key) {
+              await this.sock.readMessages([rawMessage.key]);
+            }
+          }
+        };
+      },
+
+      downloadMedia: async () => {
+        if (!isImage && !isVideo) return null;
+        const buffer = await downloadMediaMessage(rawMessage, 'buffer', {}, { logger: this.logger });
+        const mimetype = rawMessage.message?.imageMessage?.mimetype || 
+                        rawMessage.message?.videoMessage?.mimetype || 
+                        'image/jpeg';
+        return {
+          mimetype,
+          data: Buffer.from(buffer).toString('base64'),
+          filename: isImage ? 'image.jpg' : 'video.mp4',
+        };
+      }
+    };
   }
 
   async destroy() {
