@@ -20,47 +20,99 @@ class CommandHandler {
    */
   async handleCommand(command, args, chatId) {
     switch (command) {
+      // Existing commands
       case 'help':
         return this.handleHelp();
-
       case 'reset':
         return this.handleReset(chatId);
-
       case 'clear':
         return this.handleReset(chatId);
-
       case 'status':
         return await this.handleStatus();
-
       case 'about':
         return this.handleAbout();
-
       case 'context':
         return this.handleContext();
-
       case 'analytics':
         return await this.handleAnalytics();
-
       case 'cleanup':
         return await this.handleCleanup();
-
       case 'health':
         return await this.handleHealth();
-
       case 'monitor':
         return await this.handleMonitor();
-
       case 'performance':
         return await this.handlePerformance();
-
       case 'errors':
         return await this.handleErrors();
-
       case 'admin':
         return await this.handleAdminCommand(args, chatId);
-
       case 'sqlite':
         return await this.handleSqliteCommand(args, chatId);
+
+      // 🆕 AI Control Commands
+      case 'aion':
+        return this.handleAIControl('aion', chatId);
+      case 'aioff':
+        return this.handleAIControl('aioff', chatId);
+      case 'aiprivate':
+        return this.handleAIControl('aiprivate', chatId);
+      case 'aigroup':
+        return this.handleAIControl('aigroup', chatId);
+
+      // 🆕 Mode Control Commands
+      case 'privateonly':
+        return this.handleModeControl('privateonly', chatId);
+      case 'grouponly':
+        return this.handleModeControl('grouponly', chatId);
+      case 'adminonly':
+        return this.handleModeControl('adminonly', chatId);
+      case 'publicmode':
+        return this.handleModeControl('publicmode', chatId);
+
+      // 🆕 Auto-Delete Commands
+      case 'autodel':
+        return this.handleAutoDelete('autodel', args, chatId);
+      case 'autodelon':
+        return this.handleAutoDelete('autodelon', args, chatId);
+      case 'autodeloff':
+        return this.handleAutoDelete('autodeloff', args, chatId);
+      case 'autodelall':
+        return this.handleAutoDelete('autodelall', args, chatId);
+      case 'autodeltime':
+        return this.handleAutoDelete('autodeltime', args, chatId);
+
+      // 🆕 Protection Commands
+      case 'antispam':
+        return this.handleProtection('antispam', chatId);
+      case 'antilink':
+        return this.handleProtection('antilink', chatId);
+      case 'welcome':
+        return this.handleProtection('welcome', chatId);
+      case 'welcomeset':
+        return this.handleProtection('welcomeset', args, chatId);
+      case 'welcomeoff':
+        return this.handleProtection('welcomeoff', chatId);
+
+      // 🆕 Status Commands (handled by status.js file)
+      // These are loaded from the commands folder
+
+      // 🆕 Admin Controls (handled by adminControls.js file)
+      // These are loaded from the commands folder
+
+      // 🆕 Ping Command
+      case 'ping':
+        return this.handlePing();
+      case 'pong':
+      case 'test':
+      case 'latency':
+        return this.handlePing();
+
+      // 🆕 Uptime Command
+      case 'uptime':
+        return this.handleUptime();
+      case 'up':
+        return this.handleUptime();
 
       default:
         return `❓ Comando desconhecido: ${command}\n\n` +
@@ -74,50 +126,285 @@ class CommandHandler {
           `• /performance - Métricas de performance\n` +
           `• /errors - Relatório de erros\n` +
           `• /admin - Comandos administrativos\n` +
-          `• /sqlite - Gerenciamento SQLite`;
+          `• /sqlite - Gerenciamento SQLite\n` +
+          `• /aion - Liga a IA\n` +
+          `• /aioff - Desliga a IA\n` +
+          `• /aiprivate - IA em conversas privadas\n` +
+          `• /aigroup - IA em grupos\n` +
+          `• /privateonly - Apenas conversas privadas\n` +
+          `• /grouponly - Apenas grupos\n` +
+          `• /adminonly - Apenas administradores\n` +
+          `• /publicmode - Todos podem usar\n` +
+          `• /autodel - Auto-deletar no grupo\n` +
+          `• /autodeltime <s> - Tempo de auto-delete\n` +
+          `• /ping - Verifica a velocidade do bot\n` +
+          `• /uptime - Tempo de atividade do bot`;
     }
   }
 
   /**
    * Handle /help command
-   * @returns {string} - Help message with available commands
    */
   handleHelp() {
     return `🤖 *Available Commands*
 
 *Basic Commands:*
 • /help - Show this help message
-• /status - Check bot and API status (with analytics)
+• /status - Check bot and API status
 • /about - Information about this bot
 • /reset - Clear conversation history
 • /clear - Alias for /reset
+• /ping - Check bot response speed
+• /uptime - Show bot uptime
 
-*Context Management:*
+*AI Control:*
+• /aion - Turn AI ON (master toggle)
+• /aioff - Turn AI OFF (master toggle)
+• /aiprivate - Toggle AI in private chats
+• /aigroup - Toggle AI in groups
+
+*Mode Control:*
+• /privateonly - Bot only works in private chats
+• /grouponly - Bot only works in groups
+• /adminonly - Only admins can use commands
+• /publicmode - Everyone can use commands
+
+*Context & Analytics:*
 • /context - View current AI configuration
-
-*Analytics & Reports:*
-• /analytics - View conversation analytics report
+• /analytics - View conversation analytics
 • /cleanup - Clean up old conversation data
 
 *System Monitoring:*
-• /health - System health check and status
-• /monitor - Comprehensive monitoring dashboard
-• /performance - Performance metrics and optimization
-• /errors - Error logs and system diagnostics
+• /health - System health check
+• /monitor - Monitoring dashboard
+• /performance - Performance metrics
+• /errors - Error logs
 
-*Usage Tips:*
+*Auto-Delete:*
+• /autodel - Toggle auto-delete in group
+• /autodeltime <seconds> - Set delete delay
+
+*Protection:*
+• /antispam - Toggle anti-spam
+• /antilink - Toggle anti-link
+• /welcome - Toggle welcome messages
+• /welcomeset <message> - Set welcome message
+
+*Admin & Management:*
+• /admin - Admin controls
+• /sqlite - SQLite management
+
+*Status (NEW!):*
+• /status - View and interact with statuses
+• Reply to a status then use:
+  - /status react ❤️
+  - /status reply Nice!
+  - /status view
+  - /status download
+
+*Tips:*
 • Just send a normal message to chat with the AI
-• The AI remembers our conversation context permanently
-• Conversations are automatically saved and restored
+• The bot only responds to private messages
+• Group messages are automatically ignored
 • Use /reset if you want to start fresh
-• Update the Mistral Agent instructions to customize the assistant behavior
 
 *Need help?* Just ask me anything! 😊`;
   }
 
   /**
+   * Handle AI Control Commands
+   */
+  handleAIControl(command, chatId) {
+    if (!this.adminService) {
+      return '❌ Admin service not available';
+    }
+
+    const isAdmin = this.adminService.isAdmin(chatId);
+    if (!isAdmin) {
+      return '🔒 This command is for admins only';
+    }
+
+    let response = '';
+    switch (command) {
+      case 'aion':
+        this.adminService.toggleSetting('aiEnabled', true);
+        response = '✅ AI Master toggle turned ON';
+        break;
+      case 'aioff':
+        this.adminService.toggleSetting('aiEnabled', false);
+        response = '⛔ AI Master toggle turned OFF';
+        break;
+      case 'aiprivate':
+        const privateStatus = this.adminService.toggleSetting('aiPrivateChats');
+        response = `✅ AI in private chats: ${privateStatus ? 'ON' : 'OFF'}`;
+        break;
+      case 'aigroup':
+        const groupStatus = this.adminService.toggleSetting('aiGroups');
+        response = `✅ AI in groups: ${groupStatus ? 'ON' : 'OFF'}`;
+        break;
+    }
+    return response;
+  }
+
+  /**
+   * Handle Mode Control Commands
+   */
+  handleModeControl(command, chatId) {
+    if (!this.adminService) {
+      return '❌ Admin service not available';
+    }
+
+    const isAdmin = this.adminService.isAdmin(chatId);
+    if (!isAdmin) {
+      return '🔒 This command is for admins only';
+    }
+
+    let response = '';
+    switch (command) {
+      case 'privateonly':
+        this.adminService.toggleSetting('privateOnlyMode', true);
+        this.adminService.toggleSetting('groupOnlyMode', false);
+        response = '✅ Bot set to PRIVATE ONLY mode (only responds in private chats)';
+        break;
+      case 'grouponly':
+        this.adminService.toggleSetting('groupOnlyMode', true);
+        this.adminService.toggleSetting('privateOnlyMode', false);
+        response = '✅ Bot set to GROUP ONLY mode (only responds in groups)';
+        break;
+      case 'adminonly':
+        const adminStatus = this.adminService.toggleSetting('adminOnlyCommands');
+        response = `✅ Admin-only mode: ${adminStatus ? 'ON' : 'OFF'}`;
+        break;
+      case 'publicmode':
+        this.adminService.toggleSetting('adminOnlyCommands', false);
+        response = '✅ All commands are now PUBLIC';
+        break;
+    }
+    return response;
+  }
+
+  /**
+   * Handle Auto-Delete Commands
+   */
+  handleAutoDelete(command, args, chatId) {
+    if (!this.adminService) {
+      return '❌ Admin service not available';
+    }
+
+    const isAdmin = this.adminService.isAdmin(chatId);
+    if (!isAdmin) {
+      return '🔒 This command is for admins only';
+    }
+
+    switch (command) {
+      case 'autodel':
+        const isEnabled = this.adminService.isAutoDeleteEnabled(chatId);
+        if (isEnabled) {
+          this.adminService.removeAutoDeleteGroup(chatId);
+          return '⛔ Auto-delete disabled for this group';
+        } else {
+          this.adminService.addAutoDeleteGroup(chatId);
+          return '✅ Auto-delete enabled for this group! Messages will be auto-deleted.';
+        }
+
+      case 'autodeltime':
+        const seconds = parseInt(args[0]);
+        if (isNaN(seconds) || seconds < 1 || seconds > 60) {
+          return '❌ Please provide a valid time (1-60 seconds)';
+        }
+        this.adminService.settings.autoDeleteDelay = seconds * 1000;
+        this.adminService.saveSettings();
+        return `✅ Auto-delete delay set to ${seconds} seconds`;
+
+      default:
+        return '❌ Unknown auto-delete command';
+    }
+  }
+
+  /**
+   * Handle Protection Commands
+   */
+  handleProtection(command, args, chatId) {
+    if (!this.adminService) {
+      return '❌ Admin service not available';
+    }
+
+    const isAdmin = this.adminService.isAdmin(chatId);
+    if (!isAdmin) {
+      return '🔒 This command is for admins only';
+    }
+
+    switch (command) {
+      case 'antispam':
+        const spamStatus = this.adminService.toggleSetting('antiSpamEnabled');
+        return `✅ Anti-spam: ${spamStatus ? 'ON' : 'OFF'}`;
+
+      case 'antilink':
+        const linkStatus = this.adminService.toggleSetting('antiLinkEnabled');
+        return `✅ Anti-link: ${linkStatus ? 'ON' : 'OFF'}`;
+
+      case 'welcome':
+        const welcomeStatus = this.adminService.toggleSetting('welcomeEnabled');
+        return `✅ Welcome messages: ${welcomeStatus ? 'ON' : 'OFF'}`;
+
+      case 'welcomeset':
+        const message = args.join(' ');
+        if (!message) {
+          return '❌ Please provide a welcome message\nExample: /welcomeset Welcome to the group! 🎉';
+        }
+        // Store welcome message in settings
+        this.adminService.settings.welcomeMessage = message;
+        this.adminService.saveSettings();
+        return `✅ Welcome message set to: "${message}"`;
+
+      case 'welcomeoff':
+        this.adminService.toggleSetting('welcomeEnabled', false);
+        return '⛔ Welcome messages turned OFF';
+
+      default:
+        return '❌ Unknown protection command';
+    }
+  }
+
+  /**
+   * Handle Ping Command
+   */
+  handlePing() {
+    const startTime = Date.now();
+    const latency = Date.now() - startTime;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      timeZone: 'Africa/Lagos'
+    }).toLowerCase();
+
+    return `╭─❍ *PONG!*\n│ ❕ ${latency}ms\n│ ⚡  _online_\n╰─ 📄 \`\`\`${timeStr}\`\`\``;
+  }
+
+  /**
+   * Handle Uptime Command
+   */
+  handleUptime() {
+    const uptime = process.uptime();
+    const days = Math.floor(uptime / 86400);
+    const hours = Math.floor((uptime % 86400) / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
+
+    let uptimeStr = '';
+    if (days > 0) uptimeStr += `${days}d `;
+    if (hours > 0) uptimeStr += `${hours}h `;
+    if (minutes > 0) uptimeStr += `${minutes}m `;
+    uptimeStr += `${seconds}s`;
+
+    return `╭─❍ *📡 UPTIME*\n│\n│ ⏱️ ${uptimeStr}\n│\n│ 🕐 Started: ${new Date(Date.now() - uptime * 1000).toLocaleString()}\n╰──────────────────`;
+  }
+
+  /**
    * Handle /reset command
-   * @returns {string} - Reset confirmation
    */
   async handleReset(chatId) {
     if (chatId) {
@@ -132,16 +419,21 @@ class CommandHandler {
 
   /**
    * Handle /status command
-   * @returns {string} - Bot status information
    */
   async handleStatus() {
     try {
-      // Test API connection
       const testResponse = await this.mistralAgentService.checkApiStatus();
       const apiStatusText = testResponse ? 'Connected' : 'Disconnected';
       const statusEmoji = testResponse ? '✅' : '❌';
 
       const stats = await this.conversationService.getStats();
+
+      // Get admin settings if available
+      let adminSettings = '';
+      if (this.adminService) {
+        const settings = this.adminService.getSettingsStatus();
+        adminSettings = `\n*Controls:*\n• AI Master: ${settings.ai.enabled}\n• AI Groups: ${settings.ai.groups}\n• AI Private: ${settings.ai.privateChats}\n• Auto-Delete: ${settings.autoDelete.enabled}`;
+      }
 
       return `📊 *Bot Status*
 
@@ -159,7 +451,7 @@ class CommandHandler {
 • Daily average: ${Math.round((stats.analytics.summary?.totalMessages || 0) / 7)} msgs/day
 • Total users: ${stats.analytics.summary?.totalUsers || 0}
 • Popular commands: ${Object.keys(stats.analytics.popularCommands || {}).slice(0, 3).join(', ') || 'None'}
-
+${adminSettings}
 *System:* Running with enhanced features 🚀`;
 
     } catch (error) {
@@ -174,7 +466,6 @@ class CommandHandler {
 
   /**
    * Handle /about command
-   * @returns {string} - About message
    */
   handleAbout() {
     return `🤖 *${config.bot.name}*
@@ -194,14 +485,13 @@ This is an AI assistant integrated with WhatsApp, powered by Mistral Agents.
 • Platform: Node.js + WhatsApp Web
 
 *Developed:* September 2025
-*Version:* 1.1.0
+*Version:* 1.2.0
 
 For more information, use /help`;
   }
 
   /**
    * Handle /context command
-   * @returns {string} - Context information
    */
   handleContext() {
     return `🎭 *Current Bot Context*
@@ -222,7 +512,6 @@ For more information, use /help`;
 
   /**
    * Handle /analytics command
-   * @returns {string} - Analytics report
    */
   async handleAnalytics() {
     try {
@@ -264,7 +553,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /cleanup command
-   * @returns {string} - Cleanup results
    */
   async handleCleanup() {
     try {
@@ -272,17 +560,12 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
       return `🧹 *Data Cleanup Complete*
 
-` +
-        `📊 *Cleanup Results:*
-` +
-        `• Conversations cleaned: ${result.cleanedConversations || 0}
-` +
-        `• Analytics entries cleaned: ${result.cleanedAnalytics || 0}
-` +
-        `• Total space freed: ${result.spaceSaved || 'Unknown'}
+📊 *Cleanup Results:*
+• Conversations cleaned: ${result.cleanedConversations || 0}
+• Analytics entries cleaned: ${result.cleanedAnalytics || 0}
+• Total space freed: ${result.spaceSaved || 'Unknown'}
 
-` +
-        `✅ Old data (30+ days) has been removed to optimize storage.`;
+✅ Old data (30+ days) has been removed to optimize storage.`;
     } catch (error) {
       console.error('❌ Error during cleanup:', error);
       return '❌ Error occurred during data cleanup. Please try again later.';
@@ -291,7 +574,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /health command
-   * @returns {string} - System health status
    */
   async handleHealth() {
     try {
@@ -353,7 +635,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /monitor command
-   * @returns {string} - Monitoring dashboard
    */
   async handleMonitor() {
     try {
@@ -368,7 +649,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       response += `⏱️ *Uptime:* ${Math.floor(dashboard.uptime / 3600)}h ${Math.floor((dashboard.uptime % 3600) / 60)}m\n`;
       response += `📅 *Started:* ${new Date(dashboard.startTime).toLocaleString()}\n\n`;
 
-      // Performance metrics
       if (dashboard.performance) {
         response += `⚡ *Performance:*\n`;
         if (dashboard.performance.memory?.current) {
@@ -383,14 +663,12 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `\n`;
       }
 
-      // Error summary
       if (dashboard.errors) {
         response += `🚨 *Errors:*\n`;
         response += `• Total: ${dashboard.errors.total}\n`;
         response += `• Recent: ${dashboard.errors.recent}\n\n`;
       }
 
-      // Alerts
       if (dashboard.alerts) {
         response += `🔔 *Alerts:*\n`;
         response += `• Total: ${dashboard.alerts.total}\n`;
@@ -414,7 +692,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /performance command
-   * @returns {string} - Performance metrics
    */
   async handlePerformance() {
     try {
@@ -426,7 +703,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
       let response = `⚡ *Performance Metrics*\n\n`;
 
-      // Memory stats
       if (stats.memory) {
         response += `🧠 *Memory Usage:*\n`;
         response += `• Current: ${Math.round(stats.memory.current)}MB\n`;
@@ -434,7 +710,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Average: ${Math.round(stats.memory.average)}MB\n\n`;
       }
 
-      // Response time stats
       if (stats.responseTime) {
         response += `⏱️ *Response Times:*\n`;
         response += `• Average: ${Math.round(stats.responseTime.average)}ms\n`;
@@ -442,7 +717,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `• Slowest: ${Math.round(stats.responseTime.max)}ms\n\n`;
       }
 
-      // Cache performance
       if (stats.cache) {
         response += `💾 *Cache Performance:*\n`;
         response += `• Hit Rate: ${Math.round(stats.cache.hitRate * 100)}%\n`;
@@ -459,7 +733,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /errors command
-   * @returns {string} - Error logs and diagnostics
    */
   async handleErrors() {
     try {
@@ -474,7 +747,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
       response += `• Total Errors: ${errorStats.total}\n`;
       response += `• Recent (24h): ${errorStats.recent?.length || 0}\n\n`;
 
-      // Error by component
       if (errorStats.byComponent && Object.keys(errorStats.byComponent).length > 0) {
         response += `🔧 *Errors by Component:*\n`;
         Object.entries(errorStats.byComponent).forEach(([component, count]) => {
@@ -483,7 +755,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `\n`;
       }
 
-      // Error by type
       if (errorStats.byType && Object.keys(errorStats.byType).length > 0) {
         response += `📋 *Errors by Type:*\n`;
         Object.entries(errorStats.byType).forEach(([type, count]) => {
@@ -492,7 +763,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
         response += `\n`;
       }
 
-      // Recent errors
       if (errorStats.recent && errorStats.recent.length > 0) {
         response += `🕐 *Recent Errors:*\n`;
         errorStats.recent.slice(0, 5).forEach((error, index) => {
@@ -512,9 +782,6 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 
   /**
    * Handle /admin command
-   * @param {Array} args - Command arguments
-   * @param {string} chatId - WhatsApp chat ID
-   * @returns {Promise<string>} - Admin command response
    */
   async handleAdminCommand(args, chatId) {
     try {
@@ -538,7 +805,10 @@ ${Object.keys(report.errorStats || {}).length > 0 ?
 ${adminStats.adminNumbers.map(num => `• ${num}`).join('\n')}
 
 🚫 *Admin-Only Commands:*
-${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}`;
+${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}
+
+📋 *Settings:*
+${Object.entries(adminStats.settings || {}).map(([key, value]) => `• ${key}: ${JSON.stringify(value)}`).join('\n')}`;
 
         case 'stats':
           const stats = this.adminService.getCommandStats();
@@ -570,9 +840,6 @@ ${adminStats.adminOnlyCommands.map(cmd => `• /${cmd}`).join('\n')}`;
 
   /**
    * Handle /sqlite command
-   * @param {Array} args - Command arguments
-   * @param {string} chatId - WhatsApp chat ID
-   * @returns {Promise<string>} - SQLite command response
    */
   async handleSqliteCommand(args, chatId) {
     try {
