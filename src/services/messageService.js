@@ -3,6 +3,7 @@ const config = require('../config/config');
 class MessageService {
   constructor() {
     this.messageSplitLength = config.bot.messageSplitLength;
+    this.debug = config.env?.debug || false;
   }
 
   /**
@@ -18,6 +19,12 @@ class MessageService {
 
     // Ignore status broadcasts
     if (message.from === 'status@broadcast') {
+      return true;
+    }
+
+    // 🚫 IGNORE ALL GROUP MESSAGES (ends with @g.us)
+    if (message.from && message.from.endsWith('@g.us')) {
+      if (this.debug) console.log(`⏭️ Ignoring: Group message from ${message.from}`);
       return true;
     }
 
@@ -166,6 +173,178 @@ class MessageService {
       .trim()
       .replace(/\*\*(.*?)\*\*/g, '*$1*') // Convert **bold** to *bold*
       .replace(/__(.*?)__/g, '_$1_'); // Convert __italic__ to _italic_
+  }
+
+  /**
+   * Check if message is a sticker
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message is a sticker
+   */
+  isSticker(message) {
+    return message?.type === 'sticker' || message?.message?.stickerMessage !== undefined;
+  }
+
+  /**
+   * Check if message is a document
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message is a document
+   */
+  isDocument(message) {
+    return message?.type === 'document' || message?.message?.documentMessage !== undefined;
+  }
+
+  /**
+   * Check if message is an image
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message is an image
+   */
+  isImage(message) {
+    return message?.type === 'image' || message?.message?.imageMessage !== undefined;
+  }
+
+  /**
+   * Check if message is a video
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message is a video
+   */
+  isVideo(message) {
+    return message?.type === 'video' || message?.message?.videoMessage !== undefined;
+  }
+
+  /**
+   * Check if message is a voice note
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message is a voice note
+   */
+  isVoiceNote(message) {
+    const type = message?.type;
+    return type === 'ptt' || type === 'audio' || message?.message?.audioMessage?.ptt === true;
+  }
+
+  /**
+   * Get message type string
+   * @param {Object} message - WhatsApp message object
+   * @returns {string} - Message type
+   */
+  getMessageType(message) {
+    if (this.isSticker(message)) return 'sticker';
+    if (this.isImage(message)) return 'image';
+    if (this.isVideo(message)) return 'video';
+    if (this.isVoiceNote(message)) return 'voice';
+    if (this.isDocument(message)) return 'document';
+    return 'text';
+  }
+
+  /**
+   * Extract text from message
+   * @param {Object} message - WhatsApp message object
+   * @returns {string} - Extracted text
+   */
+  extractText(message) {
+    if (!message || !message.message) return '';
+    
+    const msg = message.message;
+    return msg.conversation ||
+           msg.extendedTextMessage?.text ||
+           msg.imageMessage?.caption ||
+           msg.videoMessage?.caption ||
+           msg.documentMessage?.caption ||
+           msg.audioMessage?.caption ||
+           '';
+  }
+
+  /**
+   * Check if message has media
+   * @param {Object} message - WhatsApp message object
+   * @returns {boolean} - True if message has media
+   */
+  hasMedia(message) {
+    if (!message || !message.message) return false;
+    const msg = message.message;
+    return !!(msg.imageMessage || 
+              msg.videoMessage || 
+              msg.documentMessage || 
+              msg.audioMessage ||
+              msg.stickerMessage);
+  }
+
+  /**
+   * Truncate text to specified length
+   * @param {string} text - Text to truncate
+   * @param {number} length - Maximum length
+   * @returns {string} - Truncated text
+   */
+  truncate(text, length = 100) {
+    if (!text || text.length <= length) return text;
+    return text.substring(0, length) + '...';
+  }
+
+  /**
+   * Escape special characters for WhatsApp
+   * @param {string} text - Text to escape
+   * @returns {string} - Escaped text
+   */
+  escapeText(text) {
+    if (!text) return '';
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/\*/g, '\\*')
+      .replace(/_/g, '\\_')
+      .replace(/~/g, '\\~')
+      .replace(/`/g, '\\`')
+      .replace(/\[/g, '\\[')
+      .replace(/\]/g, '\\]')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/\{/g, '\\{')
+      .replace(/\}/g, '\\}');
+  }
+
+  /**
+   * Format number for WhatsApp
+   * @param {string} number - Phone number
+   * @returns {string} - Formatted number
+   */
+  formatNumber(number) {
+    if (!number) return '';
+    // Remove everything except digits and @
+    let cleaned = number.replace(/[^0-9@]/g, '');
+    // Ensure @c.us format
+    if (!cleaned.includes('@')) {
+      cleaned = cleaned + '@c.us';
+    }
+    return cleaned;
+  }
+
+  /**
+   * Extract quoted message
+   * @param {Object} message - WhatsApp message object
+   * @returns {Object|null} - Quoted message or null
+   */
+  getQuotedMessage(message) {
+    if (!message || !message.message) return null;
+    
+    const quoted = message.message.extendedTextMessage?.contextInfo?.quotedMessage ||
+                   message.message.imageMessage?.contextInfo?.quotedMessage ||
+                   message.message.videoMessage?.contextInfo?.quotedMessage ||
+                   message.message.documentMessage?.contextInfo?.quotedMessage ||
+                   message.message.audioMessage?.contextInfo?.quotedMessage ||
+                   message.message.stickerMessage?.contextInfo?.quotedMessage;
+    
+    if (!quoted) return null;
+    
+    return {
+      text: quoted.conversation || 
+            quoted.extendedTextMessage?.text || 
+            quoted.imageMessage?.caption ||
+            quoted.videoMessage?.caption ||
+            '',
+      sender: message.message.extendedTextMessage?.contextInfo?.participant ||
+              message.message.imageMessage?.contextInfo?.participant ||
+              message.message.videoMessage?.contextInfo?.participant ||
+              null,
+      type: Object.keys(quoted)[0] || 'unknown'
+    };
   }
 }
 
