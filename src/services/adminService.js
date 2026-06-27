@@ -25,10 +25,10 @@ class AdminService {
       })
       .map((value) => (value.includes('@') ? value : `${value}@c.us`));
 
-    // 🆕 Admin commands - All commands public but with control features
+    // 🆕 ALL COMMANDS ARE PUBLIC - Empty array = no restrictions
     this.adminCommands = [];
 
-    // Bot control settings
+    // 🆕 Bot control settings with status controls
     this.settings = {
       // AI Chat controls
       aiEnabled: true,           // Master AI toggle
@@ -51,6 +51,15 @@ class AdminService {
       // Group controls
       groupOnlyMode: false,       // If true, only works in groups
       privateOnlyMode: true,      // If true, only works in private chats
+      
+      // 🆕 Status controls
+      statusEnabled: false,           // Enable/disable status handling
+      statusAutoReact: false,         // Auto-react to statuses
+      statusAutoReply: false,         // Auto-reply to statuses
+      statusReplyMessage: '👀 Nice status!', // Default reply message
+      statusEmojis: ['❤️', '👀', '🔥', '💯', '✨', '👍', '😂', '😍'], // Reaction emojis
+      statusViewOn: false,            // View statuses (mark as seen)
+      statusForward: false,           // Forward statuses to admin
     };
 
     // Load settings from file
@@ -104,6 +113,14 @@ class AdminService {
   isAdmin(chatId) {
     const normalizedChatId = typeof chatId === 'string' ? chatId.trim() : '';
     const isAdmin = normalizedChatId.length > 0 && this.adminNumbers.includes(normalizedChatId);
+
+    if (!isAdmin && config.env?.debug) {
+      console.log('admin.access_denied_debug', {
+        chatId: normalizedChatId,
+        configuredAdmins: this.adminNumbers,
+      });
+    }
+
     return isAdmin;
   }
 
@@ -257,6 +274,16 @@ class AdminService {
         antiSpam: this.settings.antiSpamEnabled ? '✅ ON' : '❌ OFF',
         antiLink: this.settings.antiLinkEnabled ? '✅ ON' : '❌ OFF',
         welcome: this.settings.welcomeEnabled ? '✅ ON' : '❌ OFF'
+      },
+      // 🆕 Status settings
+      status: {
+        enabled: this.settings.statusEnabled ? '✅ ON' : '❌ OFF',
+        autoReact: this.settings.statusAutoReact ? '✅ ON' : '❌ OFF',
+        autoReply: this.settings.statusAutoReply ? '✅ ON' : '❌ OFF',
+        viewOn: this.settings.statusViewOn ? '✅ ON' : '❌ OFF',
+        forward: this.settings.statusForward ? '✅ ON' : '❌ OFF',
+        replyMessage: this.settings.statusReplyMessage,
+        emojis: this.settings.statusEmojis.join(', '),
       }
     };
   }
@@ -321,7 +348,6 @@ class AdminService {
     const deleteDelay = delay || this.settings.autoDeleteDelay;
     const timer = setTimeout(async () => {
       try {
-        // Delete the message
         if (global.sock) {
           await global.sock.sendMessage(chatId, { delete: messageId });
           console.log(`🗑️ Deleted message in ${chatId}`);
@@ -346,6 +372,73 @@ class AdminService {
       return true;
     }
     return false;
+  }
+
+  // 🆕 Status control methods
+
+  /**
+   * Get status settings
+   */
+  getStatusSettings() {
+    return {
+      enabled: this.settings.statusEnabled ? '✅ ON' : '❌ OFF',
+      autoReact: this.settings.statusAutoReact ? '✅ ON' : '❌ OFF',
+      autoReply: this.settings.statusAutoReply ? '✅ ON' : '❌ OFF',
+      viewOn: this.settings.statusViewOn ? '✅ ON' : '❌ OFF',
+      forward: this.settings.statusForward ? '✅ ON' : '❌ OFF',
+      replyMessage: this.settings.statusReplyMessage,
+      emojis: this.settings.statusEmojis.join(', '),
+    };
+  }
+
+  /**
+   * Toggle status viewing
+   */
+  toggleStatusView() {
+    this.settings.statusViewOn = !this.settings.statusViewOn;
+    this.saveSettings();
+    return this.settings.statusViewOn;
+  }
+
+  /**
+   * Toggle status forwarding
+   */
+  toggleStatusForward() {
+    this.settings.statusForward = !this.settings.statusForward;
+    this.saveSettings();
+    return this.settings.statusForward;
+  }
+
+  /**
+   * Get random emoji for status reaction
+   */
+  getRandomStatusEmoji() {
+    const emojis = this.settings.statusEmojis;
+    return emojis[Math.floor(Math.random() * emojis.length)];
+  }
+
+  /**
+   * Set status reply message
+   */
+  setStatusReply(message) {
+    if (!message || message.trim().length === 0) {
+      return false;
+    }
+    this.settings.statusReplyMessage = message.trim();
+    this.saveSettings();
+    return true;
+  }
+
+  /**
+   * Set status emojis
+   */
+  setStatusEmojis(emojis) {
+    if (!Array.isArray(emojis) || emojis.length === 0) {
+      return false;
+    }
+    this.settings.statusEmojis = emojis;
+    this.saveSettings();
+    return true;
   }
 
   /**
@@ -442,6 +535,14 @@ class AdminService {
       adminOnlyCommands: false,
       groupOnlyMode: false,
       privateOnlyMode: true,
+      // 🆕 Status settings
+      statusEnabled: false,
+      statusAutoReact: false,
+      statusAutoReply: false,
+      statusReplyMessage: '👀 Nice status!',
+      statusEmojis: ['❤️', '👀', '🔥', '💯', '✨', '👍', '😂', '😍'],
+      statusViewOn: false,
+      statusForward: false,
     };
     this.saveSettings();
     return true;
