@@ -54,13 +54,6 @@ class WhatsAppBot {
 
     this.isReady = false;
     this.startTime = Date.now();
-
-    // 🆕 Status tracking
-    this.processedStatuses = new Set(); // Track processed statuses to avoid duplicates
-    
-    // Make admin service globally accessible
-    global.adminService = this.adminService;
-    global.botInstance = this;
   }
 
   setupTimeoutListeners() {
@@ -140,14 +133,9 @@ class WhatsAppBot {
         level: 'silent'
       };
 
-      // 🆕 Get pairing code from environment
-      const phoneNumber = process.env.ADMIN_WHATSAPP_NUMBER?.replace('@c.us', '') || '';
-
       this.client = new BaileysClient({
         sessionPath: config.whatsapp.sessionPath,
         logger: noOpLogger,
-        pairingCode: phoneNumber, // 🆕 Pass pairing code
-        printQR: false, // 🆕 Disable QR
       });
 
       // Set up event listeners
@@ -174,16 +162,9 @@ class WhatsAppBot {
    * Set up WhatsApp client event listeners
    */
   setupEventListeners() {
-    // 🆕 Pairing code handler
-    this.client.on('pairing_code', (code) => {
-      console.log('\n📱 PAIRING CODE: ' + code);
-      console.log('Enter this code in WhatsApp > Settings > Linked Devices > Link with Phone Number\n');
-    });
-
-    // QR Code as fallback
+    // QR Code for authentication
     this.client.on('qr', (qr) => {
-      console.log('⚠️  QR Code generated (fallback method)');
-      console.log('If you see this, pairing code may have failed. Scan this QR:');
+      console.log('📱 Scan this QR code with your WhatsApp:');
       qrcode.generate(qr, { small: true });
     });
 
@@ -209,11 +190,6 @@ class WhatsAppBot {
       this.isReady = false;
     });
 
-    // 🆕 Handle status messages
-    this.client.on('status', async (statusMessage) => {
-      await this.handleStatusMessage(statusMessage);
-    });
-
     // Incoming messages
     this.client.on('message', async (message) => {
       await this.handleMessage(message);
@@ -223,104 +199,6 @@ class WhatsAppBot {
     this.client.on('error', (error) => {
       console.error('❌ WhatsApp client error:', error);
     });
-  }
-
-  /**
-   * 🆕 Handle status messages
-   */
-  async handleStatusMessage(statusMessage) {
-    try {
-      // Skip if status is from the bot itself
-      if (statusMessage.fromMe) {
-        return;
-      }
-
-      // Create a unique ID for this status
-      const statusId = statusMessage._key?.id || Date.now().toString();
-      
-      // Skip if already processed
-      if (this.processedStatuses.has(statusId)) {
-        return;
-      }
-      this.processedStatuses.add(statusId);
-
-      // Get status settings
-      const statusSettings = this.adminService.getStatusSettings();
-      
-      // Check if status handling is enabled
-      if (!this.adminService.settings.statusEnabled) {
-        return;
-      }
-
-      console.log(`📱 Status from ${statusMessage.from}: ${statusMessage.body || '(media)'}`);
-
-      // 👁️ Auto-view status (mark as seen)
-      if (this.adminService.settings.statusViewOn) {
-        try {
-          const chat = await statusMessage.getChat();
-          await chat.sendSeen();
-          console.log(`👁️ Status viewed from ${statusMessage.from}`);
-        } catch (error) {
-          console.error('❌ Failed to view status:', error.message);
-        }
-      }
-
-      // 📤 Forward status to admin
-      if (this.adminService.settings.statusForward) {
-        try {
-          const adminNumber = process.env.ADMIN_WHATSAPP_NUMBER || '2349132471190@c.us';
-          
-          if (statusMessage.hasMedia) {
-            const media = await statusMessage.downloadMedia();
-            if (media) {
-              await this.client.sendMessage(adminNumber, {
-                [statusMessage.type === 'image' ? 'image' : 'video']: Buffer.from(media.data, 'base64'),
-                caption: `📱 Status from ${statusMessage.from}\n${statusMessage.body || ''}`,
-                mimetype: media.mimetype,
-              });
-            }
-          } else {
-            await this.client.sendMessage(adminNumber, {
-              text: `📱 Status from ${statusMessage.from}:\n\n${statusMessage.body}`
-            });
-          }
-          console.log(`📤 Status forwarded to admin`);
-        } catch (error) {
-          console.error('❌ Failed to forward status:', error.message);
-        }
-      }
-
-      // 🎨 Auto-react to status
-      if (this.adminService.settings.statusAutoReact) {
-        try {
-          const emoji = this.adminService.getRandomStatusEmoji();
-          await statusMessage.react(emoji);
-          console.log(`✅ Reacted to status with ${emoji}`);
-        } catch (error) {
-          console.error('❌ Failed to react to status:', error.message);
-        }
-      }
-
-      // 💬 Auto-reply to status
-      if (this.adminService.settings.statusAutoReply) {
-        try {
-          const reply = this.adminService.settings.statusReplyMessage;
-          await statusMessage.reply(reply);
-          console.log(`✅ Replied to status: ${reply}`);
-        } catch (error) {
-          console.error('❌ Failed to reply to status:', error.message);
-        }
-      }
-
-      // Clean up old status IDs (keep last 1000)
-      if (this.processedStatuses.size > 1000) {
-        const toDelete = Array.from(this.processedStatuses).slice(0, 100);
-        toDelete.forEach(id => this.processedStatuses.delete(id));
-      }
-
-    } catch (error) {
-      console.error('❌ Error handling status:', error.message);
-    }
   }
 
   /**
